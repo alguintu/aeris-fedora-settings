@@ -18,7 +18,7 @@ virtual environment and generated caches are deliberately excluded from Git.
 |---|---|
 | Motherboard `JRAINBOW1`, 75 LEDs | Maximum of CPU and GPU workload; pump, PSU, backplate, and accent chain |
 | Motherboard `JRAINBOW2`, 75 LEDs | Hottest CPU `k10temp` or Radeon edge/junction/memory temperature; all fans |
-| Two ENE DRAM devices | CPU utilization |
+| Four ENE DRAM devices (64 GB total) | CPU utilization |
 | ASUS TUF Radeon RX 6900 XT Gaming OC | Maximum of GPU utilization and board power normalized to 272 W |
 
 `JRGB1` is unused logically. OpenRGB Direct mode requires complete motherboard
@@ -48,7 +48,7 @@ controller resets, and falls back to teal when telemetry is unavailable.
 
 At login, the SDK server waits for udev to settle and then delays hardware
 discovery for 10 seconds. This prevents it from scanning before the AMD I2C/SMBus
-devices are ready. The client rejects an incomplete discovery unless both ENE
+devices are ready. The client rejects an incomplete discovery unless all four ENE
 DRAM modules and the Radeon GPU are present, rather than silently leaving those
 devices in their firmware rainbow mode.
 
