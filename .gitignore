@@ -1,0 +1,10 @@
+*~
+*.bak
+*.log
+.DS_Store
+
+# Never commit authentication material.
+*credentials*
+*token*
+auth.json
+hosts.yml
