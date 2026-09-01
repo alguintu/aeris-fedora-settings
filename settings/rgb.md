@@ -41,6 +41,13 @@ Colors interpolate between anchors. CPU package power is not exposed on this
 machine, so CPU lighting uses utilization. GPU lighting uses both utilization
 and `power1_average`.
 
+Fan hue continues to represent the hottest CPU/GPU temperature, while fan
+brightness moves inversely with the combined CPU/GPU workload. The fans are at
+100% brightness at or below 20% workload, dim smoothly to 35% brightness at
+full workload, and brighten again as work returns to idle. This brightness
+effect applies only to `JRAINBOW2`; the workload chain, DIMMs, and GPU retain
+their normal brightness.
+
 The controller, both DIMMs, and GPU are switched to **Direct** mode on every SDK
 connection. Otherwise their hardware rainbow effects remain active. The process
 starts calm teal, keeps one persistent SDK connection, reconnects after server or

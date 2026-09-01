@@ -17,6 +17,10 @@ workload:
   maximum: 1.00
   gpu_power_watts_max: 272.0
 
+fan_brightness:
+  idle: 1.00
+  minimum: 0.35
+
 openrgb:
   host: "127.0.0.1"
   port: 6742

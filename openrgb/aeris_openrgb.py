@@ -68,6 +68,11 @@ def gradient(value, low, middle, high, teal, orange, red):
     return red
 
 
+def scale_color(color, brightness):
+    brightness = max(0.0, min(1.0, brightness))
+    return tuple(round(channel * brightness) for channel in color)
+
+
 class Telemetry:
     def __init__(self, gpu_power_max):
         self.cpu = find_hwmon("k10temp")
@@ -198,6 +203,10 @@ def main():
             load_color = gradient(smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"], teal, orange, red)
             cpu_color = gradient(smooth_cpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"], teal, orange, red)
             gpu_color = gradient(smooth_gpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"], teal, orange, red)
+            bcfg = cfg["fan_brightness"]
+            brightness_progress = max(0.0, min(1.0, (smooth_load - wcfg["idle"]) / (wcfg["maximum"] - wcfg["idle"])))
+            fan_brightness = bcfg["idle"] + (bcfg["minimum"] - bcfg["idle"]) * brightness_progress
+            temp_color = scale_color(temp_color, fan_brightness)
             lighting.apply(load_color, temp_color, cpu_color, gpu_color)
         except Exception as exc:
             LOG.warning("OpenRGB update failed; reconnecting: %s", exc)
