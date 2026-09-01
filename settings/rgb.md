@@ -46,6 +46,12 @@ connection. Otherwise their hardware rainbow effects remain active. The process
 starts calm teal, keeps one persistent SDK connection, reconnects after server or
 controller resets, and falls back to teal when telemetry is unavailable.
 
+At login, the SDK server waits for udev to settle and then delays hardware
+discovery for 10 seconds. This prevents it from scanning before the AMD I2C/SMBus
+devices are ready. The client rejects an incomplete discovery unless both ENE
+DRAM modules and the Radeon GPU are present, rather than silently leaving those
+devices in their firmware rainbow mode.
+
 ## Install or synchronize
 
 From the repository root:

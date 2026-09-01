@@ -1,7 +1,10 @@
 [Unit]
 Description=OpenRGB SDK server for Aeris lighting
+After=graphical-session.target
 
 [Service]
+ExecStartPre=/usr/bin/udevadm settle --timeout=15
+ExecStartPre=/usr/bin/sleep 10
 ExecStart=/usr/bin/openrgb --noautoconnect --server --server-host 127.0.0.1 --server-port 6742
 Restart=on-failure
 RestartSec=5

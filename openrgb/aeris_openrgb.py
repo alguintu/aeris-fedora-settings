@@ -123,6 +123,11 @@ class Lighting:
             device for device in self.client.devices
             if any(name in device.name.lower() for name in gpu_wanted)
         ]
+        if len(self.cpu_devices) < 2 or len(self.gpu_devices) < 1:
+            raise RuntimeError(
+                "incomplete OpenRGB discovery: expected 2 ENE DRAM and 1 GPU, "
+                f"found {len(self.cpu_devices)} DRAM and {len(self.gpu_devices)} GPU"
+            )
         self.accents = self.cpu_devices + self.gpu_devices
         self.motherboard.set_mode("Direct")
         for device in self.accents:
