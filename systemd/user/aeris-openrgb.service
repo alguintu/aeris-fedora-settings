@@ -1,0 +1,12 @@
+[Unit]
+Description=Aeris temperature and workload lighting
+After=aeris-openrgb-server.service
+Requires=aeris-openrgb-server.service
+
+[Service]
+ExecStart=/home/drei/.local/share/aeris-openrgb/venv/bin/python /home/drei/.local/share/aeris-openrgb/aeris_openrgb.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

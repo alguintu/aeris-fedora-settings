@@ -39,3 +39,9 @@ The usable tile area is 3840×2098, leaving pixels 2098–2159 for the panels.
 
 The layout uses independent floating KWin tiles so the bottom panel band remains
 outside every tile. The normalized geometry is stored in `kwin-tiles.json`.
+
+## Automated restoration
+
+Run `scripts/apply-desktop.sh` from an active Plasma session. It validates the
+expected display geometry and saves timestamped backups under
+`~/.local/state/fedora-settings/backups/` before applying the profile.

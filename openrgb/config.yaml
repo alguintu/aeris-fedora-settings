@@ -1,0 +1,29 @@
+poll_seconds: 1.0
+smoothing_alpha: 0.20
+
+palette:
+  teal: "00C8C8"
+  orange: "FF8A00"
+  red: "FF2A1A"
+
+temperature:
+  cool_c: 45.0
+  orange_c: 65.0
+  hot_c: 85.0
+
+workload:
+  idle: 0.20
+  orange: 0.60
+  maximum: 1.00
+  gpu_power_watts_max: 272.0
+
+openrgb:
+  host: "127.0.0.1"
+  port: 6742
+  motherboard_contains: "MSI MAG B550M MORTAR WIFI"
+  workload_zone: "JRAINBOW1"
+  temperature_zone: "JRAINBOW2"
+  cpu_devices:
+    - "ENE DRAM"
+  gpu_devices:
+    - "ASUS TUF Radeon RX 6900 XT Gaming OC"

@@ -1,0 +1,10 @@
+[Unit]
+Description=OpenRGB SDK server for Aeris lighting
+
+[Service]
+ExecStart=/usr/bin/openrgb --noautoconnect --server --server-host 127.0.0.1 --server-port 6742
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

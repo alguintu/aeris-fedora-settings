@@ -8,3 +8,10 @@
 *token*
 auth.json
 hosts.yml
+
+# Python/OpenRGB generated state.
+__pycache__/
+*.pyc
+.venv/
+venv/
+OpenRGB/logs/
