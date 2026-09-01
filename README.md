@@ -17,6 +17,7 @@ unrelated personal state, hardware identifiers, and application data.
 ## Recorded settings
 
 - [Desktop and tiling](settings/desktop.md)
+- [Hardware monitoring](settings/monitoring.md)
 - [Storage](settings/storage.md)
 - [Git and GitHub](settings/git.md)
 - [KWin tile geometry](settings/kwin-tiles.json)
@@ -44,6 +45,13 @@ Inspect the live desktop configuration with:
 
 ```bash
 ./scripts/verify-desktop.sh
+```
+
+Restore or verify the hardware-monitoring profile separately:
+
+```bash
+./scripts/apply-monitoring.sh
+./scripts/apply-monitoring.sh --check
 ```
 
 Storage formatting is intentionally not automated because it is destructive.
