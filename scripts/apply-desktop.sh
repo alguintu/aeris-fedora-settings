@@ -1,13 +1,32 @@
 #!/usr/bin/bash
 set -euo pipefail
 
-required_commands=(busctl gdbus jq kscreen-doctor kwriteconfig6)
+required_commands=(busctl gdbus jq kscreen-doctor kwriteconfig6 patch rg)
 for command_name in "${required_commands[@]}"; do
     if ! command -v "$command_name" >/dev/null; then
         echo "Missing required command: $command_name" >&2
         exit 1
     fi
 done
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+repo_root=$(cd -- "$script_dir/.." && pwd)
+kzones_dir=$HOME/.local/share/kwin/scripts/kzones
+kzones_main=$kzones_dir/contents/ui/main.qml
+kzones_metadata=$kzones_dir/metadata.json
+
+if [[ ! -f "$kzones_main" || ! -f "$kzones_metadata" ]]; then
+    echo "KZones is not installed." >&2
+    echo "Install it from System Settings > Window Management > KWin Scripts > Get New." >&2
+    exit 1
+fi
+
+kzones_version=$(jq -r '.KPlugin.Version // empty' "$kzones_metadata")
+if [[ "$kzones_version" != 0.9.2 ]]; then
+    echo "This profile expects KZones 0.9.2; found ${kzones_version:-unknown}." >&2
+    echo "Review patches/kzones-detach-native-tiling.patch before applying it to another version." >&2
+    exit 1
+fi
 
 display_json=$(kscreen-doctor -j)
 enabled_outputs=$(jq '[.outputs[] | select(.enabled)] | length' <<<"$display_json")
@@ -28,11 +47,12 @@ temp_dir=$(mktemp -d)
 trap 'rm -rf -- "$temp_dir"' EXIT
 
 mkdir -p "$backup_dir"
-for config_file in kcminputrc kwinrc plasma-org.kde.plasma.desktop-appletsrc; do
+for config_file in kcminputrc kglobalshortcutsrc kwinrc plasmashellrc plasma-org.kde.plasma.desktop-appletsrc; do
     if [[ -f "$HOME/.config/$config_file" ]]; then
         cp -a "$HOME/.config/$config_file" "$backup_dir/$config_file"
     fi
 done
+cp -a "$kzones_main" "$backup_dir/kzones-main.qml"
 
 kwriteconfig6 --notify --file kcminputrc --group Mouse --key cursorTheme breeze_cursors
 kwriteconfig6 --notify --file kcminputrc --group Mouse --key cursorSize 36
@@ -79,7 +99,7 @@ if (!statusPanel || statusPanel.id === centerPanel.id) {
 centerPanel.location = "bottom";
 centerPanel.alignment = "center";
 centerPanel.lengthMode = "fit";
-centerPanel.hiding = "none";
+centerPanel.hiding = "windowsgobelow";
 centerPanel.floating = true;
 centerPanel.height = 46;
 centerPanel.offset = 0;
@@ -103,7 +123,7 @@ for (const widget of centerPanel.widgets()) {
 statusPanel.location = "bottom";
 statusPanel.alignment = "right";
 statusPanel.lengthMode = "fit";
-statusPanel.hiding = "none";
+statusPanel.hiding = "windowsgobelow";
 statusPanel.floating = true;
 statusPanel.height = 46;
 statusPanel.offset = 0;
@@ -120,53 +140,64 @@ gdbus call --session \
     --method org.kde.PlasmaShell.evaluateScript \
     "$panel_script" >/dev/null
 
-cat >"$temp_dir/tiles.js" <<'KWIN_SCRIPT'
-const Floating = 0;
-const root = workspace.tilingForScreen(workspace.activeScreen).rootTile;
-
-let guard = 0;
-while (root.tiles.length > 0 && guard++ < 100) {
-    let leaf = root;
-    while (leaf.tiles.length > 0) {
-        leaf = leaf.tiles[0];
-    }
-    leaf.remove();
-}
-if (root.tiles.length !== 0) {
-    throw new Error("Unable to clear the existing tile tree safely");
-}
-
-root.split(Floating);
-while (root.tiles.length < 6) {
-    root.tiles[root.tiles.length - 1].split(Floating);
-}
-
-const halfUsableHeight = 1049 / 2160;
-const targets = [
-    {x: 0.00, y: 0,                width: 0.25, height: halfUsableHeight},
-    {x: 0.00, y: halfUsableHeight, width: 0.25, height: halfUsableHeight},
-    {x: 0.25, y: 0,                width: 0.50, height: halfUsableHeight},
-    {x: 0.25, y: halfUsableHeight, width: 0.50, height: halfUsableHeight},
-    {x: 0.75, y: 0,                width: 0.25, height: halfUsableHeight},
-    {x: 0.75, y: halfUsableHeight, width: 0.25, height: halfUsableHeight},
-];
-
-for (let index = 0; index < targets.length; ++index) {
-    root.tiles[index].relativeGeometry = targets[index];
-}
-root.padding = 8;
-KWIN_SCRIPT
-
-plugin_name=fedora-settings-$timestamp
-script_id=$(busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting loadScript ss "$temp_dir/tiles.js" "$plugin_name" | awk '{print $2}')
-if [[ -z "$script_id" || "$script_id" == "-1" ]]; then
-    echo "KWin refused to load the tile restoration script." >&2
-    exit 1
+patch_marker='including when the cursor misses a KZones indicator'
+if ! rg -Fq "$patch_marker" "$kzones_main"; then
+    patch --batch --forward -p1 -d "$kzones_dir" \
+        <"$repo_root/patches/kzones-detach-native-tiling.patch"
 fi
 
-busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting start >/dev/null
-sleep 3
-busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting unloadScript s "$plugin_name" >/dev/null
+layouts_json=$(jq -c . "$repo_root/settings/kzones-layouts.json")
+kwriteconfig6 --file kwinrc --group Script-kzones --key autoSnapAllNew false
+kwriteconfig6 --file kwinrc --group Script-kzones --key enableEdgeSnapping false
+kwriteconfig6 --file kwinrc --group Script-kzones --key enableZoneOverlay true
+kwriteconfig6 --file kwinrc --group Script-kzones --key enableZoneSelector false
+kwriteconfig6 --file kwinrc --group Script-kzones --key layoutsJson "$layouts_json"
+kwriteconfig6 --file kwinrc --group Script-kzones --key rememberWindowGeometries true
+kwriteconfig6 --file kwinrc --group Script-kzones --key zoneOverlayHighlightTarget 0
+kwriteconfig6 --file kwinrc --group Script-kzones --key zoneOverlayIndicatorDisplay 1
+kwriteconfig6 --file kwinrc --group Script-kzones --key zoneOverlayShowWhen 0
+
+kwriteconfig6 --file kwinrc --group Windows --key ElectricBorderMaximize false
+kwriteconfig6 --file kwinrc --group Windows --key ElectricBorderTiling false
+
+disable_shortcut() {
+    local action_name=$1
+    local action_label=$2
+    busctl --user call \
+        org.kde.kglobalaccel \
+        /kglobalaccel \
+        org.kde.KGlobalAccel \
+        setShortcut asaiu \
+        4 kwin "$action_name" KWin "$action_label" \
+        0 4 >/dev/null
+}
+
+disable_shortcut "Edit Tiles" "Toggle Tiles Editor"
+disable_shortcut "Window Quick Tile Left" "Quick Tile Window to the Left"
+disable_shortcut "Window Quick Tile Right" "Quick Tile Window to the Right"
+disable_shortcut "Window Quick Tile Top" "Quick Tile Window to the Top"
+disable_shortcut "Window Quick Tile Bottom" "Quick Tile Window to the Bottom"
+disable_shortcut "Window Quick Tile Top Left" "Quick Tile Window to the Top Left"
+disable_shortcut "Window Quick Tile Top Right" "Quick Tile Window to the Top Right"
+disable_shortcut "Window Quick Tile Bottom Left" "Quick Tile Window to the Bottom Left"
+disable_shortcut "Window Quick Tile Bottom Right" "Quick Tile Window to the Bottom Right"
+disable_shortcut "Window Custom Quick Tile Left" "Custom Quick Tile Window to the Left"
+disable_shortcut "Window Custom Quick Tile Right" "Custom Quick Tile Window to the Right"
+disable_shortcut "Window Custom Quick Tile Top" "Custom Quick Tile Window to the Top"
+disable_shortcut "Window Custom Quick Tile Bottom" "Custom Quick Tile Window to the Bottom"
+
+kwriteconfig6 --file kwinrc --group Plugins --key kzonesEnabled false
+busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null
+sleep 1
+kwriteconfig6 --file kwinrc --group Plugins --key kzonesEnabled true
+busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null
+sleep 2
+
+loaded=$(busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting isScriptLoaded s kzones)
+if [[ "$loaded" != "b true" ]]; then
+    echo "KZones did not reload successfully: $loaded" >&2
+    exit 1
+fi
 
 echo "Desktop profile applied."
 echo "Backup: $backup_dir"

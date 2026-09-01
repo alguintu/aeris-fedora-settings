@@ -1,0 +1,9 @@
+--- a/contents/ui/main.qml
++++ b/contents/ui/main.qml
+@@ -228 +228,6 @@
+         saveClientProperties(client, zone);
++        // KWin assigns its native Custom tile whenever Shift is held during a
++        // drag. Detach it on every drop so only KZones controls placement,
++        // including when the cursor misses a KZones indicator (zone == -1).
++        client.tile = null;
++

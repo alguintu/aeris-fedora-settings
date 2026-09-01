@@ -1,0 +1,43 @@
+[
+  {
+    "name": "Aeris 3x2 + Spans",
+    "padding": 8,
+    "zones": [
+      { "x": 0,  "y": 0,                 "width": 25, "height": 48.56481481481482 },
+      { "x": 0,  "y": 48.56481481481482, "width": 25, "height": 48.56481481481482 },
+      { "x": 25, "y": 0,                 "width": 50, "height": 48.56481481481482 },
+      { "x": 25, "y": 48.56481481481482, "width": 50, "height": 48.56481481481482 },
+      { "x": 75, "y": 0,                 "width": 25, "height": 48.56481481481482 },
+      { "x": 75, "y": 48.56481481481482, "width": 25, "height": 48.56481481481482 },
+
+      {
+        "x": 0,
+        "y": 0,
+        "width": 25,
+        "height": 97.12962962962964,
+        "indicator": { "position": "left-center", "margin": { "left": 24 } }
+      },
+      {
+        "x": 25,
+        "y": 0,
+        "width": 50,
+        "height": 97.12962962962964,
+        "indicator": { "position": "center" }
+      },
+      {
+        "x": 75,
+        "y": 0,
+        "width": 25,
+        "height": 97.12962962962964,
+        "indicator": { "position": "right-center", "margin": { "right": 24 } }
+      },
+      {
+        "x": 25,
+        "y": 48.56481481481482,
+        "width": 75,
+        "height": 48.56481481481482,
+        "indicator": { "position": "bottom-center", "margin": { "bottom": 100 } }
+      }
+    ]
+  }
+]

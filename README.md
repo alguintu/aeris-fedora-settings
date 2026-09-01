@@ -16,11 +16,11 @@ unrelated personal state, hardware identifiers, and application data.
 
 ## Recorded settings
 
-- [Desktop and tiling](settings/desktop.md)
+- [Desktop and KZones](settings/desktop.md)
 - [Hardware monitoring](settings/monitoring.md)
 - [Storage](settings/storage.md)
 - [Git and GitHub](settings/git.md)
-- [KWin tile geometry](settings/kwin-tiles.json)
+- [KZones layout geometry](settings/kzones-layouts.json)
 - [Aeris OpenRGB lighting](settings/rgb.md)
 
 ## Restore
@@ -33,7 +33,9 @@ Apply the desktop profile from an active KDE Plasma session:
 
 The script requires one 3840×2160 display at 100% scale. It backs up the
 existing cursor, KWin, and Plasma panel configuration before changing anything.
-It then restores the cursor, split docks, dock-safe six-tile layout, and gutters.
+KZones 0.9.2 must already be installed. The script then restores the cursor,
+split floating panels, dock-safe six-zone layout, four span targets, 8 px
+gutters, and native-KWin-tiling disablement.
 
 Restore the Git commit identity separately:
 
