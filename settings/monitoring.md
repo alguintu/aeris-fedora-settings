@@ -48,7 +48,21 @@ different index after a hardware change, update `gpu_sensor` in the script.
 
 These are observations from this machine, not restore-time acceptance tests:
 
+- Light background activity: CPU `Tctl` held around 53-54°C while `rsync`, Chrome,
+  Plasma, and other processes were active. The system load average was about 3.16,
+  so this was not true idle even though aggregate CPU usage appeared to be about
+  5%. On the 32-thread Ryzen 9 5950X, 5% aggregate utilization can still represent
+  roughly one or two busy, boosting cores and produce short localized temperature
+  spikes.
 - CPU: 60-second `stress-ng --cpu 0 --cpu-method all --verify` peaked at 77.2°C
+- CPU lighting validation: a separate 30-second `stress-ng --cpu 16` run peaked
+  at 71.6°C and visibly exercised the OpenRGB workload and temperature transitions
 - GPU: two-minute 2560×1440 `vkmark` peaked at 52°C edge, 64°C junction, and
   56°C VRAM; this test drew only about 68 W and is not a maximum-power test
 
+AMD specifies 90°C as the Ryzen 9 5950X maximum operating temperature (`Tjmax`):
+<https://www.amd.com/en/support/downloads/drivers.html/processors/ryzen/ryzen-5000-series/amd-ryzen-9-5950x.html>.
+On this machine, temperatures in the low-to-mid 50s during light background work
+are expected. Investigate sustained temperatures above roughly 55-60°C only after
+confirming the system is genuinely idle, or normal heavy workloads approaching
+85-90°C.
