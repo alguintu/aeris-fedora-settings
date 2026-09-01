@@ -99,3 +99,26 @@ the SDK server, so systemd starts the server automatically.
 A 30-second `stress-ng --cpu 16` run passed. CPU temperature peaked at 71.6 °C,
 and the lighting visibly transitioned under load. This stress test is documented
 rather than rerun automatically.
+
+## Day-one tuning notes
+
+The functional behavior is accepted for day one: CPU-specific DIMM lighting,
+GPU-specific GPU lighting, the combined workload chain, temperature-driven fans,
+and inverse fan brightness all reacted during separate one-minute CPU and GPU
+tests without service errors.
+
+Future visual tuning should address:
+
+- The 35% full-workload fan brightness floor is still too bright for the intended
+  dimming effect; test a substantially lower floor.
+- Make workload and temperature transitions more dramatic while retaining smooth
+  changes and avoiding flicker.
+- Calibrate colors per hardware group. The motherboard backplate/PSU chain, fans,
+  ENE DRAM, and ASUS GPU render identical RGB values differently because their
+  LEDs, diffusers, and controllers come from different vendors.
+- Build per-device corrected teal, orange, and red anchors instead of assuming one
+  shared RGB triplet will visually match every component.
+
+Do not change these values blindly. Tune them while observing the physical system
+under controlled CPU and GPU loads, then record the calibrated values here and in
+`openrgb/config.yaml`.
