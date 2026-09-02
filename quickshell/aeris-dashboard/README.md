@@ -9,8 +9,8 @@ The surface is organized as three horizontally swipeable modes:
   Git, task, and focus integrations.
 - **AI Focus** — local-model status plus live GPU, VRAM, and thermal context.
 
-Drag anywhere left or right to move between modes. A persistent mode strip also
-supports direct touch navigation. Short taps remain available to launch Terminal,
+Drag anywhere left or right to move between modes. Three compact page dots also
+support direct touch navigation. Short taps remain available to launch Terminal,
 Firefox, Code, and Files; the drag gesture only takes over after its movement
 threshold is crossed. A slow drag settles after 180 pixels, leaving room to
 cancel by releasing earlier. A fast flick can settle after 36 pixels when its

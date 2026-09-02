@@ -111,7 +111,7 @@ ShellRoot {
                     id: viewport
                     anchors.fill: parent
                     anchors.margins: 14
-                    anchors.bottomMargin: 58
+                    anchors.bottomMargin: 42
                     clip: true
 
                     Row {
@@ -226,17 +226,17 @@ ShellRoot {
                 Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 8
-                    width: 420
-                    height: 42
-                    radius: 21
+                    anchors.bottomMargin: 6
+                    width: 116
+                    height: 28
+                    radius: 14
                     z: 20
                     color: "#e31a2230"
                     border.color: "#53607182"
 
                     Row {
                         anchors.centerIn: parent
-                        spacing: 6
+                        spacing: 4
 
                         Repeater {
                             model: root.modeNames
@@ -244,20 +244,22 @@ ShellRoot {
                             Rectangle {
                                 required property string modelData
                                 required property int index
-                                width: 130
-                                height: 34
-                                radius: 17
-                                color: index === root.currentMode ? "#503b2857" : "transparent"
-                                border.color: index === root.currentMode ? "#9469cf" : "transparent"
+                                width: 32
+                                height: 24
+                                color: "transparent"
 
-                                Text {
+                                Rectangle {
                                     anchors.centerIn: parent
-                                    text: modelData
+                                    width: index === root.currentMode ? 18 : 8
+                                    height: 8
+                                    radius: 4
                                     color: index === root.currentMode ? "#e2c4ff" : "#8995a5"
-                                    font.family: "Noto Sans"
-                                    font.pixelSize: 11
-                                    font.weight: Font.DemiBold
-                                    font.letterSpacing: 1.1
+
+                                    Behavior on width {
+                                        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                                    }
+
+                                    Behavior on color { ColorAnimation { duration: 140 } }
                                 }
 
                                 TapHandler {
