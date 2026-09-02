@@ -156,22 +156,33 @@ ShellRoot {
 
                 DragHandler {
                     id: swipeHandler
+                    property real retainedTranslation: 0
+                    readonly property real settleDistance: 48
+
                     target: null
                     acceptedDevices: PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Mouse
-                    dragThreshold: 18
+                    dragThreshold: 10
                     xAxis.enabled: true
                     yAxis.enabled: false
                     grabPermissions: PointerHandler.CanTakeOverFromItems
                                      | PointerHandler.CanTakeOverFromHandlersOfDifferentType
                                      | PointerHandler.ApprovesTakeOverByAnything
 
-                    onActiveChanged: {
+                    onActiveTranslationChanged: {
                         if (active)
+                            retainedTranslation = activeTranslation.x
+                    }
+
+                    onActiveChanged: {
+                        if (active) {
+                            retainedTranslation = 0
                             return
-                        const distance = activeTranslation.x
-                        if (distance < -150 && root.currentMode < root.modeNames.length - 1)
+                        }
+
+                        const distance = retainedTranslation
+                        if (distance < -settleDistance && root.currentMode < root.modeNames.length - 1)
                             root.currentMode += 1
-                        else if (distance > 150 && root.currentMode > 0)
+                        else if (distance > settleDistance && root.currentMode > 0)
                             root.currentMode -= 1
                     }
                 }
