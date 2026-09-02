@@ -11,6 +11,31 @@ Open the cursor settings page with:
 kcmshell6 kcm_cursortheme
 ```
 
+## Secondary touchscreen display
+
+The TeNizo R7-series panel is connected as `DP-3`. Its native 480×1920 mode is
+rotated into a 1920×480 desktop surface at 100% scale and positioned directly
+beneath the 3840×2160 primary display:
+
+- Geometry: `1920×480+960+2160`
+- KScreen rotation: `8`
+- Output UUID: `a8010dcd-95c3-4fb2-b1a4-73dd48a2cc37`
+
+The horizontal offset is `(3840 - 1920) / 2 = 960`, so the two displays share
+the same center line. Restore the position from an active Plasma session with:
+
+```bash
+kscreen-doctor output.DP-3.position.960,2160
+```
+
+The USB touch controller is `TeNizo TeNizo_R7Series_TC` (`1a86:e5e3`). KWin
+maps it to `DP-3` and persists the association in `kcminputrc` as:
+
+```ini
+[Libinput][6790][58851][TeNizo TeNizo_R7Series_TC]
+OutputUuid=a8010dcd-95c3-4fb2-b1a4-73dd48a2cc37
+```
+
 ## Plasma panels
 
 Two independent floating panels occupy the bottom 62-pixel band:

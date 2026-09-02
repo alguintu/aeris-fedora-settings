@@ -10,6 +10,7 @@ unrelated personal state, hardware identifiers, and application data.
 
 - Fedora Linux 44, KDE Plasma 6.6
 - 3840×2160 primary display at 100% scale
+- 1920×480 TeNizo touchscreen centered beneath the primary display
 - Samsung 990 PRO 1 TB: Fedora system disk
 - Lexar NM620 512 GB: reserved for Hackintosh experiments
 - Seagate 4 TB: Btrfs bulk storage mounted at `/mnt/storage`
@@ -17,6 +18,7 @@ unrelated personal state, hardware identifiers, and application data.
 ## Recorded settings
 
 - [Desktop and KZones](settings/desktop.md)
+- [Quickshell touch dashboard](quickshell/aeris-dashboard/README.md)
 - [Hardware monitoring](settings/monitoring.md)
 - [Storage](settings/storage.md)
 - [Git and GitHub](settings/git.md)
