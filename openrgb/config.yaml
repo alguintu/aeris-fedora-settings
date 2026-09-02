@@ -21,10 +21,11 @@ device_palettes:
     teal: "00C8C8"
     orange: "FF6000"
 
-temperature:
-  cool_c: 45.0
-  orange_c: 65.0
-  hot_c: 85.0
+temperature_override:
+  cpu_enter_c: 70.0
+  cpu_exit_c: 65.0
+  gpu_enter_c: 80.0
+  gpu_exit_c: 75.0
 
 workload:
   idle: 0.20

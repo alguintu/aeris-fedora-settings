@@ -17,7 +17,7 @@ virtual environment and generated caches are deliberately excluded from Git.
 | Device or zone | Signal |
 |---|---|
 | Motherboard `JRAINBOW1`, 75 LEDs | Maximum of CPU and GPU workload; pump, PSU, backplate, and accent chain |
-| Motherboard `JRAINBOW2`, 75 LEDs | Hottest CPU `k10temp` or Radeon edge/junction/memory temperature; all fans |
+| Motherboard `JRAINBOW2`, 75 LEDs | Maximum of CPU and GPU workload with inverse brightness; all fans |
 | Four ENE DRAM devices (64 GB total) | CPU utilization |
 | ASUS TUF Radeon RX 6900 XT Gaming OC | Maximum of GPU utilization and board power normalized to 272 W |
 
@@ -31,11 +31,11 @@ Do not use this binary profile on different RGB hardware.
 
 ## Palette
 
-| Anchor | Color | Temperature | Workload |
-|---|---|---:|---:|
-| Calm | Teal `#00C8C8` | ≤45 °C | ≤20% |
-| Elevated | Orange `#FF8A00` | 65 °C | 60% |
-| High | Red `#FF0000` | ≥85 °C | 100% |
+| Anchor | Color | Workload |
+|---|---|---:|
+| Calm | Teal `#00C8C8` | ≤20% |
+| Elevated | Orange `#FF8A00` | 60% |
+| High | Red `#FF0000` | 100% |
 
 The shared palette is a fallback. Hardware-specific palette overrides compensate
 for differences between LED vendors and diffusers. Calibrated teal anchors are:
@@ -54,12 +54,18 @@ Colors interpolate between anchors. CPU package power is not exposed on this
 machine, so CPU lighting uses utilization. GPU lighting uses both utilization
 and `power1_average`.
 
-Fan hue continues to represent the hottest CPU/GPU temperature, while fan
-brightness moves inversely with the combined CPU/GPU workload. The approved
-curve is 100% brightness at or below 20% workload, 40% at the 60% orange anchor,
-and fully off at 100% workload. It reverses smoothly as work returns to idle.
-This brightness effect applies only to `JRAINBOW2`; the workload chain, DIMMs,
-and GPU retain their normal brightness.
+Fan hue follows the same combined CPU/GPU workload wave as the workload chain,
+while fan brightness moves inversely with that workload. The approved curve is
+100% brightness at or below 20% workload, 40% at the 60% orange anchor, and
+fully off at 100% workload. It reverses smoothly as work returns to idle. This
+brightness effect applies only to `JRAINBOW2`; the workload chain, DIMMs, and GPU
+retain their normal brightness.
+
+Temperature is an override, not a normal color input. A smoothed CPU Tctl of
+70°C or GPU hottest reported temperature (normally junction/hotspot) of 80°C
+forces every hardware group to full `#FF0000`, including the normally dark
+maximum-load fans. Five-degree hysteresis prevents flicker: normal workload
+lighting resumes only after CPU is below 65°C and GPU is below 75°C.
 
 The RAM is deliberately black at or below the 20% CPU idle anchor. Above that
 point it fades from black to its calibrated `#FF8000` at 60% CPU usage, then to
@@ -120,9 +126,9 @@ rather than rerun automatically.
 ## Day-one tuning notes
 
 The functional behavior is accepted for day one: CPU-specific DIMM lighting,
-GPU-specific GPU lighting, the combined workload chain, temperature-driven fans,
-and inverse fan brightness all reacted during separate one-minute CPU and GPU
-tests without service errors.
+GPU-specific GPU lighting, the combined workload-driven fan hue, inverse fan
+brightness, and combined workload chain reacted during CPU and GPU tests without
+service errors.
 
 Future visual tuning should address:
 
