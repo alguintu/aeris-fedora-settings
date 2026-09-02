@@ -85,12 +85,14 @@ rises, remains off until filtered CPU load falls below 40%, then returns on a
 squared curve to full teal at the 20% idle anchor. Meaningful GPU activity
 restores its own independently workload-driven lighting.
 
-Above 75% combined workload, the backplane/PSU/ambient chain begins a slow
-brightness pulse without changing its current interpolated hue. Pulse depth
-increases with load and reaches the approved 100%-to-20% brightness range at
-95% workload. The cycle is 4.6 seconds. Motherboard-only pulse frames render at
-150 ms intervals; telemetry and ENE DRAM/GPU writes remain at one-second cadence.
-The thermal-warning override remains solid full red rather than pulsing.
+Above 75% filtered workload, affected lighting begins a synchronized brightness
+pulse without changing its current interpolated hue. The backplane follows
+combined CPU/GPU load, RAM follows CPU load only, and the GPU follows GPU load
+only. Pulse depth increases with the corresponding signal and reaches the
+approved 100%-to-5% brightness range at 95% workload. The shared cycle is 4.6
+seconds. Motherboard frames render at 150 ms intervals; active RAM/GPU pulse
+frames render at 300 ms to limit ENE SMBus traffic. The thermal-warning override
+remains solid full red rather than pulsing.
 
 The controller, both DIMMs, and GPU are switched to **Direct** mode on every SDK
 connection. Otherwise their hardware rainbow effects remain active. The process

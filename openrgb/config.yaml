@@ -45,12 +45,13 @@ fan_brightness:
   maximum: 0.00
   off_workload: 0.85
 
-backplane_pulse:
+high_load_pulse:
   start_workload: 0.75
   full_depth_workload: 0.95
   period_seconds: 4.6
-  minimum_brightness: 0.20
-  render_interval_seconds: 0.15
+  minimum_brightness: 0.05
+  motherboard_render_interval_seconds: 0.15
+  accent_render_interval_seconds: 0.30
 
 openrgb:
   host: "127.0.0.1"
