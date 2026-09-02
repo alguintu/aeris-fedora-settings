@@ -270,15 +270,18 @@ class Lighting:
     def apply_firmware_idle(self, workload, fans, ram, gpu):
         self.motherboard.set_mode("Static")
         self.apply_motherboard(workload, fans)
+        self.motherboard.save_mode()
         for device in self.cpu_devices:
             mode = next(m for m in device.modes if m.name == self.firmware_idle["ram_mode"])
             mode.speed = int(self.firmware_idle["ram_speed"])
             mode.direction = ModeDirections.LEFT
             device.set_mode(mode)
             device.set_color(RGBColor(*ram), fast=True)
+            device.save_mode()
         for device in self.gpu_devices:
             device.set_mode("Static")
             device.set_color(RGBColor(*gpu), fast=True)
+            device.save_mode()
 
 
 def main():
