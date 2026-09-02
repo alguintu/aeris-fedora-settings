@@ -7,7 +7,8 @@
 - Controller: MSI MAG B550M MORTAR WIFI, serial `A02020051203`
 - SDK endpoint: `127.0.0.1:6742`
 - Poll interval: 1 second
-- Exponential smoothing alpha: 0.20
+- Temperature smoothing alpha: 0.20
+- CPU and GPU workload envelopes: 0.30 attack, 4-second peak hold, 0.08 release
 
 The pinned Python dependencies are listed in `openrgb/requirements.txt`. The
 virtual environment and generated caches are deliberately excluded from Git.
@@ -53,6 +54,13 @@ previous `#FF2A1A` anchor did not read as red and must not be restored.
 Colors interpolate between anchors. CPU package power is not exposed on this
 machine, so CPU lighting uses utilization. GPU lighting uses both utilization
 and `power1_average`.
+
+CPU and GPU workloads each pass through the same asymmetric envelope before
+driving lighting. Rising load uses a 0.30 attack factor, momentary drops are held
+for four seconds, and sustained recovery uses a slower 0.08 release factor. This
+suppresses utilization jitter without replacing the graduated ramps. The
+combined workload chain and fans use the maximum of the two filtered signals;
+RAM uses filtered CPU load and the GPU uses filtered GPU load.
 
 Fan hue follows the same combined CPU/GPU workload wave as the workload chain,
 while fan brightness moves inversely with that workload. The approved curve is

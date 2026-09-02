@@ -85,6 +85,26 @@ def fan_brightness(value, low, middle, high, idle, orange, maximum):
     return maximum
 
 
+class LoadEnvelope:
+    def __init__(self, attack_alpha, release_alpha, hold_seconds):
+        self.attack_alpha = attack_alpha
+        self.release_alpha = release_alpha
+        self.hold_seconds = hold_seconds
+        self.value = None
+        self.hold_until = 0.0
+
+    def update(self, sample, now=None):
+        now = time.monotonic() if now is None else now
+        if self.value is None:
+            self.value = sample
+        elif sample >= self.value:
+            self.value += (sample - self.value) * self.attack_alpha
+            self.hold_until = now + self.hold_seconds
+        elif now >= self.hold_until:
+            self.value += (sample - self.value) * self.release_alpha
+        return self.value
+
+
 class Telemetry:
     def __init__(self, gpu_power_max):
         self.cpu = find_hwmon("k10temp")
@@ -128,7 +148,7 @@ class Lighting:
             if ocfg["motherboard_contains"].lower() in device.name.lower()
         )
         self.workload_zone = next(z for z in self.motherboard.zones if z.name == ocfg["workload_zone"])
-        self.temperature_zone = next(z for z in self.motherboard.zones if z.name == ocfg["temperature_zone"])
+        self.fan_zone = next(z for z in self.motherboard.zones if z.name == ocfg["fan_zone"])
         cpu_wanted = [name.lower() for name in ocfg["cpu_devices"]]
         gpu_wanted = [name.lower() for name in ocfg["gpu_devices"]]
         self.cpu_devices = [
@@ -150,9 +170,9 @@ class Lighting:
             device.set_mode("Direct")
             time.sleep(0.1)
         LOG.info(
-            "Mapped workload=%s, temperature=%s, CPU devices=%s, GPU devices=%s",
+            "Mapped workload=%s, fans=%s, CPU devices=%s, GPU devices=%s",
             self.workload_zone.name,
-            self.temperature_zone.name,
+            self.fan_zone.name,
             ", ".join(d.name for d in self.cpu_devices),
             ", ".join(d.name for d in self.gpu_devices),
         )
@@ -164,7 +184,12 @@ class Lighting:
         gpu_rgb = RGBColor(*gpu)
         frame = []
         for zone in self.motherboard.zones:
-            color = load_rgb if zone.name == self.workload_zone.name else fan_rgb
+            if zone.name == self.workload_zone.name:
+                color = load_rgb
+            elif zone.name == self.fan_zone.name:
+                color = fan_rgb
+            else:
+                color = RGBColor(0, 0, 0)
             frame.extend([color] * len(zone.leds))
         self.motherboard.set_colors(frame, fast=True)
         for device in self.cpu_devices:
@@ -192,11 +217,21 @@ def main():
     gpu_palette = hardware_palette("gpu")
     ram_idle = parse_color(device_palettes.get("ram", {}).get("idle", "000000"))
     alpha = float(cfg["smoothing_alpha"])
+    workload_smoothing = cfg["workload_smoothing"]
+    cpu_envelope = LoadEnvelope(
+        float(workload_smoothing["attack_alpha"]),
+        float(workload_smoothing["release_alpha"]),
+        float(workload_smoothing["hold_seconds"]),
+    )
+    gpu_envelope = LoadEnvelope(
+        float(workload_smoothing["attack_alpha"]),
+        float(workload_smoothing["release_alpha"]),
+        float(workload_smoothing["hold_seconds"]),
+    )
     poll = float(cfg["poll_seconds"])
     telemetry = Telemetry(float(cfg["workload"]["gpu_power_watts_max"]))
     smooth_cpu_temp = None
     smooth_gpu_temp = None
-    smooth_load = None
     smooth_cpu = None
     smooth_gpu = None
     lighting = None
@@ -222,9 +257,9 @@ def main():
                 smooth_cpu_temp = cpu_temp if smooth_cpu_temp is None else smooth_cpu_temp * (1 - alpha) + cpu_temp * alpha
             if gpu_temp is not None:
                 smooth_gpu_temp = gpu_temp if smooth_gpu_temp is None else smooth_gpu_temp * (1 - alpha) + gpu_temp * alpha
-            smooth_load = workload if smooth_load is None else smooth_load * (1 - alpha) + workload * alpha
-            smooth_cpu = cpu_workload if smooth_cpu is None else smooth_cpu * (1 - alpha) + cpu_workload * alpha
-            smooth_gpu = gpu_workload if smooth_gpu is None else smooth_gpu * (1 - alpha) + gpu_workload * alpha
+            smooth_cpu = cpu_envelope.update(cpu_workload)
+            smooth_gpu = gpu_envelope.update(gpu_workload)
+            smooth_load = max(smooth_cpu, smooth_gpu)
             wcfg = cfg["workload"]
             ocfg = cfg["temperature_override"]
             if not temperature_override:

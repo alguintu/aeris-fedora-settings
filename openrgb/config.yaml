@@ -1,6 +1,11 @@
 poll_seconds: 1.0
 smoothing_alpha: 0.20
 
+workload_smoothing:
+  attack_alpha: 0.30
+  release_alpha: 0.08
+  hold_seconds: 4.0
+
 palette:
   teal: "00C8C8"
   orange: "FF8A00"
@@ -43,7 +48,7 @@ openrgb:
   port: 6742
   motherboard_contains: "MSI MAG B550M MORTAR WIFI"
   workload_zone: "JRAINBOW1"
-  temperature_zone: "JRAINBOW2"
+  fan_zone: "JRAINBOW2"
   cpu_devices:
     - "ENE DRAM"
   gpu_devices:
