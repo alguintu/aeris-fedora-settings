@@ -53,6 +53,11 @@ high_load_pulse:
   motherboard_render_interval_seconds: 0.15
   accent_render_interval_seconds: 0.30
 
+firmware_idle:
+  ram_mode: "Chase Fade"
+  ram_color: "FF0000"
+  ram_speed: 4
+
 openrgb:
   host: "127.0.0.1"
   port: 6742

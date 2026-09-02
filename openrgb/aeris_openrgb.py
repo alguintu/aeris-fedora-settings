@@ -2,13 +2,14 @@
 import glob
 import logging
 import math
+import signal
 import time
 from pathlib import Path
 
 import psutil
 import yaml
 from openrgb import OpenRGBClient
-from openrgb.utils import RGBColor
+from openrgb.utils import ModeDirections, RGBColor
 
 
 CONFIG = Path.home() / ".config/aeris-openrgb/config.yaml"
@@ -205,6 +206,7 @@ class Lighting:
         )
         self.workload_zone = next(z for z in self.motherboard.zones if z.name == ocfg["workload_zone"])
         self.fan_zone = next(z for z in self.motherboard.zones if z.name == ocfg["fan_zone"])
+        self.firmware_idle = cfg["firmware_idle"]
         cpu_wanted = [name.lower() for name in ocfg["cpu_devices"]]
         gpu_wanted = [name.lower() for name in ocfg["gpu_devices"]]
         self.cpu_devices = [
@@ -265,6 +267,19 @@ class Lighting:
         self.apply_motherboard(workload, fans)
         self.apply_accents(cpu, gpu)
 
+    def apply_firmware_idle(self, workload, fans, ram, gpu):
+        self.motherboard.set_mode("Static")
+        self.apply_motherboard(workload, fans)
+        for device in self.cpu_devices:
+            mode = next(m for m in device.modes if m.name == self.firmware_idle["ram_mode"])
+            mode.speed = int(self.firmware_idle["ram_speed"])
+            mode.direction = ModeDirections.LEFT
+            device.set_mode(mode)
+            device.set_color(RGBColor(*ram), fast=True)
+        for device in self.gpu_devices:
+            device.set_mode("Static")
+            device.set_color(RGBColor(*gpu), fast=True)
+
 
 def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -284,6 +299,7 @@ def main():
     ram_palette = hardware_palette("ram")
     gpu_palette = hardware_palette("gpu")
     ram_idle = parse_color(device_palettes.get("ram", {}).get("idle", "000000"))
+    firmware_ram = parse_color(cfg["firmware_idle"]["ram_color"])
     alpha = float(cfg["smoothing_alpha"])
     workload_smoothing = cfg["workload_smoothing"]
     cpu_envelope = LoadEnvelope(
@@ -313,8 +329,16 @@ def main():
     smooth_gpu = None
     lighting = None
     retry_at = 0.0
+    stop_requested = False
 
-    while True:
+    def request_stop(_signum, _frame):
+        nonlocal stop_requested
+        stop_requested = True
+
+    signal.signal(signal.SIGTERM, request_stop)
+    signal.signal(signal.SIGINT, request_stop)
+
+    while not stop_requested:
         try:
             if lighting is None:
                 if time.monotonic() < retry_at:
@@ -373,7 +397,7 @@ def main():
                 else:
                     render_until = time.monotonic() + poll
                     next_accent_render = now + pulse_cfg["accent_render_interval_seconds"]
-                    while True:
+                    while not stop_requested:
                         remaining = render_until - time.monotonic()
                         if remaining <= 0:
                             break
@@ -394,6 +418,13 @@ def main():
             lighting = None
             retry_at = time.monotonic() + 5.0
             time.sleep(poll)
+
+    if lighting is not None:
+        try:
+            lighting.apply_firmware_idle(chain_palette[0], fan_palette[0], firmware_ram, gpu_palette[0])
+            LOG.info("Applied autonomous firmware idle lighting for shutdown")
+        except Exception as exc:
+            LOG.warning("Unable to apply firmware idle lighting during shutdown: %s", exc)
 
 
 if __name__ == "__main__":

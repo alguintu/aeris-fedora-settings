@@ -94,6 +94,13 @@ seconds. Motherboard frames render at 150 ms intervals; active RAM/GPU pulse
 frames render at 300 ms to limit ENE SMBus traffic. The thermal-warning override
 remains solid full red rather than pulsing.
 
+On graceful logout, reboot, or shutdown, the daemon hands each controller an
+autonomous firmware state before the OpenRGB server exits. The motherboard keeps
+the calibrated static backplane (`#00C8C8`) and fan (`#008A54`) teals, the GPU
+keeps static `#00C8C8`, and the RAM runs pure-red `Chase Fade` at hardware speed
+4 with a consistent direction. These states remain visible during BIOS and the
+delayed OpenRGB discovery window; the daemon restores Direct mode after login.
+
 The controller, both DIMMs, and GPU are switched to **Direct** mode on every SDK
 connection. Otherwise their hardware rainbow effects remain active. The process
 starts calm teal, keeps one persistent SDK connection, reconnects after server or
