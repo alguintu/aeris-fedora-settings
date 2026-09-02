@@ -3,8 +3,8 @@ smoothing_alpha: 0.20
 
 workload_smoothing:
   attack_alpha: 0.30
-  release_alpha: 0.08
-  hold_seconds: 4.0
+  release_alpha: 0.40
+  hold_seconds: 2.0
 
 palette:
   teal: "00C8C8"
