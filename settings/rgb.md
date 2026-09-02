@@ -35,18 +35,35 @@ Do not use this binary profile on different RGB hardware.
 |---|---|---:|---:|
 | Calm | Teal `#00C8C8` | ≤45 °C | ≤20% |
 | Elevated | Orange `#FF8A00` | 65 °C | 60% |
-| High | Red `#FF2A1A` | ≥85 °C | 100% |
+| High | Red `#FF0000` | ≥85 °C | 100% |
+
+The shared palette is a fallback. Hardware-specific palette overrides compensate
+for differences between LED vendors and diffusers. Calibrated teal anchors are:
+
+| Hardware group | Teal command | Orange command |
+|---|---|---|
+| Fans (`JRAINBOW2`) | `#008A54` | `#C03000` (visually confirmed) |
+| Backplane/PSU/ambient (`JRAINBOW1`) | `#00C8C8` | `#FF6000` (visually confirmed) |
+| ASUS GPU | `#00C8C8` | `#FF6000` (visually confirmed) |
+| ENE DRAM | `#0060B0` (provisional; direct teal is unreliable) | `#FF8000` (visually confirmed) |
+
+Pure red `#FF0000` is visually confirmed across all four hardware groups. The
+previous `#FF2A1A` anchor did not read as red and must not be restored.
 
 Colors interpolate between anchors. CPU package power is not exposed on this
 machine, so CPU lighting uses utilization. GPU lighting uses both utilization
 and `power1_average`.
 
 Fan hue continues to represent the hottest CPU/GPU temperature, while fan
-brightness moves inversely with the combined CPU/GPU workload. The fans are at
-100% brightness at or below 20% workload, dim smoothly to 35% brightness at
-full workload, and brighten again as work returns to idle. This brightness
-effect applies only to `JRAINBOW2`; the workload chain, DIMMs, and GPU retain
-their normal brightness.
+brightness moves inversely with the combined CPU/GPU workload. The approved
+curve is 100% brightness at or below 20% workload, 40% at the 60% orange anchor,
+and fully off at 100% workload. It reverses smoothly as work returns to idle.
+This brightness effect applies only to `JRAINBOW2`; the workload chain, DIMMs,
+and GPU retain their normal brightness.
+
+The RAM is deliberately black at or below the 20% CPU idle anchor. Above that
+point it fades from black to its calibrated `#FF8000` at 60% CPU usage, then to
+the shared `#FF0000` at maximum CPU usage.
 
 The controller, both DIMMs, and GPU are switched to **Direct** mode on every SDK
 connection. Otherwise their hardware rainbow effects remain active. The process
@@ -109,8 +126,6 @@ tests without service errors.
 
 Future visual tuning should address:
 
-- The 35% full-workload fan brightness floor is still too bright for the intended
-  dimming effect; test a substantially lower floor.
 - Make workload and temperature transitions more dramatic while retaining smooth
   changes and avoiding flicker.
 - Calibrate colors per hardware group. The motherboard backplate/PSU chain, fans,
@@ -118,6 +133,15 @@ Future visual tuning should address:
   LEDs, diffusers, and controllers come from different vendors.
 - Build per-device corrected teal, orange, and red anchors instead of assuming one
   shared RGB triplet will visually match every component.
+- The PNY `16GF2X08QFHH36-135-K-RGB` DIMMs render Direct-mode teal, blue, and
+  white unreliably even though their hardware Rainbow mode produces convincing
+  blue and purple. RAM is off through the 20% CPU idle anchor, then transitions
+  through its visually confirmed `#FF8000` orange to shared `#FF0000` red.
+
+The complete synthetic preview—idle to orange to maximum and back—was visually
+approved. At maximum load, switching the fan LEDs fully off was preferred over
+the tested 15% and 5% red levels because the contrast against the full-red RAM,
+GPU, and backplane is more dramatic. Actual CPU/GPU load validation remains.
 
 Do not change these values blindly. Tune them while observing the physical system
 under controlled CPU and GPU loads, then record the calibrated values here and in

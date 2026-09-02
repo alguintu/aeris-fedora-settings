@@ -4,7 +4,22 @@ smoothing_alpha: 0.20
 palette:
   teal: "00C8C8"
   orange: "FF8A00"
-  red: "FF2A1A"
+  red: "FF0000"
+
+device_palettes:
+  fans:
+    teal: "008A54"
+    orange: "C03000"
+  workload_chain:
+    teal: "00C8C8"
+    orange: "FF6000"
+  ram:
+    idle: "000000"
+    teal: "0060B0"
+    orange: "FF8000"
+  gpu:
+    teal: "00C8C8"
+    orange: "FF6000"
 
 temperature:
   cool_c: 45.0
@@ -19,7 +34,8 @@ workload:
 
 fan_brightness:
   idle: 1.00
-  minimum: 0.35
+  orange: 0.40
+  maximum: 0.00
 
 openrgb:
   host: "127.0.0.1"

@@ -73,6 +73,18 @@ def scale_color(color, brightness):
     return tuple(round(channel * brightness) for channel in color)
 
 
+def fan_brightness(value, low, middle, high, idle, orange, maximum):
+    if value <= low:
+        return idle
+    if value < middle:
+        amount = (value - low) / (middle - low)
+        return idle + (orange - idle) * amount
+    if value < high:
+        amount = (value - middle) / (high - middle)
+        return orange + (maximum - orange) * amount
+    return maximum
+
+
 class Telemetry:
     def __init__(self, gpu_power_max):
         self.cpu = find_hwmon("k10temp")
@@ -168,6 +180,21 @@ def main():
     teal = parse_color(cfg["palette"]["teal"])
     orange = parse_color(cfg["palette"]["orange"])
     red = parse_color(cfg["palette"]["red"])
+    device_palettes = cfg.get("device_palettes", {})
+
+    def hardware_palette(name):
+        overrides = device_palettes.get(name, {})
+        return (
+            parse_color(overrides.get("teal", cfg["palette"]["teal"])),
+            parse_color(overrides.get("orange", cfg["palette"]["orange"])),
+            parse_color(overrides.get("red", cfg["palette"]["red"])),
+        )
+
+    fan_palette = hardware_palette("fans")
+    chain_palette = hardware_palette("workload_chain")
+    ram_palette = hardware_palette("ram")
+    gpu_palette = hardware_palette("gpu")
+    ram_idle = parse_color(device_palettes.get("ram", {}).get("idle", "000000"))
     alpha = float(cfg["smoothing_alpha"])
     poll = float(cfg["poll_seconds"])
     telemetry = Telemetry(float(cfg["workload"]["gpu_power_watts_max"]))
@@ -185,11 +212,11 @@ def main():
                     time.sleep(poll)
                     continue
                 lighting = Lighting(cfg)
-                lighting.apply(teal, teal, teal, teal)
+                lighting.apply(chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0])
 
             temperature, workload, cpu_workload, gpu_workload = telemetry.sample()
             if temperature is None or workload is None or gpu_workload is None:
-                lighting.apply(teal, teal, teal, teal)
+                lighting.apply(chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0])
                 time.sleep(poll)
                 continue
 
@@ -199,14 +226,19 @@ def main():
             smooth_gpu = gpu_workload if smooth_gpu is None else smooth_gpu * (1 - alpha) + gpu_workload * alpha
             tcfg = cfg["temperature"]
             wcfg = cfg["workload"]
-            temp_color = gradient(smooth_temp, tcfg["cool_c"], tcfg["orange_c"], tcfg["hot_c"], teal, orange, red)
-            load_color = gradient(smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"], teal, orange, red)
-            cpu_color = gradient(smooth_cpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"], teal, orange, red)
-            gpu_color = gradient(smooth_gpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"], teal, orange, red)
+            temp_color = gradient(smooth_temp, tcfg["cool_c"], tcfg["orange_c"], tcfg["hot_c"], *fan_palette)
+            load_color = gradient(smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"], *chain_palette)
+            cpu_color = gradient(
+                smooth_cpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"],
+                ram_idle, ram_palette[1], ram_palette[2],
+            )
+            gpu_color = gradient(smooth_gpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"], *gpu_palette)
             bcfg = cfg["fan_brightness"]
-            brightness_progress = max(0.0, min(1.0, (smooth_load - wcfg["idle"]) / (wcfg["maximum"] - wcfg["idle"])))
-            fan_brightness = bcfg["idle"] + (bcfg["minimum"] - bcfg["idle"]) * brightness_progress
-            temp_color = scale_color(temp_color, fan_brightness)
+            brightness = fan_brightness(
+                smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"],
+                bcfg["idle"], bcfg["orange"], bcfg["maximum"],
+            )
+            temp_color = scale_color(temp_color, brightness)
             lighting.apply(load_color, temp_color, cpu_color, gpu_color)
         except Exception as exc:
             LOG.warning("OpenRGB update failed; reconnecting: %s", exc)
