@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import glob
 import logging
+import math
 import time
 from pathlib import Path
 
@@ -96,6 +97,15 @@ def subordinate_brightness(primary, own, low, middle):
     return_progress = max(0.0, min(1.0, (return_start - primary) / (return_start - low)))
     idle_visibility = return_progress ** 2
     return idle_visibility + (1.0 - idle_visibility) * own_progress
+
+
+def backplane_pulse_color(color, workload, now, cfg):
+    start = cfg["start_workload"]
+    full = cfg["full_depth_workload"]
+    strength = max(0.0, min(1.0, (workload - start) / (full - start)))
+    wave = (1.0 - math.cos(2.0 * math.pi * now / cfg["period_seconds"])) / 2.0
+    brightness = 1.0 - strength * (1.0 - cfg["minimum_brightness"]) * wave
+    return scale_color(color, brightness)
 
 
 class LoadEnvelope:
@@ -223,11 +233,9 @@ class Lighting:
             ", ".join(d.name for d in self.gpu_devices),
         )
 
-    def apply(self, workload, fans, cpu, gpu):
+    def apply_motherboard(self, workload, fans):
         load_rgb = RGBColor(*workload)
         fan_rgb = RGBColor(*fans)
-        cpu_rgb = RGBColor(*cpu)
-        gpu_rgb = RGBColor(*gpu)
         frame = []
         for zone in self.motherboard.zones:
             if zone.name == self.workload_zone.name:
@@ -238,10 +246,18 @@ class Lighting:
                 color = RGBColor(0, 0, 0)
             frame.extend([color] * len(zone.leds))
         self.motherboard.set_colors(frame, fast=True)
+
+    def apply_accents(self, cpu, gpu):
+        cpu_rgb = RGBColor(*cpu)
+        gpu_rgb = RGBColor(*gpu)
         for device in self.cpu_devices:
             device.set_color(cpu_rgb, fast=True)
         for device in self.gpu_devices:
             device.set_color(gpu_rgb, fast=True)
+
+    def apply(self, workload, fans, cpu, gpu):
+        self.apply_motherboard(workload, fans)
+        self.apply_accents(cpu, gpu)
 
 
 def main():
@@ -275,6 +291,7 @@ def main():
         float(workload_smoothing["hold_seconds"]),
     )
     poll = float(cfg["poll_seconds"])
+    pulse_cfg = cfg["backplane_pulse"]
     telemetry = Telemetry(float(cfg["workload"]["gpu_power_watts_max"]))
     override_cfg = cfg["temperature_override"]
     thermal_override = ThermalOverride(
@@ -338,13 +355,28 @@ def main():
             )
             if temperature_override:
                 lighting.apply(chain_palette[2], fan_palette[2], ram_palette[2], gpu_palette[2])
+                time.sleep(poll)
             else:
-                lighting.apply(load_color, fan_color, cpu_color, gpu_color)
+                pulsed_load_color = backplane_pulse_color(load_color, smooth_load, time.monotonic(), pulse_cfg)
+                lighting.apply(pulsed_load_color, fan_color, cpu_color, gpu_color)
+                if smooth_load <= pulse_cfg["start_workload"]:
+                    time.sleep(poll)
+                else:
+                    render_until = time.monotonic() + poll
+                    while True:
+                        remaining = render_until - time.monotonic()
+                        if remaining <= 0:
+                            break
+                        time.sleep(min(pulse_cfg["render_interval_seconds"], remaining))
+                        pulsed_load_color = backplane_pulse_color(
+                            load_color, smooth_load, time.monotonic(), pulse_cfg,
+                        )
+                        lighting.apply_motherboard(pulsed_load_color, fan_color)
         except Exception as exc:
             LOG.warning("OpenRGB update failed; reconnecting: %s", exc)
             lighting = None
             retry_at = time.monotonic() + 5.0
-        time.sleep(poll)
+            time.sleep(poll)
 
 
 if __name__ == "__main__":
