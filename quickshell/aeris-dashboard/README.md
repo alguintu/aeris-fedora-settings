@@ -12,8 +12,9 @@ The surface is organized as three horizontally swipeable modes:
 Drag anywhere left or right to move between modes. A persistent mode strip also
 supports direct touch navigation. Short taps remain available to launch Terminal,
 Firefox, Code, and Files; the drag gesture only takes over after its movement
-threshold is crossed. A 48-pixel displacement is enough to settle onto the next
-mode, so navigation is a short finger flick rather than an edge-to-edge drag.
+threshold is crossed. A slow drag settles after 180 pixels, leaving room to
+cancel by releasing earlier. A fast flick can settle after 36 pixels when its
+release velocity exceeds 700 pixels per second.
 
 ## Run
 

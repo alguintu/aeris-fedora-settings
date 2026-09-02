@@ -9,6 +9,9 @@ ShellRoot {
     property string targetOutput: "DP-3"
     property int currentMode: 0
     readonly property var modeNames: ["IDLE", "WORK", "AI FOCUS"]
+    property real lastSwipeDistance: 0
+    property real lastSwipeVelocity: 0
+    property bool lastSwipeCommitted: false
     property bool metricsHealthy: false
     property var metrics: ({
         "cpuUsage": 0,
@@ -61,6 +64,9 @@ ShellRoot {
     IpcHandler {
         target: "dashboard"
         readonly property int mode: root.currentMode
+        readonly property real swipeDistance: root.lastSwipeDistance
+        readonly property real swipeVelocity: root.lastSwipeVelocity
+        readonly property bool swipeCommitted: root.lastSwipeCommitted
 
         function setMode(mode: int): void {
             root.currentMode = Math.max(0, Math.min(root.modeNames.length - 1, mode))
@@ -157,7 +163,12 @@ ShellRoot {
                 DragHandler {
                     id: swipeHandler
                     property real retainedTranslation: 0
-                    readonly property real settleDistance: 48
+                    property real retainedVelocity: 0
+                    property double lastMovementAt: 0
+                    readonly property real settleDistance: 180
+                    readonly property real flickDistance: 36
+                    readonly property real flickVelocity: 700
+                    readonly property real flickReleaseWindow: 140
 
                     target: null
                     acceptedDevices: PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Mouse
@@ -169,21 +180,46 @@ ShellRoot {
                                      | PointerHandler.ApprovesTakeOverByAnything
 
                     onActiveTranslationChanged: {
-                        if (active)
+                        if (active) {
                             retainedTranslation = activeTranslation.x
+                            retainedVelocity = centroid.velocity.x
+                            lastMovementAt = Date.now()
+                        }
                     }
 
                     onActiveChanged: {
                         if (active) {
                             retainedTranslation = 0
+                            retainedVelocity = 0
+                            lastMovementAt = 0
                             return
                         }
 
                         const distance = retainedTranslation
-                        if (distance < -settleDistance && root.currentMode < root.modeNames.length - 1)
+                        const velocity = retainedVelocity
+                        const releasedDuringFlick = Date.now() - lastMovementAt <= flickReleaseWindow
+                        const flickLeft = releasedDuringFlick
+                                && distance < -flickDistance && velocity < -flickVelocity
+                        const flickRight = releasedDuringFlick
+                                && distance > flickDistance && velocity > flickVelocity
+                        const commitLeft = distance < -settleDistance || flickLeft
+                        const commitRight = distance > settleDistance || flickRight
+
+                        root.lastSwipeDistance = distance
+                        root.lastSwipeVelocity = velocity
+                        root.lastSwipeCommitted = false
+
+                        if (commitLeft && root.currentMode < root.modeNames.length - 1) {
                             root.currentMode += 1
-                        else if (distance > settleDistance && root.currentMode > 0)
+                            root.lastSwipeCommitted = true
+                        } else if (commitRight && root.currentMode > 0) {
                             root.currentMode -= 1
+                            root.lastSwipeCommitted = true
+                        }
+
+                        console.info("Aeris swipe:", Math.round(distance), "px,",
+                                     Math.round(velocity), "px/s, committed:",
+                                     root.lastSwipeCommitted)
                     }
                 }
 
