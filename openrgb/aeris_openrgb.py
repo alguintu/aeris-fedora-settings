@@ -73,16 +73,29 @@ def scale_color(color, brightness):
     return tuple(round(channel * brightness) for channel in color)
 
 
-def fan_brightness(value, low, middle, high, idle, orange, maximum):
+def fan_workload_color(value, low, middle, high, palette, brightness):
+    black = (0, 0, 0)
+    teal = scale_color(palette[0], brightness["idle"])
+    orange = scale_color(palette[1], brightness["orange"])
+    red = scale_color(palette[2], brightness["maximum"])
     if value <= low:
-        return idle
+        return teal
     if value < middle:
         amount = (value - low) / (middle - low)
-        return idle + (orange - idle) * amount
+        if amount <= 0.5:
+            return interpolate(teal, black, amount * 2)
+        return interpolate(black, orange, (amount - 0.5) * 2)
     if value < high:
-        amount = (value - middle) / (high - middle)
-        return orange + (maximum - orange) * amount
-    return maximum
+        return interpolate(orange, red, (value - middle) / (high - middle))
+    return red
+
+
+def subordinate_brightness(primary, own, low, middle):
+    own_progress = max(0.0, min(1.0, (own - low) / (middle - low)))
+    return_start = low + (middle - low) * 0.5
+    return_progress = max(0.0, min(1.0, (return_start - primary) / (return_start - low)))
+    idle_visibility = return_progress ** 2
+    return idle_visibility + (1.0 - idle_visibility) * own_progress
 
 
 class LoadEnvelope:
@@ -103,6 +116,39 @@ class LoadEnvelope:
         elif now >= self.hold_until:
             self.value += (sample - self.value) * self.release_alpha
         return self.value
+
+
+class ThermalOverride:
+    def __init__(self, cpu_enter, cpu_exit, gpu_enter, gpu_exit, dwell_seconds):
+        self.cpu_enter = cpu_enter
+        self.cpu_exit = cpu_exit
+        self.gpu_enter = gpu_enter
+        self.gpu_exit = gpu_exit
+        self.dwell_seconds = dwell_seconds
+        self.pending_since = None
+        self.active = False
+
+    def update(self, cpu_temp, gpu_temp, now=None):
+        now = time.monotonic() if now is None else now
+        if self.active:
+            cpu_clear = cpu_temp is None or cpu_temp < self.cpu_exit
+            gpu_clear = gpu_temp is None or gpu_temp < self.gpu_exit
+            if cpu_clear and gpu_clear:
+                self.active = False
+            return self.active
+
+        triggered = (
+            (cpu_temp is not None and cpu_temp >= self.cpu_enter)
+            or (gpu_temp is not None and gpu_temp >= self.gpu_enter)
+        )
+        if not triggered:
+            self.pending_since = None
+        elif self.pending_since is None:
+            self.pending_since = now
+        elif now - self.pending_since >= self.dwell_seconds:
+            self.active = True
+            self.pending_since = None
+        return self.active
 
 
 class Telemetry:
@@ -230,12 +276,19 @@ def main():
     )
     poll = float(cfg["poll_seconds"])
     telemetry = Telemetry(float(cfg["workload"]["gpu_power_watts_max"]))
+    override_cfg = cfg["temperature_override"]
+    thermal_override = ThermalOverride(
+        float(override_cfg["cpu_enter_c"]),
+        float(override_cfg["cpu_exit_c"]),
+        float(override_cfg["gpu_enter_c"]),
+        float(override_cfg["gpu_exit_c"]),
+        float(override_cfg["dwell_seconds"]),
+    )
     smooth_cpu_temp = None
     smooth_gpu_temp = None
     smooth_cpu = None
     smooth_gpu = None
     lighting = None
-    temperature_override = False
     retry_at = 0.0
 
     while True:
@@ -261,42 +314,31 @@ def main():
             smooth_gpu = gpu_envelope.update(gpu_workload)
             smooth_load = max(smooth_cpu, smooth_gpu)
             wcfg = cfg["workload"]
-            ocfg = cfg["temperature_override"]
-            if not temperature_override:
-                cpu_triggered = smooth_cpu_temp is not None and smooth_cpu_temp >= ocfg["cpu_enter_c"]
-                gpu_triggered = smooth_gpu_temp is not None and smooth_gpu_temp >= ocfg["gpu_enter_c"]
-                if cpu_triggered or gpu_triggered:
-                    temperature_override = True
-                    LOG.warning(
-                        "Temperature override entered: CPU=%s GPU=%s",
-                        smooth_cpu_temp, smooth_gpu_temp,
-                    )
-            else:
-                cpu_clear = smooth_cpu_temp is None or smooth_cpu_temp < ocfg["cpu_exit_c"]
-                gpu_clear = smooth_gpu_temp is None or smooth_gpu_temp < ocfg["gpu_exit_c"]
-                if cpu_clear and gpu_clear:
-                    temperature_override = False
-                    LOG.info(
-                        "Temperature override cleared: CPU=%s GPU=%s",
-                        smooth_cpu_temp, smooth_gpu_temp,
-                    )
+            override_was_active = thermal_override.active
+            temperature_override = thermal_override.update(smooth_cpu_temp, smooth_gpu_temp)
+            if temperature_override and not override_was_active:
+                LOG.warning("Temperature override entered: CPU=%s GPU=%s", smooth_cpu_temp, smooth_gpu_temp)
+            elif override_was_active and not temperature_override:
+                LOG.info("Temperature override cleared: CPU=%s GPU=%s", smooth_cpu_temp, smooth_gpu_temp)
 
             load_color = gradient(smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"], *chain_palette)
-            fan_color = gradient(smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"], *fan_palette)
+            bcfg = cfg["fan_brightness"]
+            fan_color = fan_workload_color(
+                smooth_load, wcfg["idle"], wcfg["orange"], bcfg["off_workload"],
+                fan_palette, bcfg,
+            )
             cpu_color = gradient(
                 smooth_cpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"],
                 ram_idle, ram_palette[1], ram_palette[2],
             )
             gpu_color = gradient(smooth_gpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"], *gpu_palette)
+            gpu_color = scale_color(
+                gpu_color,
+                subordinate_brightness(smooth_cpu, smooth_gpu, wcfg["idle"], wcfg["orange"]),
+            )
             if temperature_override:
                 lighting.apply(chain_palette[2], fan_palette[2], ram_palette[2], gpu_palette[2])
             else:
-                bcfg = cfg["fan_brightness"]
-                brightness = fan_brightness(
-                    smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"],
-                    bcfg["idle"], bcfg["orange"], bcfg["maximum"],
-                )
-                fan_color = scale_color(fan_color, brightness)
                 lighting.apply(load_color, fan_color, cpu_color, gpu_color)
         except Exception as exc:
             LOG.warning("OpenRGB update failed; reconnecting: %s", exc)

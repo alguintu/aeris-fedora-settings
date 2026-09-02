@@ -65,19 +65,24 @@ RAM uses filtered CPU load and the GPU uses filtered GPU load.
 Fan hue follows the same combined CPU/GPU workload wave as the workload chain,
 while fan brightness moves inversely with that workload. The approved curve is
 100% brightness at or below 20% workload, 40% at the 60% orange anchor, and
-fully off at 100% workload. It reverses smoothly as work returns to idle. This
-brightness effect applies only to `JRAINBOW2`; the workload chain, DIMMs, and GPU
-retain their normal brightness.
+fully off by 85% workload. Between teal and orange, the fans crossfade through
+black so their diffuser does not expose the washed-out RGB midpoint. The path
+reverses smoothly as work returns to idle.
 
 Temperature is an override, not a normal color input. A smoothed CPU Tctl of
-70°C or GPU hottest reported temperature (normally junction/hotspot) of 80°C
-forces every hardware group to full `#FF0000`, including the normally dark
-maximum-load fans. Five-degree hysteresis prevents flicker: normal workload
-lighting resumes only after CPU is below 65°C and GPU is below 75°C.
+82°C or GPU hottest reported temperature (normally junction/hotspot) of 95°C,
+sustained for five seconds, forces every hardware group to full `#FF0000`,
+including the normally dark high-load fans. Normal workload lighting resumes
+only after CPU is below 75°C and GPU is below 85°C.
 
 The RAM is deliberately black at or below the 20% CPU idle anchor. Above that
 point it fades from black to its calibrated `#FF8000` at 60% CPU usage, then to
 the shared `#FF0000` at maximum CPU usage.
+
+An idle GPU yields visually to CPU activity: its teal fades out as CPU load
+rises, remains off until filtered CPU load falls below 40%, then returns on a
+squared curve to full teal at the 20% idle anchor. Meaningful GPU activity
+restores its own independently workload-driven lighting.
 
 The controller, both DIMMs, and GPU are switched to **Direct** mode on every SDK
 connection. Otherwise their hardware rainbow effects remain active. The process
