@@ -1,0 +1,14 @@
+[Unit]
+Description=Aeris Quickshell touchscreen dashboard
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/drei/Documents/Codex/aeris-fedora-settings/scripts/run-dashboard.sh
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=5
+
+[Install]
+WantedBy=graphical-session.target

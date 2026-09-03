@@ -47,6 +47,20 @@ Run the telemetry adapter independently with:
 python3 quickshell/aeris-dashboard/services/metrics.py --once
 ```
 
-Autostart, Pomodoro behavior, media, Awake, and Aeris runtime controls remain
-deferred. The four launch targets have passed a first physical touch test; mode
-swiping is the next on-device validation gate.
+## Login startup
+
+Install and immediately start the user service with:
+
+```bash
+./scripts/install-dashboard.sh
+```
+
+The service is attached to KDE's graphical session, starts automatically at
+login, and restarts Quickshell after an unexpected failure. Verify the deployed
+unit and its live state with:
+
+```bash
+./scripts/install-dashboard.sh --check
+```
+
+Pomodoro behavior, media, Awake, and Aeris runtime controls remain deferred.
