@@ -1,10 +1,15 @@
 # Aeris OpenRGB lighting
 
+> **Quarantined:** do not start OpenRGB or either Aeris RGB service. The installed
+> Fedora rc2 build predates upstream ENE SMBus safety fixes. Reactivation is
+> blocked by an empty runtime approval file and must follow every step in the
+> [OpenRGB hardware-safety policy](rgb-safety.md).
+
 ## Components
 
 - Fedora packages: `openrgb` and `openrgb-udev-rules`
 - Python 3 virtual environment: `~/.local/share/aeris-openrgb/venv`
-- Controller: MSI MAG B550M MORTAR WIFI, serial `A02020051203`
+- Controller: MSI MAG B550M MORTAR WIFI, recovered serial `A02021090806`
 - SDK endpoint: `127.0.0.1:6742`
 - Poll interval: 1 second
 - Temperature smoothing alpha: 0.20
@@ -26,9 +31,10 @@ virtual environment and generated caches are deliberately excluded from Git.
 frames, so the controller still receives a harmless filler color for its single
 JRGB1 LED followed by 75 JRAINBOW1 and 75 JRAINBOW2 colors: 151 total.
 
-The hardware-specific `openrgb/sizes.ors` profile activates both JRAINBOW zones
-at 75 LEDs. Without it, OpenRGB initially reports zero LEDs for those zones.
-Do not use this binary profile on different RGB hardware.
+The old rc2 `openrgb/sizes.ors` file recorded both JRAINBOW zones at 75 LEDs.
+It is retained only as historical evidence and must not be deployed or loaded by
+another OpenRGB version. Recreate and verify the 75/75 sizes under the exact
+approved build.
 
 ## Palette
 
@@ -94,28 +100,28 @@ seconds. Motherboard frames render at 150 ms intervals; active RAM/GPU pulse
 frames render at 300 ms to limit ENE SMBus traffic. The thermal-warning override
 remains solid full red rather than pulsing.
 
-On graceful logout, reboot, or shutdown, the daemon exits without sending any
-final color, mode, profile-save, or persistent-state command. The controllers
-retain whatever live Direct-mode frame they last received until firmware or
-another application changes it. Linux does not try to program a BIOS-visible or
-cold-power lighting state. This shutdown-write ban is intentional: the previous
-firmware-idle handoff repeatedly changed hardware modes and preceded the MSI
-Mystic Light controller ceasing to enumerate.
+On graceful logout, reboot, shutdown, suspend, or failure, the daemon must exit
+without sending any final color, mode, profile-save, or persistent-state
+command. Linux does not try to program a BIOS-visible or cold-power lighting
+state. This shutdown-write ban is absolute: the previous firmware-idle handoff
+repeatedly changed hardware modes and preceded the MSI Mystic Light controller
+ceasing to enumerate.
 
-The controller, both DIMMs, and GPU are switched to **Direct** mode on every SDK
-connection. Otherwise their hardware rainbow effects remain active. The process
-starts calm teal, keeps one persistent SDK connection, reconnects after server or
-controller resets, and falls back to teal when telemetry is unavailable.
+After the full hardware identity is validated, the controller, four DIMMs, and
+GPU are switched to **Direct** mode only if they are not already in it. The
+process keeps one SDK connection for its lifetime. Any discovery mismatch,
+disconnect, or update failure exits immediately; it never reconnects or retries.
+Unchanged frames are not resent.
 
-At login, the SDK server waits for udev to settle and then delays hardware
-discovery for 10 seconds. This prevents it from scanning before the AMD I2C/SMBus
-devices are ready. The client rejects an incomplete discovery unless all four ENE
-DRAM modules and the Radeon GPU are present, rather than silently leaving those
-devices in their firmware rainbow mode.
+The SDK server has no restart policy and is blocked by an exact-package approval
+gate before discovery. Once approved and explicitly enabled, it waits for udev
+to settle and delays discovery for 10 seconds. The client requires exactly six
+allowlisted devices, the recovered motherboard name and serial, and the exact
+1/75/75 zone map before its first write.
 
 ## Install or synchronize
 
-From the repository root:
+From the repository root, deployment is deliberately non-activating:
 
 ```bash
 ./scripts/install-openrgb.sh
@@ -123,15 +129,19 @@ From the repository root:
 
 The installer:
 
-1. Installs Fedora's OpenRGB package and udev rules.
-2. Backs up existing Aeris files.
-3. Builds the pinned Python virtual environment.
-4. Deploys the application, YAML configuration, OpenRGB size profile, and user units.
-5. Enables and restarts the main Aeris service; its required SDK server starts automatically.
+1. Requires an already installed OpenRGB package and udev rules; it never
+   upgrades hardware-control software implicitly.
+2. Stops and disables both Aeris RGB services.
+3. Backs up existing Aeris files.
+4. Builds the pinned Python virtual environment.
+5. Deploys the daemon, configuration, safety gate, detector-policy tool, and
+   user units.
+6. Quarantines every OpenRGB detector. It does not copy the legacy `sizes.ors`,
+   enable a service, start OpenRGB, or access hardware.
 
-Before installation, the script rejects an RGB daemon source containing known
-persistent or shutdown-firmware write paths (`save_mode`, `save_profile`, or
-`apply_firmware_idle`).
+Before installation, the script rejects daemon source containing known
+persistent or shutdown-firmware write paths (`save_mode`, `save_profile`,
+`save=True`, `set_custom_mode`, or `apply_firmware_idle`).
 
 Check an existing installation without modifying or restarting it:
 
@@ -143,14 +153,17 @@ Check an existing installation without modifying or restarting it:
 
 ```bash
 systemctl --user status aeris-openrgb.service aeris-openrgb-server.service
-systemctl --user restart aeris-openrgb.service
 systemctl --user stop aeris-openrgb.service aeris-openrgb-server.service
-systemctl --user enable --now aeris-openrgb.service
+journalctl --user -u aeris-openrgb.service -u aeris-openrgb-server.service
+~/.local/share/aeris-openrgb/check-openrgb-safety.sh
+~/.local/share/aeris-openrgb/configure-openrgb-detectors.py --check
 journalctl --user -u aeris-openrgb.service -u aeris-openrgb-server.service -f
 ```
 
-Only `aeris-openrgb.service` is enabled. It declares `Requires=` and `After=` on
-the SDK server, so systemd starts the server automatically.
+Both services remain disabled. Do not run the enable command until the complete
+reactivation gate in `settings/rgb-safety.md` has passed and the approved runtime
+file contains the exact installed RPM identity. The service declares
+`Requires=` and `After=` on the SDK server, but neither unit retries a failure.
 
 ## Validation history
 

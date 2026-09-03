@@ -1,13 +1,15 @@
 [Unit]
 Description=OpenRGB SDK server for Aeris lighting
 After=graphical-session.target
+PartOf=aeris-openrgb.service
+StopWhenUnneeded=yes
 
 [Service]
+ExecStartPre=/home/drei/.local/share/aeris-openrgb/check-openrgb-safety.sh
 ExecStartPre=/usr/bin/udevadm settle --timeout=15
 ExecStartPre=/usr/bin/sleep 10
 ExecStart=/usr/bin/openrgb --noautoconnect --server --server-host 127.0.0.1 --server-port 6742
-Restart=on-failure
-RestartSec=5
+Restart=no
 
 [Install]
 WantedBy=default.target

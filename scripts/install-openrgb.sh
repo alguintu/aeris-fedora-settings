@@ -10,9 +10,9 @@ venv=$app_root/venv
 
 check_runtime_safety() {
     local source_file=$1
-    local forbidden='save_mode[[:space:]]*\(|save_profile[[:space:]]*\(|apply_firmware_idle'
+    local forbidden='save_mode[[:space:]]*\(|save_profile[[:space:]]*\(|save[[:space:]]*=[[:space:]]*True|set_custom_mode[[:space:]]*\(|apply_firmware_idle'
 
-    if grep -En "$forbidden" "$source_file"; then
+    if rg -n "$forbidden" "$source_file"; then
         echo "UNSAFE   $source_file contains a persistent or shutdown firmware-write path" >&2
         return 1
     fi
@@ -41,9 +41,18 @@ check_installation() {
     rpm -q openrgb openrgb-udev-rules || result=1
     check_file "$repo_root/openrgb/aeris_openrgb.py" "$app_root/aeris_openrgb.py" || result=1
     check_file "$repo_root/openrgb/config.yaml" "$config_root/config.yaml" || result=1
-    check_file "$repo_root/openrgb/sizes.ors" "$openrgb_config_root/sizes.ors" || result=1
+    check_file "$repo_root/openrgb/approved-runtime.txt" "$app_root/approved-runtime.txt" || result=1
+    check_file "$repo_root/scripts/check-openrgb-safety.sh" "$app_root/check-openrgb-safety.sh" || result=1
+    check_file "$repo_root/scripts/configure-openrgb-detectors.py" "$app_root/configure-openrgb-detectors.py" || result=1
     check_file "$repo_root/systemd/user/aeris-openrgb-server.service" "$unit_root/aeris-openrgb-server.service" || result=1
     check_file "$repo_root/systemd/user/aeris-openrgb.service" "$unit_root/aeris-openrgb.service" || result=1
+    "$app_root/configure-openrgb-detectors.py" --check || result=1
+    if [[ -f "$openrgb_config_root/sizes.ors" ]]; then
+        echo "UNSAFE   legacy $openrgb_config_root/sizes.ors is still in OpenRGB's load path" >&2
+        result=1
+    else
+        echo "SAFE     no legacy sizes.ors is in OpenRGB's load path"
+    fi
 
     if [[ -x "$venv/bin/python" ]]; then
         "$venv/bin/python" -c 'compile(open("'"$app_root/aeris_openrgb.py"'", encoding="utf-8").read(), "aeris_openrgb.py", "exec")'
@@ -55,9 +64,25 @@ check_installation() {
         result=1
     fi
 
-    systemctl --user is-enabled aeris-openrgb.service || result=1
-    systemctl --user is-active aeris-openrgb.service || result=1
-    systemctl --user is-active aeris-openrgb-server.service || result=1
+    for unit in aeris-openrgb.service aeris-openrgb-server.service; do
+        if systemctl --user is-enabled --quiet "$unit"; then
+            echo "UNSAFE   $unit is enabled" >&2
+            result=1
+        else
+            echo "SAFE     $unit is disabled"
+        fi
+        if systemctl --user is-active --quiet "$unit"; then
+            echo "UNSAFE   $unit is active" >&2
+            result=1
+        else
+            echo "SAFE     $unit is inactive"
+        fi
+    done
+    if "$app_root/check-openrgb-safety.sh"; then
+        echo "READY    installed OpenRGB runtime is explicitly approved"
+    else
+        echo "BLOCKED  OpenRGB runtime remains quarantined"
+    fi
     return "$result"
 }
 
@@ -71,7 +96,10 @@ fi
 
 check_runtime_safety "$repo_root/openrgb/aeris_openrgb.py"
 
-sudo dnf install -y openrgb openrgb-udev-rules python3
+rpm -q openrgb openrgb-udev-rules >/dev/null
+command -v python3 >/dev/null
+
+systemctl --user disable --now aeris-openrgb.service aeris-openrgb-server.service 2>/dev/null || true
 
 timestamp=$(date +%Y%m%d-%H%M%S)
 state_root=${XDG_STATE_HOME:-$HOME/.local/state}/fedora-settings
@@ -80,8 +108,11 @@ mkdir -p "$backup_dir"
 
 for installed_file in \
     "$app_root/aeris_openrgb.py" \
+    "$app_root/approved-runtime.txt" \
+    "$app_root/check-openrgb-safety.sh" \
+    "$app_root/configure-openrgb-detectors.py" \
     "$config_root/config.yaml" \
-    "$openrgb_config_root/sizes.ors" \
+    "$openrgb_config_root/OpenRGB.json" \
     "$unit_root/aeris-openrgb-server.service" \
     "$unit_root/aeris-openrgb.service"; do
     if [[ -f "$installed_file" ]]; then
@@ -89,20 +120,25 @@ for installed_file in \
     fi
 done
 
+if [[ -f "$openrgb_config_root/sizes.ors" ]]; then
+    mv "$openrgb_config_root/sizes.ors" "$backup_dir/sizes.ors.quarantined"
+fi
+
 python3 -m venv "$venv"
 "$venv/bin/pip" install --upgrade pip
 "$venv/bin/pip" install --requirement "$repo_root/openrgb/requirements.txt"
 
 install -Dm0644 "$repo_root/openrgb/aeris_openrgb.py" "$app_root/aeris_openrgb.py"
+install -Dm0644 "$repo_root/openrgb/approved-runtime.txt" "$app_root/approved-runtime.txt"
+install -Dm0755 "$repo_root/scripts/check-openrgb-safety.sh" "$app_root/check-openrgb-safety.sh"
+install -Dm0755 "$repo_root/scripts/configure-openrgb-detectors.py" "$app_root/configure-openrgb-detectors.py"
 install -Dm0644 "$repo_root/openrgb/config.yaml" "$config_root/config.yaml"
-install -Dm0644 "$repo_root/openrgb/sizes.ors" "$openrgb_config_root/sizes.ors"
 install -Dm0644 "$repo_root/systemd/user/aeris-openrgb-server.service" "$unit_root/aeris-openrgb-server.service"
 install -Dm0644 "$repo_root/systemd/user/aeris-openrgb.service" "$unit_root/aeris-openrgb.service"
 
 systemctl --user daemon-reload
-systemctl --user enable aeris-openrgb.service
-systemctl --user restart aeris-openrgb.service
+"$app_root/configure-openrgb-detectors.py" --quarantine
 
-echo "Aeris OpenRGB profile installed."
+echo "Aeris OpenRGB files installed in quarantine; no service was enabled or started."
 echo "Backup: $backup_dir"
 check_installation

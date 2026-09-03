@@ -5,8 +5,7 @@ Requires=aeris-openrgb-server.service
 
 [Service]
 ExecStart=/home/drei/.local/share/aeris-openrgb/venv/bin/python /home/drei/.local/share/aeris-openrgb/aeris_openrgb.py
-Restart=always
-RestartSec=5
+Restart=no
 
 [Install]
 WantedBy=default.target

@@ -200,31 +200,67 @@ class Lighting:
     def __init__(self, cfg):
         ocfg = cfg["openrgb"]
         self.client = OpenRGBClient(ocfg["host"], ocfg["port"], name="Aeris telemetry")
-        self.motherboard = next(
+        if len(self.client.devices) != int(ocfg["expected_device_count"]):
+            raise RuntimeError(
+                "unexpected OpenRGB inventory: expected "
+                f"{ocfg['expected_device_count']} devices, found {len(self.client.devices)}"
+            )
+
+        motherboards = [
             device for device in self.client.devices
-            if ocfg["motherboard_contains"].lower() in device.name.lower()
-        )
-        self.workload_zone = next(z for z in self.motherboard.zones if z.name == ocfg["workload_zone"])
-        self.fan_zone = next(z for z in self.motherboard.zones if z.name == ocfg["fan_zone"])
-        cpu_wanted = [name.lower() for name in ocfg["cpu_devices"]]
-        gpu_wanted = [name.lower() for name in ocfg["gpu_devices"]]
+            if device.name == ocfg["motherboard_name"]
+        ]
+        if len(motherboards) != 1:
+            raise RuntimeError(
+                f"expected exactly one {ocfg['motherboard_name']!r}, found {len(motherboards)}"
+            )
+        self.motherboard = motherboards[0]
+        if self.motherboard.serial != ocfg["motherboard_serial"]:
+            raise RuntimeError(
+                "motherboard serial mismatch: expected "
+                f"{ocfg['motherboard_serial']!r}, found {self.motherboard.serial!r}"
+            )
+
+        zones = {zone.name: zone for zone in self.motherboard.zones}
+        expected_zones = ocfg["expected_zones"]
+        if set(zones) != set(expected_zones):
+            raise RuntimeError(
+                f"motherboard zone mismatch: expected {sorted(expected_zones)}, found {sorted(zones)}"
+            )
+        for name, expected_leds in expected_zones.items():
+            if len(zones[name].leds) != int(expected_leds):
+                raise RuntimeError(
+                    f"zone {name!r} LED mismatch: expected {expected_leds}, "
+                    f"found {len(zones[name].leds)}"
+                )
+        self.workload_zone = zones[ocfg["workload_zone"]]
+        self.fan_zone = zones[ocfg["fan_zone"]]
+
+        cpu_wanted = set(ocfg["cpu_devices"])
+        gpu_wanted = set(ocfg["gpu_devices"])
         self.cpu_devices = [
             device for device in self.client.devices
-            if any(name in device.name.lower() for name in cpu_wanted)
+            if device.name in cpu_wanted
         ]
         self.gpu_devices = [
             device for device in self.client.devices
-            if any(name in device.name.lower() for name in gpu_wanted)
+            if device.name in gpu_wanted
         ]
-        if len(self.cpu_devices) < 4 or len(self.gpu_devices) < 1:
+        cpu_count_ok = len(self.cpu_devices) == int(ocfg["expected_cpu_devices"])
+        gpu_count_ok = len(self.gpu_devices) == int(ocfg["expected_gpu_devices"])
+        if not cpu_count_ok or not gpu_count_ok:
             raise RuntimeError(
                 "incomplete OpenRGB discovery: expected 4 ENE DRAM and 1 GPU, "
                 f"found {len(self.cpu_devices)} DRAM and {len(self.gpu_devices)} GPU"
             )
         self.accents = self.cpu_devices + self.gpu_devices
-        self.motherboard.set_mode("Direct")
+        self.last_motherboard_frame = None
+        self.last_cpu_color = None
+        self.last_gpu_color = None
+
+        self._ensure_direct(self.motherboard)
         for device in self.accents:
-            device.set_mode("Direct")
+            self._ensure_direct(device)
             time.sleep(0.1)
         LOG.info(
             "Mapped workload=%s, fans=%s, CPU devices=%s, GPU devices=%s",
@@ -233,6 +269,12 @@ class Lighting:
             ", ".join(d.name for d in self.cpu_devices),
             ", ".join(d.name for d in self.gpu_devices),
         )
+
+    @staticmethod
+    def _ensure_direct(device):
+        active_mode = device.modes[device.active_mode]
+        if active_mode.name.lower() != "direct":
+            device.set_mode("Direct")
 
     def apply_motherboard(self, workload, fans):
         load_rgb = RGBColor(*workload)
@@ -246,17 +288,27 @@ class Lighting:
             else:
                 color = RGBColor(0, 0, 0)
             frame.extend([color] * len(zone.leds))
+        frame_key = tuple((color.red, color.green, color.blue) for color in frame)
+        if frame_key == self.last_motherboard_frame:
+            return
         self.motherboard.set_colors(frame, fast=True)
+        self.last_motherboard_frame = frame_key
 
     def apply_cpu(self, cpu):
+        if cpu == self.last_cpu_color:
+            return
         cpu_rgb = RGBColor(*cpu)
         for device in self.cpu_devices:
             device.set_color(cpu_rgb, fast=True)
+        self.last_cpu_color = cpu
 
     def apply_gpu(self, gpu):
+        if gpu == self.last_gpu_color:
+            return
         gpu_rgb = RGBColor(*gpu)
         for device in self.gpu_devices:
             device.set_color(gpu_rgb, fast=True)
+        self.last_gpu_color = gpu
 
     def apply_accents(self, cpu, gpu):
         self.apply_cpu(cpu)
@@ -311,9 +363,9 @@ def main():
     smooth_gpu_temp = None
     smooth_cpu = None
     smooth_gpu = None
-    lighting = None
-    retry_at = 0.0
     stop_requested = False
+    last_loop_at = None
+    max_loop_gap = float(cfg["safety"]["max_loop_gap_seconds"])
 
     def request_stop(_signum, _frame):
         nonlocal stop_requested
@@ -322,15 +374,18 @@ def main():
     signal.signal(signal.SIGTERM, request_stop)
     signal.signal(signal.SIGINT, request_stop)
 
-    while not stop_requested:
-        try:
-            if lighting is None:
-                if time.monotonic() < retry_at:
-                    time.sleep(poll)
-                    continue
-                lighting = Lighting(cfg)
-                lighting.apply(chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0])
+    try:
+        lighting = Lighting(cfg)
+        lighting.apply(chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0])
 
+        while not stop_requested:
+            loop_at = time.monotonic()
+            if last_loop_at is not None and loop_at - last_loop_at > max_loop_gap:
+                raise RuntimeError(
+                    f"event loop paused for {loop_at - last_loop_at:.1f}s; "
+                    "possible suspend/resume, refusing the old hardware connection"
+                )
+            last_loop_at = loop_at
             cpu_temp, gpu_temp, workload, cpu_workload, gpu_workload = telemetry.sample()
             if workload is None or gpu_workload is None:
                 lighting.apply(chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0])
@@ -397,14 +452,13 @@ def main():
                             if smooth_gpu > pulse_cfg["start_workload"]:
                                 lighting.apply_gpu(high_load_pulse_color(gpu_color, smooth_gpu, now, pulse_cfg))
                             next_accent_render = now + pulse_cfg["accent_render_interval_seconds"]
-        except Exception as exc:
-            LOG.warning("OpenRGB update failed; reconnecting: %s", exc)
-            lighting = None
-            retry_at = time.monotonic() + 5.0
-            time.sleep(poll)
+    except Exception as exc:
+        LOG.error("OpenRGB safety stop; no reconnect will be attempted: %s", exc)
+        return 1
 
     LOG.info("Stopping without changing controller modes or persistent state")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -1,0 +1,5 @@
+# Deliberately empty while OpenRGB is quarantined.
+#
+# After auditing a replacement release, put the exact output of `rpm -q openrgb`
+# on the first non-comment line. The server refuses to start if the installed
+# package does not match exactly.
