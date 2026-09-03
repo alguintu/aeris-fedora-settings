@@ -3,3 +3,7 @@
 # After auditing a replacement release, put the exact output of `rpm -q openrgb`
 # on the first non-comment line. The server refuses to start if the installed
 # package does not match exactly.
+#
+# Installed candidate (still quarantined):
+# openrgb-0.9.2026^1.0rc3.1-0.fc43.x86_64
+# Upstream tag commit: 5e81e26fcc65d3dacfb76b0a30ec0142ec7bb131

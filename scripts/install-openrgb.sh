@@ -27,12 +27,24 @@ check_file() {
     fi
 }
 
+check_openrgb_packages() {
+    local result=0
+    rpm -q openrgb || result=1
+    if rpm -qf /usr/lib/udev/rules.d/60-openrgb.rules >/dev/null 2>&1; then
+        echo "PRESENT  /usr/lib/udev/rules.d/60-openrgb.rules"
+    else
+        echo "MISSING  /usr/lib/udev/rules.d/60-openrgb.rules" >&2
+        result=1
+    fi
+    return "$result"
+}
+
 check_installation() {
     local result=0
 
     check_runtime_safety "$repo_root/openrgb/aeris_openrgb.py" || result=1
     check_runtime_safety "$app_root/aeris_openrgb.py" || result=1
-    rpm -q openrgb openrgb-udev-rules || result=1
+    check_openrgb_packages || result=1
     check_file "$repo_root/openrgb/aeris_openrgb.py" "$app_root/aeris_openrgb.py" || result=1
     check_file "$repo_root/openrgb/config.yaml" "$config_root/config.yaml" || result=1
     check_file "$repo_root/openrgb/approved-runtime.txt" "$app_root/approved-runtime.txt" || result=1
@@ -91,7 +103,7 @@ fi
 
 check_runtime_safety "$repo_root/openrgb/aeris_openrgb.py"
 
-rpm -q openrgb openrgb-udev-rules >/dev/null
+check_openrgb_packages >/dev/null
 command -v python3 >/dev/null
 
 systemctl --user disable --now aeris-openrgb.service aeris-openrgb-server.service 2>/dev/null || true

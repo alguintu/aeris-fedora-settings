@@ -36,7 +36,8 @@ if [[ $installed_nevra != "$approved_nevra" ]]; then
 fi
 
 installed_version=$(rpm -q --qf '%{VERSION}' openrgb 2>/dev/null || true)
-if [[ $installed_version == 1.0~rc3.1* \
+if [[ $installed_version == 0.9.2026\^1.0rc3.1* \
+    || $installed_version == 1.0~rc3.1* \
     || $installed_version =~ ^1\.0~rc([4-9]|[1-9][0-9]+) \
     || $installed_version =~ ^1\.([1-9][0-9]*)(\.|$) \
     || $installed_version =~ ^([2-9][0-9]*)(\.|$) ]]; then

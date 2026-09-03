@@ -12,12 +12,17 @@ recur. See the [upstream warning](https://gitlab.com/CalcProgrammer1/OpenRGB/-/b
 
 - `aeris-openrgb.service` and `aeris-openrgb-server.service` are disabled and
   inactive.
-- The installed Fedora package is
-  `openrgb-1.0~rc2-3.20260126git74cbdcc.fc44.x86_64` and is **not approved**.
+- The installed package is upstream's official Fedora rc3.1 RPM,
+  `openrgb-0.9.2026^1.0rc3.1-0.fc43.x86_64`, built from exact release-tag commit
+  `5e81e26fcc65d3dacfb76b0a30ec0142ec7bb131`. Its installed binary SHA-256 is
+  `ea351bab96bd7334e7b8f6452a2c245bcce864f24ddf77c27c76219ac4a21946`.
 - OpenRGB's maintainer says invalid ENE-controller SMBus writes were fixed only
-  in 1.0rc3. Aeris must use an audited 1.0rc3.1-or-newer package before any
-  further hardware access. See [issue #3821](https://gitlab.com/CalcProgrammer1/OpenRGB/-/issues/3821)
+  in 1.0rc3. The installed rc3.1 clears that version floor, but does not by
+  itself authorize hardware access. See [issue #3821](https://gitlab.com/CalcProgrammer1/OpenRGB/-/issues/3821)
   and the [1.0rc3.1 release](https://gitlab.com/CalcProgrammer1/OpenRGB/-/releases).
+- The package is version-locked at rc3.1. Upstream's RPM version begins with
+  `0.9.2026`, so without the lock DNF incorrectly offers Fedora's rc2 package as
+  a numerical upgrade.
 - The runtime approval file is deliberately empty. The SDK server cannot start
   until it contains an exact, audited RPM package identity.
 - All OpenRGB hardware detectors in the live configuration are quarantined.

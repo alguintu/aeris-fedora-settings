@@ -1,13 +1,19 @@
 # Aeris OpenRGB lighting
 
-> **Quarantined:** do not start OpenRGB or either Aeris RGB service. The installed
-> Fedora rc2 build predates upstream ENE SMBus safety fixes. Reactivation is
-> blocked by an empty runtime approval file and must follow every step in the
-> [OpenRGB hardware-safety policy](rgb-safety.md).
+> **Quarantined:** do not start OpenRGB or either Aeris RGB service. Upstream's
+> exact rc3.1 RPM is installed and version-locked, but hardware access remains
+> blocked by an empty runtime approval file and must follow every remaining step
+> in the [OpenRGB hardware-safety policy](rgb-safety.md).
 
 ## Components
 
-- Fedora packages: `openrgb` and `openrgb-udev-rules`
+- OpenRGB package plus its installed `60-openrgb.rules` udev policy. The exact
+  upstream rc3.1 RPM bundles the rule in the main package; Fedora's older rc2
+  build split it into `openrgb-udev-rules`.
+- Installed package: `openrgb-0.9.2026^1.0rc3.1-0.fc43.x86_64`, official
+  upstream release tag commit `5e81e26fcc65d3dacfb76b0a30ec0142ec7bb131`.
+  The package is version-locked because RPM ordering otherwise treats Fedora's
+  unsafe `1.0~rc2` package as an upgrade over upstream's unusual version string.
 - Python 3 virtual environment: `~/.local/share/aeris-openrgb/venv`
 - Controller: MSI MAG B550M MORTAR WIFI, recovered serial `A02021090806`
 - SDK endpoint: `127.0.0.1:6742`
@@ -138,7 +144,7 @@ From the repository root, deployment is deliberately non-activating:
 
 The installer:
 
-1. Requires an already installed OpenRGB package and udev rules; it never
+1. Requires an already installed OpenRGB package and installed udev rules; it never
    upgrades hardware-control software implicitly.
 2. Stops and disables both Aeris RGB services.
 3. Backs up existing Aeris files.
