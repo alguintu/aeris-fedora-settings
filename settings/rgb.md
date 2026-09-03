@@ -100,8 +100,9 @@ not issue persistent save-mode writes during routine shutdown, because repeated
 writes caused the MSI Mystic Light interface to stop enumerating. The motherboard
 keeps the calibrated static backplane (`#00C8C8`) and fan (`#008A54`) teals, the GPU
 keeps static `#00C8C8`, and the RAM runs pure-red `Chase Fade` at hardware speed
-4 with a consistent direction. These states remain visible during BIOS and the
-delayed OpenRGB discovery window; the daemon restores Direct mode after login.
+4 with a consistent direction. This covers warm-reboot and logout gaps when the
+controllers retain their live state; Linux cannot reliably enforce the MSI
+controller's cold-power BIOS state. The daemon restores Direct mode after login.
 
 The controller, both DIMMs, and GPU are switched to **Direct** mode on every SDK
 connection. Otherwise their hardware rainbow effects remain active. The process
