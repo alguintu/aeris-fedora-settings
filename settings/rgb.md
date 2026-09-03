@@ -94,15 +94,13 @@ seconds. Motherboard frames render at 150 ms intervals; active RAM/GPU pulse
 frames render at 300 ms to limit ENE SMBus traffic. The thermal-warning override
 remains solid full red rather than pulsing.
 
-On graceful logout, reboot, or shutdown, the daemon hands each controller an
-autonomous firmware state before the OpenRGB server exits. It deliberately does
-not issue persistent save-mode writes during routine shutdown, because repeated
-writes caused the MSI Mystic Light interface to stop enumerating. The motherboard
-keeps the calibrated static backplane (`#00C8C8`) and fan (`#008A54`) teals, the GPU
-keeps static `#00C8C8`, and the RAM runs pure-red `Chase Fade` at hardware speed
-4 with a consistent direction. This covers warm-reboot and logout gaps when the
-controllers retain their live state; Linux cannot reliably enforce the MSI
-controller's cold-power BIOS state. The daemon restores Direct mode after login.
+On graceful logout, reboot, or shutdown, the daemon exits without sending any
+final color, mode, profile-save, or persistent-state command. The controllers
+retain whatever live Direct-mode frame they last received until firmware or
+another application changes it. Linux does not try to program a BIOS-visible or
+cold-power lighting state. This shutdown-write ban is intentional: the previous
+firmware-idle handoff repeatedly changed hardware modes and preceded the MSI
+Mystic Light controller ceasing to enumerate.
 
 The controller, both DIMMs, and GPU are switched to **Direct** mode on every SDK
 connection. Otherwise their hardware rainbow effects remain active. The process
@@ -130,6 +128,10 @@ The installer:
 3. Builds the pinned Python virtual environment.
 4. Deploys the application, YAML configuration, OpenRGB size profile, and user units.
 5. Enables and restarts the main Aeris service; its required SDK server starts automatically.
+
+Before installation, the script rejects an RGB daemon source containing known
+persistent or shutdown-firmware write paths (`save_mode`, `save_profile`, or
+`apply_firmware_idle`).
 
 Check an existing installation without modifying or restarting it:
 

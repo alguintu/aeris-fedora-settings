@@ -8,6 +8,17 @@ openrgb_config_root=$HOME/.config/OpenRGB
 unit_root=$HOME/.config/systemd/user
 venv=$app_root/venv
 
+check_runtime_safety() {
+    local source_file=$1
+    local forbidden='save_mode[[:space:]]*\(|save_profile[[:space:]]*\(|apply_firmware_idle'
+
+    if grep -En "$forbidden" "$source_file"; then
+        echo "UNSAFE   $source_file contains a persistent or shutdown firmware-write path" >&2
+        return 1
+    fi
+    echo "SAFE     $source_file contains no persistent or shutdown firmware-write path"
+}
+
 check_file() {
     local source_file=$1
     local installed_file=$2
@@ -25,6 +36,8 @@ check_file() {
 check_installation() {
     local result=0
 
+    check_runtime_safety "$repo_root/openrgb/aeris_openrgb.py" || result=1
+    check_runtime_safety "$app_root/aeris_openrgb.py" || result=1
     rpm -q openrgb openrgb-udev-rules || result=1
     check_file "$repo_root/openrgb/aeris_openrgb.py" "$app_root/aeris_openrgb.py" || result=1
     check_file "$repo_root/openrgb/config.yaml" "$config_root/config.yaml" || result=1
@@ -55,6 +68,8 @@ elif [[ $# -ne 0 ]]; then
     echo "Usage: $0 [--check]" >&2
     exit 2
 fi
+
+check_runtime_safety "$repo_root/openrgb/aeris_openrgb.py"
 
 sudo dnf install -y openrgb openrgb-udev-rules python3
 

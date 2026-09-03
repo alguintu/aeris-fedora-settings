@@ -9,7 +9,7 @@ from pathlib import Path
 import psutil
 import yaml
 from openrgb import OpenRGBClient
-from openrgb.utils import ModeDirections, RGBColor
+from openrgb.utils import RGBColor
 
 
 CONFIG = Path.home() / ".config/aeris-openrgb/config.yaml"
@@ -206,7 +206,6 @@ class Lighting:
         )
         self.workload_zone = next(z for z in self.motherboard.zones if z.name == ocfg["workload_zone"])
         self.fan_zone = next(z for z in self.motherboard.zones if z.name == ocfg["fan_zone"])
-        self.firmware_idle = cfg["firmware_idle"]
         cpu_wanted = [name.lower() for name in ocfg["cpu_devices"]]
         gpu_wanted = [name.lower() for name in ocfg["gpu_devices"]]
         self.cpu_devices = [
@@ -267,20 +266,6 @@ class Lighting:
         self.apply_motherboard(workload, fans)
         self.apply_accents(cpu, gpu)
 
-    def apply_firmware_idle(self, workload, fans, ram, gpu):
-        self.motherboard.set_mode("Static")
-        self.apply_motherboard(workload, fans)
-        for device in self.cpu_devices:
-            mode = next(m for m in device.modes if m.name == self.firmware_idle["ram_mode"])
-            mode.speed = int(self.firmware_idle["ram_speed"])
-            mode.direction = ModeDirections.LEFT
-            device.set_mode(mode)
-            device.set_color(RGBColor(*ram), fast=True)
-        for device in self.gpu_devices:
-            device.set_mode("Static")
-            device.set_color(RGBColor(*gpu), fast=True)
-
-
 def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     cfg = yaml.safe_load(CONFIG.read_text())
@@ -299,7 +284,6 @@ def main():
     ram_palette = hardware_palette("ram")
     gpu_palette = hardware_palette("gpu")
     ram_idle = parse_color(device_palettes.get("ram", {}).get("idle", "000000"))
-    firmware_ram = parse_color(cfg["firmware_idle"]["ram_color"])
     alpha = float(cfg["smoothing_alpha"])
     workload_smoothing = cfg["workload_smoothing"]
     cpu_envelope = LoadEnvelope(
@@ -419,12 +403,7 @@ def main():
             retry_at = time.monotonic() + 5.0
             time.sleep(poll)
 
-    if lighting is not None:
-        try:
-            lighting.apply_firmware_idle(chain_palette[0], fan_palette[0], firmware_ram, gpu_palette[0])
-            LOG.info("Applied autonomous firmware idle lighting for shutdown")
-        except Exception as exc:
-            LOG.warning("Unable to apply firmware idle lighting during shutdown: %s", exc)
+    LOG.info("Stopping without changing controller modes or persistent state")
 
 
 if __name__ == "__main__":
