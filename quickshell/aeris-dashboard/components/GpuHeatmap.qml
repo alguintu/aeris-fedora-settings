@@ -5,6 +5,7 @@ Item {
 
     property real utilization: 0
     property real smoothedUtilization: 0
+    property real lowLoadResidence: 0
     property int activeCount: 0
     property int columns: 10
     property int rows: 8
@@ -109,6 +110,15 @@ Item {
         activeCount -= 1
     }
 
+    function rotateLowLoadActivity() {
+        const previous = chooseFringeActive()
+        if (previous < 0)
+            return
+        units.setProperty(previous, "active", false)
+        activeCount -= 1
+        activateOne()
+    }
+
     ListModel { id: units }
 
     Component.onCompleted: {
@@ -126,21 +136,34 @@ Item {
             root.smoothedUtilization += (requested - root.smoothedUtilization) * 0.14
             const target = Math.round(root.smoothedUtilization * root.unitCount / 100)
 
-            if (target > root.activeCount + 1) {
+            const lowLoadTarget = target <= 2
+            if (target > root.activeCount + 1
+                    || (lowLoadTarget && target > root.activeCount)) {
                 root.activateOne()
                 if (target > root.activeCount + 5)
                     root.activateOne()
-            } else if (target < root.activeCount - 1) {
+            } else if (target < root.activeCount - 1
+                       || (lowLoadTarget && target < root.activeCount)) {
                 root.deactivateOne()
                 if (target < root.activeCount - 5)
                     root.deactivateOne()
             }
 
+            if (target > 0 && target <= 2 && root.activeCount > 0 && requested < 4) {
+                root.lowLoadResidence += interval / 1000
+                if (root.lowLoadResidence >= 2.5 && Math.random() < 0.08) {
+                    root.rotateLowLoadActivity()
+                    root.lowLoadResidence = 0
+                }
+            } else {
+                root.lowLoadResidence = 0
+            }
+
             for (let index = 0; index < root.unitCount; ++index) {
                 const cell = units.get(index)
                 const nextHeat = cell.active
-                        ? Math.min(1, cell.heat + 0.016)
-                        : Math.max(0, cell.heat - 0.009)
+                        ? Math.min(1, cell.heat + 0.014)
+                        : Math.max(0, cell.heat - 0.024)
                 if (nextHeat !== cell.heat)
                     units.setProperty(index, "heat", nextHeat)
             }
