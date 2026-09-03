@@ -119,10 +119,14 @@ disconnect, or update failure exits immediately; it never reconnects or retries.
 Unchanged frames are not resent.
 
 The SDK server has no restart policy and is blocked by an exact-package approval
-gate before discovery. Once approved and explicitly enabled, it waits for udev
-to settle and delays discovery for 10 seconds. The client requires exactly six
-allowlisted devices, the recovered motherboard name and serial, and the exact
-1/75/75 zone map before its first write.
+gate before discovery. At every start it also re-audits the installed daemon,
+refuses a second OpenRGB process, and requires the detector configuration to be
+exactly the three approved Aeris detector families. Once approved and explicitly
+enabled, it waits for udev to settle and delays discovery for 10 seconds. The
+client requires exactly six allowlisted devices, the recovered motherboard name
+and serial, and the exact 1/75/75 zone map before its first write. After its one
+allowed `set_mode("Direct", save=False)` transition site, it verifies that each
+device actually reports Direct mode before sending any color frame.
 
 ## Install or synchronize
 
@@ -139,8 +143,8 @@ The installer:
 2. Stops and disables both Aeris RGB services.
 3. Backs up existing Aeris files.
 4. Builds the pinned Python virtual environment.
-5. Deploys the daemon, configuration, safety gate, detector-policy tool, and
-   user units.
+5. Deploys the daemon, configuration, runtime command auditor, safety gate,
+   detector-policy tool, and user units.
 6. Quarantines every OpenRGB detector. It does not copy the legacy `sizes.ors`,
    enable a service, start OpenRGB, or access hardware.
 
@@ -162,6 +166,7 @@ systemctl --user stop aeris-openrgb.service aeris-openrgb-server.service
 journalctl --user -u aeris-openrgb.service -u aeris-openrgb-server.service
 ~/.local/share/aeris-openrgb/check-openrgb-safety.sh
 ~/.local/share/aeris-openrgb/configure-openrgb-detectors.py --check
+~/.local/share/aeris-openrgb/configure-openrgb-detectors.py --require-aeris
 journalctl --user -u aeris-openrgb.service -u aeris-openrgb-server.service -f
 ```
 

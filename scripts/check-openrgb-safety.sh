@@ -3,9 +3,23 @@ set -euo pipefail
 
 app_root=${XDG_DATA_HOME:-$HOME/.local/share}/aeris-openrgb
 approval_file=$app_root/approved-runtime.txt
+daemon_file=$app_root/aeris_openrgb.py
+daemon_auditor=$app_root/audit-openrgb-daemon.py
 
 if [[ ! -f $approval_file ]]; then
     echo "Aeris OpenRGB safety gate: missing $approval_file" >&2
+    exit 1
+fi
+
+if [[ ! -x $daemon_auditor || ! -f $daemon_file ]]; then
+    echo "Aeris OpenRGB safety gate: missing daemon safety auditor or daemon" >&2
+    exit 1
+fi
+
+"$daemon_auditor" "$daemon_file"
+
+if pgrep -x openrgb >/dev/null; then
+    echo "Aeris OpenRGB safety gate: another OpenRGB process is already running" >&2
     exit 1
 fi
 

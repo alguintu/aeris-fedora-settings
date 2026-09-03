@@ -274,7 +274,12 @@ class Lighting:
     def _ensure_direct(device):
         active_mode = device.modes[device.active_mode]
         if active_mode.name.lower() != "direct":
-            device.set_mode("Direct")
+            device.set_mode("Direct", save=False)
+            active_mode = device.modes[device.active_mode]
+        if active_mode.name.lower() != "direct":
+            raise RuntimeError(
+                f"device {device.name!r} did not enter Direct mode; refusing color writes"
+            )
 
     def apply_motherboard(self, workload, fans):
         load_rgb = RGBColor(*workload)

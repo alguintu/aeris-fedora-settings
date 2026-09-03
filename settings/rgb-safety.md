@@ -111,6 +111,12 @@ device is not assumed read-only.
     Stop, collect logs, verify USB/HID enumeration without OpenRGB, and decide
     the next step manually. Firmware recovery uses only the exact signed MSI
     package for `7C94`.
+13. **Re-audit at every service start.** Before OpenRGB is launched, the service
+    statically rejects daemon code with a persistence/custom-mode path, requires
+    the sole mode transition to be exactly `Direct` with `save=False`, requires
+    color calls to use the Direct-mode fast update path, rejects a concurrently
+    running OpenRGB process, and requires the detector set to equal the three-item
+    Aeris allowlist. Installation-time checks alone are not sufficient.
 
 ## Controlled static-save maintenance
 
@@ -148,7 +154,8 @@ full quarantine.
 5. Recreate the 75/75 zone configuration under that exact version. Do not copy
    the rc2 `sizes.ors` file.
 6. Put the exact `rpm -q openrgb` output in `openrgb/approved-runtime.txt` and
-   deploy it. Confirm `check-openrgb-safety.sh` passes.
+   deploy it. Confirm `check-openrgb-safety.sh` and the strict detector
+   `--require-aeris` check pass.
 7. Perform one controlled enumeration. Require the exact six-device and
    three-zone inventory before the daemon sends any command.
 8. Apply Direct mode and one low-rate static canary frame. Observe all devices,

@@ -43,6 +43,7 @@ def main():
     parser = argparse.ArgumentParser()
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--check", action="store_true")
+    action.add_argument("--require-aeris", action="store_true")
     action.add_argument("--quarantine", action="store_true")
     action.add_argument("--allow-aeris", action="store_true")
     args = parser.parse_args()
@@ -65,6 +66,15 @@ def main():
         if len(unexpected) > 20:
             print(f"  ... and {len(unexpected) - 20} more")
         return 1
+
+    if args.require_aeris:
+        if enabled != AERIS_ALLOWLIST:
+            print("UNSAFE: OpenRGB runtime detector allowlist is not exact")
+            print(f"  expected: {', '.join(sorted(AERIS_ALLOWLIST))}")
+            print(f"  enabled: {', '.join(sorted(enabled)) if enabled else '(none)'}")
+            return 1
+        print("ALLOWLISTED: exactly Aeris's three audited detector families are enabled")
+        return 0
 
     if args.allow_aeris and missing:
         raise SystemExit(

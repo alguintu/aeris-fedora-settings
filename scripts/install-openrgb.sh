@@ -10,13 +10,7 @@ venv=$app_root/venv
 
 check_runtime_safety() {
     local source_file=$1
-    local forbidden='save_mode[[:space:]]*\(|save_profile[[:space:]]*\(|save[[:space:]]*=[[:space:]]*True|set_custom_mode[[:space:]]*\(|apply_firmware_idle'
-
-    if rg -n "$forbidden" "$source_file"; then
-        echo "UNSAFE   $source_file contains a persistent or shutdown firmware-write path" >&2
-        return 1
-    fi
-    echo "SAFE     $source_file contains no persistent or shutdown firmware-write path"
+    "$repo_root/scripts/audit-openrgb-daemon.py" "$source_file"
 }
 
 check_file() {
@@ -43,6 +37,7 @@ check_installation() {
     check_file "$repo_root/openrgb/config.yaml" "$config_root/config.yaml" || result=1
     check_file "$repo_root/openrgb/approved-runtime.txt" "$app_root/approved-runtime.txt" || result=1
     check_file "$repo_root/scripts/check-openrgb-safety.sh" "$app_root/check-openrgb-safety.sh" || result=1
+    check_file "$repo_root/scripts/audit-openrgb-daemon.py" "$app_root/audit-openrgb-daemon.py" || result=1
     check_file "$repo_root/scripts/configure-openrgb-detectors.py" "$app_root/configure-openrgb-detectors.py" || result=1
     check_file "$repo_root/systemd/user/aeris-openrgb-server.service" "$unit_root/aeris-openrgb-server.service" || result=1
     check_file "$repo_root/systemd/user/aeris-openrgb.service" "$unit_root/aeris-openrgb.service" || result=1
@@ -110,6 +105,7 @@ for installed_file in \
     "$app_root/aeris_openrgb.py" \
     "$app_root/approved-runtime.txt" \
     "$app_root/check-openrgb-safety.sh" \
+    "$app_root/audit-openrgb-daemon.py" \
     "$app_root/configure-openrgb-detectors.py" \
     "$config_root/config.yaml" \
     "$openrgb_config_root/OpenRGB.json" \
@@ -131,6 +127,7 @@ python3 -m venv "$venv"
 install -Dm0644 "$repo_root/openrgb/aeris_openrgb.py" "$app_root/aeris_openrgb.py"
 install -Dm0644 "$repo_root/openrgb/approved-runtime.txt" "$app_root/approved-runtime.txt"
 install -Dm0755 "$repo_root/scripts/check-openrgb-safety.sh" "$app_root/check-openrgb-safety.sh"
+install -Dm0755 "$repo_root/scripts/audit-openrgb-daemon.py" "$app_root/audit-openrgb-daemon.py"
 install -Dm0755 "$repo_root/scripts/configure-openrgb-detectors.py" "$app_root/configure-openrgb-detectors.py"
 install -Dm0644 "$repo_root/openrgb/config.yaml" "$config_root/config.yaml"
 install -Dm0644 "$repo_root/systemd/user/aeris-openrgb-server.service" "$unit_root/aeris-openrgb-server.service"
