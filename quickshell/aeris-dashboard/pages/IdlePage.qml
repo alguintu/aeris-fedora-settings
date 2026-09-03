@@ -108,32 +108,26 @@ Item {
                     Layout.preferredHeight: 18
                     Layout.bottomMargin: 5
 
-                    Row {
+                    DashboardSectionHeader {
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 10
-
-                        Rectangle { width: 5; height: 18; radius: 3; color: "#57bced" }
-                        DashboardHeaderLabel {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: page.nominalCapacity(page.metrics.ramTotal) + " RAM "
-                                  + Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100) + "%"
-                            color: "#57bced"
-                        }
+                        width: (parent.width - 21) / 2
+                        height: 18
+                        title: "RAM"
+                        eyebrow: Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100)
+                                 + "%  ·  " + page.nominalCapacity(page.metrics.ramTotal)
+                        accent: "#57bced"
                     }
 
-                    Row {
+                    DashboardSectionHeader {
                         x: (parent.width + 21) / 2
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 10
-
-                        Rectangle { width: 5; height: 18; radius: 3; color: "#a99bf5" }
-                        DashboardHeaderLabel {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: page.nominalCapacity(page.metrics.vramTotal) + " VRAM "
-                                  + Math.round(page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100) + "%"
-                            color: "#a99bf5"
-                        }
+                        width: (parent.width - 21) / 2
+                        height: 18
+                        title: "VRAM"
+                        eyebrow: Math.round(page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100)
+                                 + "%  ·  " + page.nominalCapacity(page.metrics.vramTotal)
+                        accent: "#a99bf5"
                     }
                 }
 

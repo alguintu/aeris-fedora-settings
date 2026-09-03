@@ -19,31 +19,12 @@ Rectangle {
         anchors.margins: 18
         spacing: 10
 
-        RowLayout {
+        DashboardSectionHeader {
             Layout.fillWidth: true
             visible: root.title.length > 0 || root.eyebrow.length > 0
-            spacing: 10
-
-            Rectangle {
-                Layout.preferredWidth: 5
-                Layout.preferredHeight: 18
-                radius: 3
-                color: root.accent
-            }
-
-            DashboardHeaderLabel {
-                Layout.fillWidth: true
-                text: root.title
-            }
-
-            Text {
-                text: root.eyebrow
-                color: root.accent
-                font.family: "Noto Sans"
-                font.pixelSize: 12
-                font.weight: Font.DemiBold
-                font.letterSpacing: 1.2
-            }
+            title: root.title
+            eyebrow: root.eyebrow
+            accent: root.accent
         }
 
         Item {
