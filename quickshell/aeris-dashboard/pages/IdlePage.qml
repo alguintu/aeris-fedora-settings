@@ -30,6 +30,13 @@ Item {
         return (number >= 100 || unit === 0 ? number.toFixed(0) : number.toFixed(1)) + " " + units[unit]
     }
 
+    function nominalCapacity(value) {
+        if (!value || value <= 0)
+            return "--"
+        const gibibytes = value / (1024 * 1024 * 1024)
+        return Math.pow(2, Math.round(Math.log(gibibytes) / Math.LN2)) + "GB"
+    }
+
     function hourText() {
         const hour = page.now.getHours() % 12 || 12
         return hour + ":" + String(page.now.getMinutes()).padStart(2, "0")
@@ -91,15 +98,57 @@ Item {
         DashboardTile {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            title: "MEMORY"
-            eyebrow: "RAM " + Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100)
-                     + "%  ·  VRAM " + Math.round(page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100) + "%"
-            accent: "#a99bf5"
 
-            MemoryHeatmap {
+            ColumnLayout {
                 anchors.fill: parent
-                ramUtilization: page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100
-                vramUtilization: page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100
+                spacing: 10
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 18
+                    Layout.bottomMargin: 5
+
+                    Row {
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 10
+
+                        Rectangle { width: 5; height: 18; radius: 3; color: "#57bced" }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: page.nominalCapacity(page.metrics.ramTotal) + " RAM "
+                                  + Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100) + "%"
+                            color: "#57bced"
+                            font.family: "Noto Sans"
+                            font.pixelSize: 16
+                            font.weight: Font.DemiBold
+                        }
+                    }
+
+                    Row {
+                        x: (parent.width + 21) / 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 10
+
+                        Rectangle { width: 5; height: 18; radius: 3; color: "#a99bf5" }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: page.nominalCapacity(page.metrics.vramTotal) + " VRAM "
+                                  + Math.round(page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100) + "%"
+                            color: "#a99bf5"
+                            font.family: "Noto Sans"
+                            font.pixelSize: 16
+                            font.weight: Font.DemiBold
+                        }
+                    }
+                }
+
+                MemoryHeatmap {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    ramUtilization: page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100
+                    vramUtilization: page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100
+                }
             }
         }
     }

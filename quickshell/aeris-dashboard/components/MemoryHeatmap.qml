@@ -8,7 +8,7 @@ Item {
     property real smoothedRam: 0
     property real smoothedVram: 0
     property int ramActiveCount: 0
-    property int columns: 20
+    property int columns: 19
     property int rows: 8
     readonly property int unitCount: columns * rows
     property color idleColor: "#263b45"
@@ -112,9 +112,9 @@ Item {
 
             Grid {
                 id: ramGrid
-                readonly property int cellSize: Math.max(3, Math.floor(Math.min(
+                readonly property real cellSize: Math.max(3, Math.min(
                     (parent.width - (root.columns - 1) * columnSpacing) / root.columns,
-                    (parent.height - (root.rows - 1) * rowSpacing) / root.rows)))
+                    (parent.height - (root.rows - 1) * rowSpacing) / root.rows))
 
                 anchors.centerIn: parent
                 width: root.columns * cellSize + (root.columns - 1) * columnSpacing
@@ -157,9 +157,9 @@ Item {
 
             Grid {
                 id: vramGrid
-                readonly property int cellSize: Math.max(3, Math.floor(Math.min(
+                readonly property real cellSize: Math.max(3, Math.min(
                     (parent.width - (root.columns - 1) * columnSpacing) / root.columns,
-                    (parent.height - (root.rows - 1) * rowSpacing) / root.rows)))
+                    (parent.height - (root.rows - 1) * rowSpacing) / root.rows))
                 readonly property int filledUnits: Math.round(root.smoothedVram * root.unitCount / 100)
 
                 anchors.centerIn: parent
