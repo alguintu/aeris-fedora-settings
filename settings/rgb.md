@@ -103,12 +103,14 @@ remains solid full red rather than pulsing.
 On graceful logout, reboot, shutdown, suspend, or failure, the daemon must exit
 without sending any final color, mode, profile-save, or persistent-state
 command. A single manually authorized firmware-idle handoff was completed on
-2026-09-03 after controller recovery: JRAINBOW1 was saved as static `#007878`,
-JRAINBOW2 as static `#005332`, and the ASUS GPU as static `#007878`. The RAM was
-not detected or written, preserving its existing red Chase Fade. This was a
-closed one-time exception using upstream 1.0rc3.1 commit `5e81e26f`; its
-temporary writer was not installed. No daemon, shutdown hook, or repository
-script may repeat these persistent writes.
+2026-09-03 after controller recovery, then deliberately retuned to 90% of the
+approved teal commands: JRAINBOW1 is saved as static `#00B4B4`, JRAINBOW2 as
+static `#007C4C`, and the ASUS GPU as static `#00B4B4`. The RAM was not detected
+or written, preserving its existing red Chase Fade. Each final save used a
+separate, single-detector OpenRGB 1.0rc3.1 process at commit `5e81e26f`; the MSI
+save completed and USB enumeration was verified before the GPU process began.
+The temporary writer was not installed. No daemon, shutdown hook, or repository
+script may perform persistent writes.
 
 After the full hardware identity is validated, the controller, four DIMMs, and
 GPU are switched to **Direct** mode only if they are not already in it. The

@@ -24,13 +24,14 @@ recur. See the [upstream warning](https://gitlab.com/CalcProgrammer1/OpenRGB/-/b
 - The recovered MSI controller is `MS-7C94`, USB VID:PID `1462:7c94`, current
   serial `A02021090806`. Its firmware was recovered with MSI's signed
   `SUtility_7C94_v06.exe` / `MSI_MB_7C94_v0006.bin`.
-- A manually authorized, one-time firmware-idle save was completed on
-  2026-09-03 with the exact upstream 1.0rc3.1 commit `5e81e26f`. Only the MSI
-  board and ASUS GPU detectors were enabled; ENE RAM was neither detected nor
-  written. The saved state is JRAINBOW1 static `#007878`, JRAINBOW2 static
-  `#005332`, ASUS GPU static `#007878`, and the pre-existing RAM red Chase Fade.
-  The temporary writer was not installed and this exception is permanently
-  closed.
+- A manually authorized firmware-idle save was completed and then retuned on
+  2026-09-03 with the exact upstream 1.0rc3.1 commit `5e81e26f`. The final pass
+  used separate MSI-only and GPU-only processes, waited for complete detection,
+  required each controller to already be in Static mode, sent one color frame,
+  issued one save, and stopped OpenRGB before proceeding. ENE RAM was neither
+  detected nor written. The final saved state is JRAINBOW1 static `#00B4B4`,
+  JRAINBOW2 static `#007C4C`, ASUS GPU static `#00B4B4`, and the pre-existing RAM
+  red Chase Fade. The temporary writer was not installed.
 
 ## What has actually been reported
 
@@ -59,24 +60,29 @@ device is not assumed read-only.
 
 ## Non-negotiable Aeris rules
 
-1. **No further persistent device writes.** Never call SDK `SaveMode`, Python
-   `save_mode()`, `set_mode(..., save=True)`, “Save to Device,” firmware-update,
-   calibration-save, or equivalent hardware-persistence paths. The SDK defines
-   `SaveMode` as saving the current mode to the device; see the
+1. **No automated persistent device writes.** The daemon, systemd units,
+   shutdown hooks, installer, and ordinary runtime must never call SDK
+   `SaveMode`, Python `save_mode()`, `set_mode(..., save=True)`, “Save to
+   Device,” calibration-save, or an equivalent persistence path. The SDK
+   defines `SaveMode` as saving the current mode to the device; see the
    [SDK/API documentation](https://gitlab.com/CalcProgrammer1/OpenRGB/-/blob/master/Documentation/RGBControllerAPI.md).
-   The completed 2026-09-03 idle save above was a single user-authorized
-   exception, not a reusable procedure or permission for another save.
+   A future static boot-state adjustment requires a new explicit user request
+   and the controlled maintenance procedure below.
 2. **No shutdown, boot, suspend, or resume handoff.** Shutdown only stops the
    processes. It sends no last color, mode, profile, firmware, or autonomous
-   effect. BIOS-visible lighting is not an Aeris requirement.
-3. **Direct mode only.** Never select an MSI or ENE hardware effect. Switching
-   to Direct is allowed once per audited process start and only if the device is
-   not already in Direct mode.
-4. **No broad detection or rescans.** The OpenRGB detector configuration must be
+   effect. BIOS-visible lighting may be changed only in a separate, attended
+   maintenance session.
+3. **Direct mode during normal runtime.** Never select an MSI or ENE hardware
+   effect during the dynamic service. Switching to Direct is allowed once per
+   audited process start and only if the device is not already in Direct mode.
+   A manually approved static boot-state save is the only exception.
+4. **No broad detection, blind relaunch, or rescans.** The normal OpenRGB
+   detector configuration must be
    either fully quarantined or restricted to exactly:
    `MSI Mystic Light MS_7C94`, `ENE SMBus DRAM`, and
-   `ASUS TUF Radeon RX 6900 XT Gaming OC`. No GUI Rescan button and no repeated
-   OpenRGB process launches.
+   `ASUS TUF Radeon RX 6900 XT Gaming OC`. No GUI Rescan button and no blind
+   retries. Controlled persistence enables exactly one target detector in each
+   process and never enables ENE RAM.
 5. **No untested controller flags.** Never compile with
    `ENABLE_UNTESTED_MYSTIC_LIGHT`, uncomment a disabled detector, add a guessed
    VID/PID, or guess an MSI report/packet size.
@@ -105,6 +111,26 @@ device is not assumed read-only.
     Stop, collect logs, verify USB/HID enumeration without OpenRGB, and decide
     the next step manually. Firmware recovery uses only the exact signed MSI
     package for `7C94`.
+
+## Controlled static-save maintenance
+
+This is not a routine command path. It is permitted only after a new, explicit
+user request to change the BIOS-visible static idle state.
+
+1. Use an exact audited OpenRGB 1.0rc3.1-or-newer release and isolated config.
+2. Enable exactly one detector: the MSI board or the ASUS GPU. Never detect ENE
+   RAM during this procedure.
+3. Wait for OpenRGB's explicit detection-completed event before connecting.
+4. Require the exact controller identity, existing Static mode, and—on MSI—the
+   exact serial and 1/75/75 zone map before the first write.
+5. Create a durable attempted marker immediately before writing. If anything
+   fails after that marker, do not retry the controller in that session.
+6. Send one complete static color frame, issue one save, wait for its response,
+   read back the SDK state, and stop OpenRGB cleanly.
+7. For MSI, confirm USB `1462:7c94` still enumerates after OpenRGB exits. Only
+   then may a separately approved controller be handled in a new process.
+8. Delete the temporary writer. Never install it, call it from systemd, or keep
+   it as a general-purpose utility.
 
 ## Reactivation gate
 
