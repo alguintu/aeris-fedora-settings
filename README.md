@@ -20,6 +20,9 @@ unrelated personal state, hardware identifiers, and application data.
 - [Desktop and KZones](settings/desktop.md)
 - [Quickshell touch dashboard](quickshell/aeris-dashboard/README.md)
 - [Hardware monitoring](settings/monitoring.md)
+- [CPU efficiency tuning](settings/cpu-tuning.md)
+- [GPU efficiency tuning](settings/gpu-tuning.md)
+- [Efficiency baseline and test log](settings/efficiency-baseline.md)
 - [Storage](settings/storage.md)
 - [Git and GitHub](settings/git.md)
 - [KZones layout geometry](settings/kzones-layouts.json)
@@ -57,6 +60,12 @@ Restore or verify the hardware-monitoring profile separately:
 ```bash
 ./scripts/apply-monitoring.sh
 ./scripts/apply-monitoring.sh --check
+```
+
+Capture a timestamped CPU/GPU telemetry sample without changing hardware state:
+
+```bash
+./scripts/capture-power-state.sh --duration 60 --output aeris-stock.csv
 ```
 
 Storage formatting is intentionally not automated because it is destructive.
