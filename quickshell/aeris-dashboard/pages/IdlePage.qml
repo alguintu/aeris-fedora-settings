@@ -91,15 +91,15 @@ Item {
         DashboardTile {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            title: "IDLE"
-            eyebrow: "OVERVIEW"
+            title: "MEMORY"
+            eyebrow: "RAM " + Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100)
+                     + "%  ·  VRAM " + Math.round(page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100) + "%"
             accent: "#a99bf5"
 
-            Column {
-                anchors.centerIn: parent
-                spacing: 8
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "AERIS"; color: "#f1edf8"; font.family: "Noto Sans"; font.pixelSize: 30; font.weight: Font.DemiBold; font.letterSpacing: 4 }
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "SWIPE LEFT TO START"; color: "#b69ad9"; font.family: "Noto Sans"; font.pixelSize: 12; font.letterSpacing: 1.5 }
+            MemoryHeatmap {
+                anchors.fill: parent
+                ramUtilization: page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100
+                vramUtilization: page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100
             }
         }
     }
