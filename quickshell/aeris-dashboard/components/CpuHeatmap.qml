@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 
 Item {
     id: root
@@ -37,22 +36,19 @@ Item {
         return threads && threadIndex < threads.length ? threads[threadIndex] : 0
     }
 
-    RowLayout {
+    Row {
         anchors.fill: parent
         spacing: 10
 
         Repeater {
             model: 2
 
-            Grid {
+            Row {
                 required property int index
                 property int ccdIndex: index
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                columns: 4
-                rows: 2
-                columnSpacing: 4
-                rowSpacing: 4
+                width: (root.width - 10) / 2
+                height: root.height
+                spacing: 3
 
                 Repeater {
                     model: 8
@@ -61,13 +57,13 @@ Item {
                         required property int index
                         property int ccdIndex: parent.ccdIndex
                         property int coreIndex: index
-                        width: (parent.width - 12) / 4
-                        height: (parent.height - 4) / 2
+                        width: (parent.width - 21) / 8
+                        height: parent.height
                         radius: 3
                         color: "#1d2c35"
                         clip: true
 
-                        Row {
+                        Column {
                             anchors.fill: parent
                             anchors.margins: 1
                             spacing: 1
@@ -77,8 +73,8 @@ Item {
 
                                 Rectangle {
                                     required property int index
-                                    width: (parent.width - 1) / 2
-                                    height: parent.height
+                                    width: parent.width
+                                    height: (parent.height - 1) / 2
                                     radius: 2
                                     color: root.heatColor(root.threadLoad(parent.parent.ccdIndex,
                                                                              parent.parent.coreIndex,
