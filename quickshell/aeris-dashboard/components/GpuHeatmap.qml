@@ -10,6 +10,7 @@ Item {
     property int columns: 10
     property int rows: 8
     readonly property int unitCount: columns * rows
+    readonly property real saturationThreshold: 98
     property color idleColor: "#29424b"
     property color tealColor: "#59b9ad"
     property color orangeColor: "#f0a04b"
@@ -134,11 +135,14 @@ Item {
         onTriggered: {
             const requested = Math.max(0, Math.min(100, root.utilization || 0))
             root.smoothedUtilization += (requested - root.smoothedUtilization) * 0.14
-            const target = Math.round(root.smoothedUtilization * root.unitCount / 100)
+            const saturated = requested >= root.saturationThreshold
+            const target = saturated
+                    ? root.unitCount
+                    : Math.round(root.smoothedUtilization * root.unitCount / 100)
 
             const lowLoadTarget = target <= 2
             if (target > root.activeCount + 1
-                    || (lowLoadTarget && target > root.activeCount)) {
+                    || ((lowLoadTarget || saturated) && target > root.activeCount)) {
                 root.activateOne()
                 if (target > root.activeCount + 5)
                     root.activateOne()
