@@ -12,6 +12,7 @@ ShellRoot {
     property real lastSwipeDistance: 0
     property real lastSwipeVelocity: 0
     property bool lastSwipeCommitted: false
+    property bool dashboardCollapsed: false
     property bool metricsHealthy: false
     property var metrics: ({
         "cpuUsage": 0,
@@ -68,9 +69,22 @@ ShellRoot {
         readonly property real swipeDistance: root.lastSwipeDistance
         readonly property real swipeVelocity: root.lastSwipeVelocity
         readonly property bool swipeCommitted: root.lastSwipeCommitted
+        readonly property bool collapsed: root.dashboardCollapsed
 
         function setMode(mode: int): void {
             root.currentMode = Math.max(0, Math.min(root.modeNames.length - 1, mode))
+        }
+
+        function showDashboard(): void {
+            root.dashboardCollapsed = false
+        }
+
+        function hideDashboard(): void {
+            root.dashboardCollapsed = true
+        }
+
+        function toggleDashboard(): void {
+            root.dashboardCollapsed = !root.dashboardCollapsed
         }
     }
 
@@ -87,6 +101,12 @@ ShellRoot {
                 aboveWindows: true
                 focusable: false
                 exclusionMode: ExclusionMode.Ignore
+                mask: root.dashboardCollapsed ? collapsedInputRegion : null
+
+                Region {
+                    id: collapsedInputRegion
+                    item: restoreHandle
+                }
 
                 anchors {
                     top: true
@@ -97,6 +117,7 @@ ShellRoot {
 
                 Image {
                     anchors.fill: parent
+                    visible: !root.dashboardCollapsed
                     source: "file:///usr/share/wallpapers/Honeywave/contents/images/5120x2880.jpg"
                     fillMode: Image.PreserveAspectCrop
                     sourceSize.width: 1920
@@ -105,11 +126,13 @@ ShellRoot {
 
                 Rectangle {
                     anchors.fill: parent
+                    visible: !root.dashboardCollapsed
                     color: "#b00b111c"
                 }
 
                 Item {
                     id: viewport
+                    visible: !root.dashboardCollapsed
                     anchors.fill: parent
                     anchors.margins: 14
                     anchors.bottomMargin: 42
@@ -163,6 +186,7 @@ ShellRoot {
 
                 DragHandler {
                     id: swipeHandler
+                    enabled: !root.dashboardCollapsed
                     property real retainedTranslation: 0
                     property real retainedVelocity: 0
                     property double lastMovementAt: 0
@@ -225,10 +249,11 @@ ShellRoot {
                 }
 
                 Rectangle {
+                    visible: !root.dashboardCollapsed
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 6
-                    width: 116
+                    width: 152
                     height: 28
                     radius: 14
                     z: 20
@@ -268,6 +293,61 @@ ShellRoot {
                                 }
                             }
                         }
+
+                        Rectangle {
+                            width: 1
+                            height: 14
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: "#53607182"
+                        }
+
+                        Rectangle {
+                            width: 28
+                            height: 24
+                            color: "transparent"
+
+                            Text {
+                                anchors.centerIn: parent
+                                anchors.verticalCenterOffset: -2
+                                text: "⌄"
+                                color: "#b8aaf6"
+                                font.family: "Noto Sans"
+                                font.pixelSize: 20
+                                font.weight: Font.DemiBold
+                            }
+
+                            TapHandler {
+                                onTapped: root.dashboardCollapsed = true
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: restoreHandle
+                    visible: root.dashboardCollapsed
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 6
+                    width: 52
+                    height: 28
+                    radius: 14
+                    z: 20
+                    color: "#e31a2230"
+                    border.color: "#53607182"
+
+                    Text {
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: 2
+                        text: "⌃"
+                        color: "#e2c4ff"
+                        font.family: "Noto Sans"
+                        font.pixelSize: 20
+                        font.weight: Font.DemiBold
+                    }
+
+                    TapHandler {
+                        onTapped: root.dashboardCollapsed = false
                     }
                 }
             }

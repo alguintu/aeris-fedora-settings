@@ -16,6 +16,19 @@ threshold is crossed. A slow drag settles after 180 pixels, leaving room to
 cancel by releasing earlier. A fast flick can settle after 36 pixels when its
 release velocity exceeds 700 pixels per second.
 
+The down-chevron beside the page dots collapses the dashboard to a small
+bottom-center recovery handle. Tap its up-chevron to restore the previous mode.
+While collapsed, the rest of the transparent surface is click-through.
+
+The same state is available through IPC for keyboard shortcuts or recovery:
+
+```bash
+./scripts/run-dashboard.sh ipc call dashboard showDashboard
+./scripts/run-dashboard.sh ipc call dashboard hideDashboard
+./scripts/run-dashboard.sh ipc call dashboard toggleDashboard
+./scripts/run-dashboard.sh ipc prop get dashboard collapsed
+```
+
 ## Run
 
 Install Fedora's packaged runtime once:
