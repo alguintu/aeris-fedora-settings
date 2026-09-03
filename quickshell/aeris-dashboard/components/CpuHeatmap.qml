@@ -39,71 +39,52 @@ Item {
 
     RowLayout {
         anchors.fill: parent
-        spacing: 12
+        spacing: 10
 
         Repeater {
             model: 2
 
-            Item {
+            Grid {
                 required property int index
+                property int ccdIndex: index
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                columns: 4
+                rows: 2
+                columnSpacing: 4
+                rowSpacing: 4
 
-                Text {
-                    id: ccdLabel
-                    anchors.top: parent.top
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: "CCD " + index
-                    color: "#8998a8"
-                    font.family: "Noto Sans"
-                    font.pixelSize: 9
-                    font.weight: Font.DemiBold
-                    font.letterSpacing: 1.1
-                }
+                Repeater {
+                    model: 8
 
-                Grid {
-                    anchors.top: ccdLabel.bottom
-                    anchors.topMargin: 4
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    columns: 4
-                    rows: 2
-                    columnSpacing: 4
-                    rowSpacing: 4
+                    Rectangle {
+                        required property int index
+                        property int ccdIndex: parent.ccdIndex
+                        property int coreIndex: index
+                        width: (parent.width - 12) / 4
+                        height: (parent.height - 4) / 2
+                        radius: 3
+                        color: "#1d2c35"
+                        clip: true
 
-                    Repeater {
-                        model: 8
+                        Row {
+                            anchors.fill: parent
+                            anchors.margins: 1
+                            spacing: 1
 
-                        Rectangle {
-                            required property int index
-                            width: (parent.width - 12) / 4
-                            height: (parent.height - 4) / 2
-                            radius: 4
-                            color: "#17242d"
-                            border.color: "#425563"
-                            border.width: 1
-                            clip: true
+                            Repeater {
+                                model: 2
 
-                            Row {
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                spacing: 1
+                                Rectangle {
+                                    required property int index
+                                    width: (parent.width - 1) / 2
+                                    height: parent.height
+                                    radius: 2
+                                    color: root.heatColor(root.threadLoad(parent.parent.ccdIndex,
+                                                                             parent.parent.coreIndex,
+                                                                             index))
 
-                                Repeater {
-                                    model: 2
-
-                                    Rectangle {
-                                        required property int index
-                                        width: (parent.width - 1) / 2
-                                        height: parent.height
-                                        radius: 2
-                                        color: root.heatColor(root.threadLoad(ccdLabel.parent.index,
-                                                                                 parent.parent.index,
-                                                                                 index))
-
-                                        Behavior on color { ColorAnimation { duration: 340 } }
-                                    }
+                                    Behavior on color { ColorAnimation { duration: 340 } }
                                 }
                             }
                         }
