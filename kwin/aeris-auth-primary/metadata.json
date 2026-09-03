@@ -1,0 +1,18 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Drei"
+            }
+        ],
+        "Description": "Keeps KDE authentication prompts on the named primary display",
+        "EnabledByDefault": false,
+        "Id": "aeris-auth-primary",
+        "License": "MIT",
+        "Name": "Aeris Authentication Placement",
+        "Version": "1.0.0"
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js"
+}

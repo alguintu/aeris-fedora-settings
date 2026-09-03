@@ -18,6 +18,7 @@ unrelated personal state, hardware identifiers, and application data.
 ## Recorded settings
 
 - [Desktop and KZones](settings/desktop.md)
+- [Authentication prompt placement](settings/authentication-placement.md)
 - [Quickshell touch dashboard](quickshell/aeris-dashboard/README.md)
 - [Hardware monitoring](settings/monitoring.md)
 - [CPU efficiency tuning](settings/cpu-tuning.md)
