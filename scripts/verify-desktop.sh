@@ -32,6 +32,7 @@ fi
 echo "  loaded=$(busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting isScriptLoaded s kzones)"
 for key in \
     autoSnapAllNew \
+    disabledOutputs \
     enableEdgeSnapping \
     enableZoneOverlay \
     enableZoneSelector \
@@ -57,6 +58,12 @@ if rg -Fq 'including when the cursor misses a KZones indicator' "$kzones_dir/con
     echo "  native-tile detach patch=present"
 else
     echo "  native-tile detach patch=MISSING"
+fi
+
+if rg -Fq 'outputs where KZones should remain inactive' "$kzones_dir/contents/ui/main.qml"; then
+    echo "  disabled-output patch=present"
+else
+    echo "  disabled-output patch=MISSING"
 fi
 
 echo "Native KWin tiling"

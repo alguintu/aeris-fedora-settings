@@ -71,6 +71,9 @@ The usable zone area is 3840×2098, leaving pixels 2098–2159 for the panels.
 - Indicator display: only the target zone, preventing overlapping zones from
   washing out the thumbnail in grey
 - Remember and restore pre-snap window geometry: enabled
+- Enabled output: `HDMI-A-1` (3840×2160)
+- Disabled output: `DP-3` (1920×480); KZones overlays, mouse snapping,
+  and keyboard zone moves remain inactive there
 
 The four span targets are:
 
@@ -108,6 +111,6 @@ expected display geometry and saves timestamped backups under
 `~/.local/state/fedora-settings/backups/` before applying the profile.
 
 The script expects KZones 0.9.2 to already be installed. It applies the local
-compatibility patch only when needed, configures the ten zones, restores the
-panels and cursor, disables native tiling shortcuts and edges, and reloads
-KZones.
+native-tiling and per-output compatibility patches only when needed, configures
+the ten zones, restores the panels and cursor, disables native tiling shortcuts
+and edges, disables KZones on `DP-3`, and reloads KZones.

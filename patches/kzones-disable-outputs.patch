@@ -1,0 +1,89 @@
+--- a/contents/ui/main.qml
++++ b/contents/ui/main.qml
+@@ -78,6 +78,8 @@
+             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true),
+             // track active layout per screen
+             trackLayoutPerScreen: KWin.readConfig("trackLayoutPerScreen", false),
++            // outputs where KZones should remain inactive
++            disabledOutputs: KWin.readConfig("disabledOutputs", "").split(/\r?\n/).map((name) => name.trim()).filter((name) => name.length > 0),
+             // show osd messages
+             showOsdMessages: KWin.readConfig("showOsdMessages", true),
+             // fade windows while moving
+@@ -106,13 +108,26 @@
+         console.log("KZones: " + message);
+     }
+ 
++    function outputIsDisabled(output) {
++        if (!output || !output.name) return false;
++        return config.disabledOutputs.includes(output.name.toString());
++    }
++
++    function activeOutputIsDisabled() {
++        return outputIsDisabled(Workspace.activeScreen);
++    }
++
++    function clientOutputIsDisabled(client) {
++        return client && outputIsDisabled(client.output);
++    }
++
+     function show() {
+         // show OSD
+         mainDialog.shown = true;
+-        mainDialog.visible = true;
+         mainDialog.setWidth(Workspace.virtualScreenSize.width);
+         mainDialog.setHeight(Workspace.virtualScreenSize.height);
+         refreshClientArea();
++        mainDialog.visible = !activeOutputIsDisabled();
+     }
+ 
+     function hide() {
+@@ -225,6 +240,14 @@
+         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
+ 
+         refreshClientArea()
++
++        const disabledOutput = moving ? activeOutputIsDisabled() : clientOutputIsDisabled(client);
++        if (disabledOutput) {
++            saveClientProperties(client, -1);
++            client.tile = null;
++            return;
++        }
++
+         saveClientProperties(client, zone);
+ 
+         // KWin assigns its native Custom tile whenever Shift is held during a
+@@ -271,6 +294,7 @@
+ 
+     function moveClientToClosestZone(client) {
+         if (!checkFilter(client)) return null;
++        if (clientOutputIsDisabled(client)) return null;
+ 
+         log("Moving client " + client.resourceClass.toString() + " to closest zone");
+ 
+@@ -547,6 +571,9 @@
+         function onInteractiveMoveResizeFinished() {
+             log("Interactive move/resize finished for client " + client.resourceClass.toString());
+ 
++            refreshClientArea();
++            if (activeOutputIsDisabled()) highlightedZone = -1;
++
+             if (config.fadeWindowsWhileMoving) {
+                 for (let i = 0; i < Workspace.stackingOrder.length; i++) {
+                     const client = Workspace.stackingOrder[i];
+@@ -720,6 +747,16 @@
+             onTriggered: {
+                 refreshClientArea();
+ 
++                if (activeOutputIsDisabled()) {
++                    mainDialog.visible = false;
++                    highlightedZone = -1;
++                    zoneSelector.expanded = false;
++                    zoneSelector.near = false;
++                    return;
++                }
++
++                mainDialog.visible = true;
++
+                 let hoveringZone = -1;
+ 
+                 // zone overlay

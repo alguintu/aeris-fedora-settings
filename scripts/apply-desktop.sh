@@ -21,6 +21,8 @@ if [[ ! -f "$kzones_main" || ! -f "$kzones_metadata" ]]; then
     exit 1
 fi
 
+KZONES_DISABLED_OUTPUT=DP-3
+
 kzones_version=$(jq -r '.KPlugin.Version // empty' "$kzones_metadata")
 if [[ "$kzones_version" != 0.9.2 ]]; then
     echo "This profile expects KZones 0.9.2; found ${kzones_version:-unknown}." >&2
@@ -29,14 +31,12 @@ if [[ "$kzones_version" != 0.9.2 ]]; then
 fi
 
 display_json=$(kscreen-doctor -j)
-enabled_outputs=$(jq '[.outputs[] | select(.enabled)] | length' <<<"$display_json")
-display_width=$(jq -r '[.outputs[] | select(.enabled)][0].size.width' <<<"$display_json")
-display_height=$(jq -r '[.outputs[] | select(.enabled)][0].size.height' <<<"$display_json")
-display_scale=$(jq -r '[.outputs[] | select(.enabled)][0].scale' <<<"$display_json")
+main_output_valid=$(jq -r 'any(.outputs[]; .enabled and .name == "HDMI-A-1" and .size.width == 3840 and .size.height == 2160 and .scale == 1)' <<<"$display_json")
+secondary_output_valid=$(jq -r 'any(.outputs[]; .enabled and .name == "DP-3" and .size.width == 1920 and .size.height == 480 and .scale == 1)' <<<"$display_json")
 
-if [[ "$enabled_outputs" != 1 || "$display_width" != 3840 || "$display_height" != 2160 || "$display_scale" != 1 ]]; then
-    echo "This profile requires one enabled 3840x2160 display at 100% scale." >&2
-    echo "Detected: outputs=$enabled_outputs size=${display_width}x${display_height} scale=$display_scale" >&2
+if [[ "$main_output_valid" != true || "$secondary_output_valid" != true ]]; then
+    echo "This profile requires HDMI-A-1 at 3840x2160 and DP-3 at 1920x480, both at 100% scale." >&2
+    kscreen-doctor -o >&2
     exit 1
 fi
 
@@ -146,8 +146,15 @@ if ! rg -Fq "$patch_marker" "$kzones_main"; then
         <"$repo_root/patches/kzones-detach-native-tiling.patch"
 fi
 
+output_patch_marker='outputs where KZones should remain inactive'
+if ! rg -Fq "$output_patch_marker" "$kzones_main"; then
+    patch --batch --forward -p1 -d "$kzones_dir" \
+        <"$repo_root/patches/kzones-disable-outputs.patch"
+fi
+
 layouts_json=$(jq -c . "$repo_root/settings/kzones-layouts.json")
 kwriteconfig6 --file kwinrc --group Script-kzones --key autoSnapAllNew false
+kwriteconfig6 --file kwinrc --group Script-kzones --key disabledOutputs "$KZONES_DISABLED_OUTPUT"
 kwriteconfig6 --file kwinrc --group Script-kzones --key enableEdgeSnapping false
 kwriteconfig6 --file kwinrc --group Script-kzones --key enableZoneOverlay true
 kwriteconfig6 --file kwinrc --group Script-kzones --key enableZoneSelector false
