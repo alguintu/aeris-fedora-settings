@@ -63,34 +63,28 @@ Item {
         }
 
         DashboardTile {
-            Layout.preferredWidth: 450
+            Layout.preferredWidth: 460
             Layout.fillHeight: true
-            title: "SYSTEM"
-            eyebrow: page.metricsHealthy ? "LIVE" : "OFFLINE"
-            accent: page.metricsHealthy ? "#77d7cb" : "#ef648c"
+            title: "CPU"
+            eyebrow: Math.round(page.metrics.cpuUsage) + "%  ·  " + page.temperature(page.metrics.cpuTemp)
+            accent: "#77d7cb"
 
-            ColumnLayout {
+            CpuHeatmap {
                 anchors.fill: parent
-                spacing: 3
-                MetricBar { Layout.fillWidth: true; label: "CPU"; progress: page.metrics.cpuUsage / 100; valueText: Math.round(page.metrics.cpuUsage) + "%  " + page.temperature(page.metrics.cpuTemp); accent: "#ef648c" }
-                MetricBar { Layout.fillWidth: true; label: "GPU"; progress: page.metrics.gpuUsage / 100; valueText: Math.round(page.metrics.gpuUsage) + "%  " + page.temperature(page.metrics.gpuTemp); accent: "#8ed170" }
-                MetricBar { Layout.fillWidth: true; label: "RAM"; progress: page.percent(page.metrics.ramUsed, page.metrics.ramTotal); valueText: page.bytes(page.metrics.ramUsed); accent: "#57bced" }
+                ccds: page.metrics.cpuCcds || []
             }
         }
 
         DashboardTile {
-            Layout.preferredWidth: 420
+            Layout.preferredWidth: 460
             Layout.fillHeight: true
-            title: "THERMALS"
-            eyebrow: "GLANCE"
-            accent: "#f0aa58"
+            title: "GPU"
+            eyebrow: Math.round(page.metrics.gpuUsage) + "%  ·  " + page.temperature(page.metrics.gpuTemp)
+            accent: "#77d7cb"
 
-            ColumnLayout {
+            GpuHeatmap {
                 anchors.fill: parent
-                spacing: 3
-                MetricBar { Layout.fillWidth: true; label: "CPU"; progress: (page.metrics.cpuTemp || 0) / 100; valueText: page.temperature(page.metrics.cpuTemp); accent: "#ef648c" }
-                MetricBar { Layout.fillWidth: true; label: "GPU"; progress: (page.metrics.gpuTemp || 0) / 100; valueText: page.temperature(page.metrics.gpuTemp); accent: "#8ed170" }
-                MetricBar { Layout.fillWidth: true; label: "HOT"; progress: (page.metrics.gpuHotspot || 0) / 110; valueText: page.temperature(page.metrics.gpuHotspot); accent: "#f0aa58" }
+                utilization: page.metrics.gpuUsage || 0
             }
         }
 

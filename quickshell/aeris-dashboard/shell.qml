@@ -15,6 +15,7 @@ ShellRoot {
     property bool metricsHealthy: false
     property var metrics: ({
         "cpuUsage": 0,
+        "cpuCcds": [],
         "cpuTemp": null,
         "cpuClock": null,
         "gpuUsage": 0,

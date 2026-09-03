@@ -8,10 +8,12 @@ import json
 import shutil
 import time
 from pathlib import Path
+from typing import Any
 
 
 HWMON_ROOT = Path("/sys/class/hwmon")
 DRM_ROOT = Path("/sys/class/drm")
+CPU_ROOT = Path("/sys/devices/system/cpu")
 
 
 def read_text(path: Path) -> str | None:
@@ -31,11 +33,22 @@ def read_number(path: Path, divisor: float = 1.0) -> float | None:
         return None
 
 
-def cpu_sample() -> tuple[int, int]:
-    fields = Path("/proc/stat").read_text(encoding="utf-8").splitlines()[0].split()[1:]
-    values = [int(field) for field in fields]
-    idle = values[3] + (values[4] if len(values) > 4 else 0)
-    return sum(values), idle
+def cpu_samples() -> dict[int | str, tuple[int, int]]:
+    samples: dict[int | str, tuple[int, int]] = {}
+    for line in Path("/proc/stat").read_text(encoding="utf-8").splitlines():
+        fields = line.split()
+        name = fields[0]
+        if name == "cpu":
+            key: int | str = "cpu"
+        elif name.startswith("cpu") and name[3:].isdigit():
+            key = int(name[3:])
+        else:
+            break
+
+        values = [int(field) for field in fields[1:]]
+        idle = values[3] + (values[4] if len(values) > 4 else 0)
+        samples[key] = (sum(values), idle)
+    return samples
 
 
 def cpu_usage(previous: tuple[int, int], current: tuple[int, int]) -> float:
@@ -44,6 +57,59 @@ def cpu_usage(previous: tuple[int, int], current: tuple[int, int]) -> float:
     if total_delta <= 0:
         return 0.0
     return round(100.0 * (total_delta - idle_delta) / total_delta, 1)
+
+
+def parse_cpu_list(value: str | None) -> tuple[int, ...]:
+    if not value:
+        return ()
+    cpus: list[int] = []
+    for part in value.split(","):
+        if "-" in part:
+            start, end = (int(item) for item in part.split("-", 1))
+            cpus.extend(range(start, end + 1))
+        else:
+            cpus.append(int(part))
+    return tuple(sorted(cpus))
+
+
+def cpu_topology() -> list[list[tuple[int, ...]]]:
+    """Group physical cores by shared L3 cache, which maps the two Ryzen CCDs."""
+    groups: dict[tuple[int, ...], dict[int, tuple[int, ...]]] = {}
+    for cpu_path in sorted(CPU_ROOT.glob("cpu[0-9]*"), key=lambda path: int(path.name[3:])):
+        cpu_id = int(cpu_path.name[3:])
+        siblings = parse_cpu_list(read_text(cpu_path / "topology/thread_siblings_list")) or (cpu_id,)
+        if cpu_id != siblings[0]:
+            continue
+
+        l3_group = parse_cpu_list(read_text(cpu_path / "cache/index3/shared_cpu_list")) or siblings
+        core_id = int(read_text(cpu_path / "topology/core_id") or cpu_id)
+        groups.setdefault(l3_group, {})[core_id] = siblings
+
+    return [
+        [cores[core_id] for core_id in sorted(cores)]
+        for _, cores in sorted(groups.items(), key=lambda item: min(item[0]))
+    ]
+
+
+CPU_TOPOLOGY = cpu_topology()
+
+
+def cpu_ccd_usage(
+    previous: dict[int | str, tuple[int, int]],
+    current: dict[int | str, tuple[int, int]],
+) -> list[list[list[float]]]:
+    result: list[list[list[float]]] = []
+    for ccd in CPU_TOPOLOGY:
+        cores: list[list[float]] = []
+        for siblings in ccd:
+            threads = [
+                cpu_usage(previous[cpu_id], current[cpu_id])
+                if cpu_id in previous and cpu_id in current else 0.0
+                for cpu_id in siblings
+            ]
+            cores.append(threads)
+        result.append(cores)
+    return result
 
 
 def memory_bytes() -> tuple[int, int]:
@@ -86,13 +152,17 @@ def cpu_clock_ghz() -> float | None:
     return round(sum(valid) / len(valid), 2) if valid else None
 
 
-def collect(previous_cpu: tuple[int, int], current_cpu: tuple[int, int]) -> dict[str, float | int | None]:
+def collect(
+    previous_cpu: dict[int | str, tuple[int, int]],
+    current_cpu: dict[int | str, tuple[int, int]],
+) -> dict[str, Any]:
     ram_used, ram_total = memory_bytes()
     root_disk = shutil.disk_usage("/")
     device = gpu_device()
 
     return {
-        "cpuUsage": cpu_usage(previous_cpu, current_cpu),
+        "cpuUsage": cpu_usage(previous_cpu["cpu"], current_cpu["cpu"]),
+        "cpuCcds": cpu_ccd_usage(previous_cpu, current_cpu),
         "cpuTemp": labeled_temperature("k10temp", "Tctl"),
         "cpuClock": cpu_clock_ghz(),
         "gpuUsage": read_number(device / "gpu_busy_percent") if device else None,
@@ -113,11 +183,11 @@ def main() -> None:
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
 
-    previous_cpu = cpu_sample()
+    previous_cpu = cpu_samples()
     time.sleep(0.25)
 
     while True:
-        current_cpu = cpu_sample()
+        current_cpu = cpu_samples()
         print(json.dumps(collect(previous_cpu, current_cpu), separators=(",", ":")), flush=True)
         previous_cpu = current_cpu
         if args.once:
