@@ -75,6 +75,11 @@ def scale_color(color, brightness):
     return tuple(round(channel * brightness) for channel in color)
 
 
+def mask_jrainbow2_color(color):
+    """Clear JRAINBOW2's two control-flag bits from each color channel."""
+    return tuple(channel & 0xFC for channel in color)
+
+
 def fan_workload_color(value, low, middle, high, palette, brightness):
     black = (0, 0, 0)
     teal = scale_color(palette[0], brightness["idle"])
@@ -215,10 +220,11 @@ class Lighting:
                 f"expected exactly one {ocfg['motherboard_name']!r}, found {len(motherboards)}"
             )
         self.motherboard = motherboards[0]
-        if self.motherboard.serial != ocfg["motherboard_serial"]:
+        motherboard_serial = self.motherboard.metadata.serial
+        if motherboard_serial != ocfg["motherboard_serial"]:
             raise RuntimeError(
                 "motherboard serial mismatch: expected "
-                f"{ocfg['motherboard_serial']!r}, found {self.motherboard.serial!r}"
+                f"{ocfg['motherboard_serial']!r}, found {motherboard_serial!r}"
             )
 
         zones = {zone.name: zone for zone in self.motherboard.zones}
@@ -283,7 +289,7 @@ class Lighting:
 
     def apply_motherboard(self, workload, fans):
         load_rgb = RGBColor(*workload)
-        fan_rgb = RGBColor(*fans)
+        fan_rgb = RGBColor(*mask_jrainbow2_color(fans))
         frame = []
         for zone in self.motherboard.zones:
             if zone.name == self.workload_zone.name:

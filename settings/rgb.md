@@ -1,9 +1,11 @@
 # Aeris OpenRGB lighting
 
-> **Quarantined:** do not start OpenRGB or either Aeris RGB service. Upstream's
-> exact rc3.1 RPM is installed and version-locked, but hardware access remains
-> blocked by an empty runtime approval file and must follow every remaining step
-> in the [OpenRGB hardware-safety policy](rgb-safety.md).
+> **Approved attended runtime:** the exact upstream rc3.1 RPM is installed,
+> version-locked, and recorded in the runtime approval file. The fail-closed
+> Direct-mode server and daemon passed controlled canary and workload tests on
+> 2026-09-03. Both user services remain disabled; normal operation is currently
+> started manually and must continue to follow the
+> [OpenRGB hardware-safety policy](rgb-safety.md).
 
 ## Components
 
@@ -92,6 +94,13 @@ The RAM is deliberately black at or below the 20% CPU idle anchor. Above that
 point it fades from black to its calibrated `#FF8000` at 60% CPU usage, then to
 the shared `#FF0000` at maximum CPU usage.
 
+Additional attended rc3.1 tests confirmed that this is still the correct
+workaround. Direct pure blue leaves some LEDs dark even though the controller's
+autonomous Rainbow mode renders blue and purple correctly; autonomous blue
+Chase is also too dim. The temporary Chase and Rainbow tests used volatile
+`save=False` mode changes only, and all four DIMMs were returned to Off before
+the Direct-mode daemon was restarted. No ENE persistent save was attempted.
+
 An idle GPU yields visually to CPU activity: its teal fades out as CPU load
 rises, remains off until filtered CPU load falls below 40%, then returns on a
 squared curve to full teal at the 20% idle anchor. Meaningful GPU activity
@@ -123,6 +132,13 @@ GPU are switched to **Direct** mode only if they are not already in it. The
 process keeps one SDK connection for its lifetime. Any discovery mismatch,
 disconnect, or update failure exits immediately; it never reconnects or retries.
 Unchanged frames are not resent.
+
+OpenRGB rc3.1 initially rendered `JRAINBOW2` with a completely different color
+mapping from identical frames on `JRAINBOW1`. The daemon now clears the lower
+two control-flag bits of every `JRAINBOW2` color channel (`channel & 0xFC`),
+matching upstream MR !3306. A same-frame Rainbow test then rendered both headers
+identically, and the corrected workload daemon reproduced the previously
+approved smooth colors and transitions.
 
 The SDK server has no restart policy and is blocked by an exact-package approval
 gate before discovery. At every start it also re-audits the installed daemon,
@@ -176,16 +192,27 @@ journalctl --user -u aeris-openrgb.service -u aeris-openrgb-server.service
 journalctl --user -u aeris-openrgb.service -u aeris-openrgb-server.service -f
 ```
 
-Both services remain disabled. Do not run the enable command until the complete
-reactivation gate in `settings/rgb-safety.md` has passed and the approved runtime
-file contains the exact installed RPM identity. The service declares
-`Requires=` and `After=` on the SDK server, but neither unit retries a failure.
+Both services remain disabled. The approved runtime file now contains the exact
+installed RPM identity, but automatic boot activation has not been authorized.
+The service declares `Requires=` and `After=` on the SDK server, but neither unit
+retries a failure.
 
 ## Validation history
 
 A 30-second `stress-ng --cpu 16` run passed. CPU temperature peaked at 71.6 °C,
 and the lighting visibly transitioned under load. This stress test is documented
 rather than rerun automatically.
+
+The complete curve was subsequently observed under separate one-minute CPU and
+GPU stress runs and normal GPU work. Attack, peak hold, faster sustained release,
+inactive-device dimming, high-load synchronized pulsing, and the fan-off maximum
+all behaved as approved. The JRAINBOW2 rc3.1 color-mask correction was then
+verified with the actual daemon, which again matched the approved visual result.
+
+During the accepted manual run on 2026-09-03, the Python daemon used about
+0–1% CPU and 20 MiB resident memory. The separate OpenRGB SDK server used about
+4–5% CPU and 24 MiB resident memory. These are brief settled observations, not
+capacity guarantees.
 
 ## Day-one tuning notes
 
@@ -211,7 +238,8 @@ Future visual tuning should address:
 The complete synthetic preview—idle to orange to maximum and back—was visually
 approved. At maximum load, switching the fan LEDs fully off was preferred over
 the tested 15% and 5% red levels because the contrast against the full-red RAM,
-GPU, and backplane is more dramatic. Actual CPU/GPU load validation remains.
+GPU, and backplane is more dramatic. Separate CPU/GPU stress and real GPU-load
+validation also passed visually.
 
 Do not change these values blindly. Tune them while observing the physical system
 under controlled CPU and GPU loads, then record the calibrated values here and in

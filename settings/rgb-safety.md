@@ -10,8 +10,9 @@ recur. See the [upstream warning](https://gitlab.com/CalcProgrammer1/OpenRGB/-/b
 
 ## Current Aeris state
 
-- `aeris-openrgb.service` and `aeris-openrgb-server.service` are disabled and
-  inactive.
+- `aeris-openrgb.service` and `aeris-openrgb-server.service` remain disabled and
+  inactive as systemd units. An attended server and daemon were started manually
+  after the safety gate passed on 2026-09-03; this does not enable boot startup.
 - The installed package is upstream's official Fedora rc3.1 RPM,
   `openrgb-0.9.2026^1.0rc3.1-0.fc43.x86_64`, built from exact release-tag commit
   `5e81e26fcc65d3dacfb76b0a30ec0142ec7bb131`. Its installed binary SHA-256 is
@@ -23,9 +24,10 @@ recur. See the [upstream warning](https://gitlab.com/CalcProgrammer1/OpenRGB/-/b
 - The package is version-locked at rc3.1. Upstream's RPM version begins with
   `0.9.2026`, so without the lock DNF incorrectly offers Fedora's rc2 package as
   a numerical upgrade.
-- The runtime approval file is deliberately empty. The SDK server cannot start
-  until it contains an exact, audited RPM package identity.
-- All OpenRGB hardware detectors in the live configuration are quarantined.
+- The runtime approval file contains exactly
+  `openrgb-0.9.2026^1.0rc3.1-0.fc43.x86_64`.
+- The live detector configuration is restricted to exactly the three approved
+  families: MSI `MS_7C94`, ENE SMBus DRAM, and the ASUS TUF RX 6900 XT.
 - The recovered MSI controller is `MS-7C94`, USB VID:PID `1462:7c94`, current
   serial `A02021090806`. Its firmware was recovered with MSI's signed
   `SUtility_7C94_v06.exe` / `MSI_MB_7C94_v0006.bin`.
@@ -37,6 +39,15 @@ recur. See the [upstream warning](https://gitlab.com/CalcProgrammer1/OpenRGB/-/b
   detected nor written. The final saved state is JRAINBOW1 static `#00B4B4`,
   JRAINBOW2 static `#007C4C`, ASUS GPU static `#00B4B4`, and the pre-existing RAM
   red Chase Fade. The temporary writer was not installed.
+- Controlled Direct-mode canary, synthetic CPU/GPU workload, and real GPU-load
+  tests passed visually. The runtime remains fail-closed, performs no persistent
+  writes, and does not reconnect or retry after a failure.
+- A short attended diagnostic temporarily selected the ENE RAM's autonomous
+  Chase and Rainbow modes with `save=False`. It confirmed that autonomous
+  Rainbow can render blue/purple while Direct pure blue remains incomplete and
+  autonomous blue Chase is too dim. The DIMMs were returned to Off before the
+  approved Direct-mode daemon resumed. This diagnostic is historical evidence,
+  not authorization for autonomous-mode use in normal operation.
 
 ## What has actually been reported
 

@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 
-CONFIG = Path.home() / ".config/OpenRGB/OpenRGB.json"
+DEFAULT_CONFIG = Path.home() / ".config/OpenRGB/OpenRGB.json"
 AERIS_ALLOWLIST = {
     "MSI Mystic Light MS_7C94",
     "ENE SMBus DRAM",
@@ -16,24 +16,24 @@ AERIS_ALLOWLIST = {
 }
 
 
-def load_detectors():
-    data = json.loads(CONFIG.read_text(encoding="utf-8"))
+def load_detectors(config):
+    data = json.loads(config.read_text(encoding="utf-8"))
     try:
         detectors = data["Detectors"]["detectors"]
     except (KeyError, TypeError) as exc:
-        raise SystemExit(f"{CONFIG} has no OpenRGB detector map") from exc
+        raise SystemExit(f"{config} has no OpenRGB detector map") from exc
     return data, detectors
 
 
-def write_config(data):
-    CONFIG.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary_name = tempfile.mkstemp(prefix="OpenRGB.", suffix=".json", dir=CONFIG.parent)
+def write_config(data, config):
+    config.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix="OpenRGB.", suffix=".json", dir=config.parent)
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as temporary:
             json.dump(data, temporary, indent=4)
             temporary.write("\n")
-        os.chmod(temporary_name, CONFIG.stat().st_mode)
-        os.replace(temporary_name, CONFIG)
+        os.chmod(temporary_name, config.stat().st_mode)
+        os.replace(temporary_name, config)
     finally:
         if os.path.exists(temporary_name):
             os.unlink(temporary_name)
@@ -41,6 +41,7 @@ def write_config(data):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--check", action="store_true")
     action.add_argument("--require-aeris", action="store_true")
@@ -48,7 +49,7 @@ def main():
     action.add_argument("--allow-aeris", action="store_true")
     args = parser.parse_args()
 
-    data, detectors = load_detectors()
+    data, detectors = load_detectors(args.config)
     enabled = {name for name, value in detectors.items() if value}
     missing = AERIS_ALLOWLIST - set(detectors)
 
@@ -85,7 +86,7 @@ def main():
     allowed = AERIS_ALLOWLIST if args.allow_aeris else set()
     for name in detectors:
         detectors[name] = name in allowed
-    write_config(data)
+    write_config(data, args.config)
     print(
         "OpenRGB detector policy: "
         + ("Aeris allowlist enabled" if allowed else "all detectors quarantined")
