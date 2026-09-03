@@ -112,16 +112,14 @@ Item {
 
             Grid {
                 id: ramGrid
-                readonly property real cellSize: Math.max(3, Math.min(
-                    (parent.width - (root.columns - 1) * columnSpacing) / root.columns,
-                    (parent.height - (root.rows - 1) * rowSpacing) / root.rows))
+                readonly property real cellSize: Math.max(3,
+                    (height - (root.rows - 1) * rowSpacing) / root.rows)
 
-                anchors.centerIn: parent
-                width: root.columns * cellSize + (root.columns - 1) * columnSpacing
-                height: root.rows * cellSize + (root.rows - 1) * rowSpacing
+                anchors.fill: parent
                 columns: root.columns
                 rows: root.rows
-                columnSpacing: 2
+                columnSpacing: Math.max(0,
+                    (width - root.columns * cellSize) / (root.columns - 1))
                 rowSpacing: 2
 
                 Repeater {
@@ -151,17 +149,15 @@ Item {
 
             Grid {
                 id: vramGrid
-                readonly property real cellSize: Math.max(3, Math.min(
-                    (parent.width - (root.columns - 1) * columnSpacing) / root.columns,
-                    (parent.height - (root.rows - 1) * rowSpacing) / root.rows))
+                readonly property real cellSize: Math.max(3,
+                    (height - (root.rows - 1) * rowSpacing) / root.rows)
                 readonly property int filledUnits: Math.round(root.smoothedVram * root.unitCount / 100)
 
-                anchors.centerIn: parent
-                width: root.columns * cellSize + (root.columns - 1) * columnSpacing
-                height: root.rows * cellSize + (root.rows - 1) * rowSpacing
+                anchors.fill: parent
                 columns: root.columns
                 rows: root.rows
-                columnSpacing: 2
+                columnSpacing: Math.max(0,
+                    (width - root.columns * cellSize) / (root.columns - 1))
                 rowSpacing: 2
 
                 Repeater {
