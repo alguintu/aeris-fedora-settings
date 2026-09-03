@@ -21,12 +21,15 @@ if [[ $installed_nevra != "$approved_nevra" ]]; then
     exit 1
 fi
 
-case $installed_nevra in
-    *1.0~rc3.1*|*1.0~rc[4-9]*|*1.[1-9]*|*[2-9].*) ;;
-    *)
-        echo "Aeris OpenRGB safety gate: $installed_nevra predates the rc3.1 safety floor" >&2
-        exit 1
-        ;;
-esac
+installed_version=$(rpm -q --qf '%{VERSION}' openrgb 2>/dev/null || true)
+if [[ $installed_version == 1.0~rc3.1* \
+    || $installed_version =~ ^1\.0~rc([4-9]|[1-9][0-9]+) \
+    || $installed_version =~ ^1\.([1-9][0-9]*)(\.|$) \
+    || $installed_version =~ ^([2-9][0-9]*)(\.|$) ]]; then
+    :
+else
+    echo "Aeris OpenRGB safety gate: version $installed_version predates the rc3.1 safety floor" >&2
+    exit 1
+fi
 
 echo "Aeris OpenRGB safety gate: approved runtime $installed_nevra"
