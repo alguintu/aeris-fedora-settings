@@ -104,7 +104,7 @@ Item {
 
     Row {
         anchors.fill: parent
-        spacing: 10
+        spacing: 21
 
         Item {
             width: (root.width - 21) / 2
@@ -143,12 +143,6 @@ Item {
                     }
                 }
             }
-        }
-
-        Rectangle {
-            width: 1
-            height: root.height
-            color: "#344050"
         }
 
         Item {

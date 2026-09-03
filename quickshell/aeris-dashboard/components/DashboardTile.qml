@@ -31,13 +31,9 @@ Rectangle {
                 color: root.accent
             }
 
-            Text {
+            DashboardHeaderLabel {
                 Layout.fillWidth: true
                 text: root.title
-                color: "#eef3f8"
-                font.family: "Noto Sans"
-                font.pixelSize: 16
-                font.weight: Font.DemiBold
             }
 
             Text {

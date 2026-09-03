@@ -114,14 +114,11 @@ Item {
                         spacing: 10
 
                         Rectangle { width: 5; height: 18; radius: 3; color: "#57bced" }
-                        Text {
+                        DashboardHeaderLabel {
                             anchors.verticalCenter: parent.verticalCenter
                             text: page.nominalCapacity(page.metrics.ramTotal) + " RAM "
                                   + Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100) + "%"
                             color: "#57bced"
-                            font.family: "Noto Sans"
-                            font.pixelSize: 16
-                            font.weight: Font.DemiBold
                         }
                     }
 
@@ -131,14 +128,11 @@ Item {
                         spacing: 10
 
                         Rectangle { width: 5; height: 18; radius: 3; color: "#a99bf5" }
-                        Text {
+                        DashboardHeaderLabel {
                             anchors.verticalCenter: parent.verticalCenter
                             text: page.nominalCapacity(page.metrics.vramTotal) + " VRAM "
                                   + Math.round(page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100) + "%"
                             color: "#a99bf5"
-                            font.family: "Noto Sans"
-                            font.pixelSize: 16
-                            font.weight: Font.DemiBold
                         }
                     }
                 }
