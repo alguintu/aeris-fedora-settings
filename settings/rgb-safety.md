@@ -24,6 +24,13 @@ recur. See the [upstream warning](https://gitlab.com/CalcProgrammer1/OpenRGB/-/b
 - The recovered MSI controller is `MS-7C94`, USB VID:PID `1462:7c94`, current
   serial `A02021090806`. Its firmware was recovered with MSI's signed
   `SUtility_7C94_v06.exe` / `MSI_MB_7C94_v0006.bin`.
+- A manually authorized, one-time firmware-idle save was completed on
+  2026-09-03 with the exact upstream 1.0rc3.1 commit `5e81e26f`. Only the MSI
+  board and ASUS GPU detectors were enabled; ENE RAM was neither detected nor
+  written. The saved state is JRAINBOW1 static `#007878`, JRAINBOW2 static
+  `#005332`, ASUS GPU static `#007878`, and the pre-existing RAM red Chase Fade.
+  The temporary writer was not installed and this exception is permanently
+  closed.
 
 ## What has actually been reported
 
@@ -52,11 +59,13 @@ device is not assumed read-only.
 
 ## Non-negotiable Aeris rules
 
-1. **No persistent device writes.** Never call SDK `SaveMode`, Python
+1. **No further persistent device writes.** Never call SDK `SaveMode`, Python
    `save_mode()`, `set_mode(..., save=True)`, “Save to Device,” firmware-update,
    calibration-save, or equivalent hardware-persistence paths. The SDK defines
    `SaveMode` as saving the current mode to the device; see the
    [SDK/API documentation](https://gitlab.com/CalcProgrammer1/OpenRGB/-/blob/master/Documentation/RGBControllerAPI.md).
+   The completed 2026-09-03 idle save above was a single user-authorized
+   exception, not a reusable procedure or permission for another save.
 2. **No shutdown, boot, suspend, or resume handoff.** Shutdown only stops the
    processes. It sends no last color, mode, profile, firmware, or autonomous
    effect. BIOS-visible lighting is not an Aeris requirement.

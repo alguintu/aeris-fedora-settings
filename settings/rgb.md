@@ -102,10 +102,13 @@ remains solid full red rather than pulsing.
 
 On graceful logout, reboot, shutdown, suspend, or failure, the daemon must exit
 without sending any final color, mode, profile-save, or persistent-state
-command. Linux does not try to program a BIOS-visible or cold-power lighting
-state. This shutdown-write ban is absolute: the previous firmware-idle handoff
-repeatedly changed hardware modes and preceded the MSI Mystic Light controller
-ceasing to enumerate.
+command. A single manually authorized firmware-idle handoff was completed on
+2026-09-03 after controller recovery: JRAINBOW1 was saved as static `#007878`,
+JRAINBOW2 as static `#005332`, and the ASUS GPU as static `#007878`. The RAM was
+not detected or written, preserving its existing red Chase Fade. This was a
+closed one-time exception using upstream 1.0rc3.1 commit `5e81e26f`; its
+temporary writer was not installed. No daemon, shutdown hook, or repository
+script may repeat these persistent writes.
 
 After the full hardware identity is validated, the controller, four DIMMs, and
 GPU are switched to **Direct** mode only if they are not already in it. The
