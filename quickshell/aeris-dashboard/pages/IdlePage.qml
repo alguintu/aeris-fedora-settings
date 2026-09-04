@@ -97,7 +97,7 @@ Item {
                         detail: "R9 5950X " + (page.metrics.cpuClock > 0
                                 ? page.metrics.cpuClock.toFixed(1) : "--") + "GHz"
                         detailHint: "Representative clock of the busiest logical CPU, not an all-core average. One frequency read per second."
-                        eyebrow: Math.round(page.metrics.cpuUsage) + "% "
+                        eyebrow: Math.round(page.metrics.cpuUsage) + "% · "
                                  + page.temperature(page.metrics.cpuTemp)
                         accent: Theme.teal
                     }
@@ -260,34 +260,26 @@ Item {
                         condition: WeatherService.condition
                         isDay: WeatherService.previewMode ? WeatherService.previewMode !== "night"
                             : WeatherService.state.isDay !== false
+                        moonPhase: WeatherService.moonPhase
+                        moonIllumination: WeatherService.moonIllumination
                         animationEnabled: page.animationsActive && !page.profilePaused("weather")
                         useCanvasRenderer: WeatherService.renderingBackend === "canvas"
                         fixedTime: WeatherService.fixedAnimationTime
                     }
 
-                    Text {
+                    ChromaticTime {
                         anchors.left: parent.left
                         anchors.top: parent.top
                         height: 84
-                        verticalAlignment: Text.AlignVCenter
                         text: String(page.now.getHours() % 12 || 12).padStart(2, "0")
-                        color: Theme.blue
-                        font.family: Theme.clockBoldFontFamily
-                        font.pixelSize: 100
-                        font.weight: Font.Bold
                     }
 
-                    Text {
+                    ChromaticTime {
                         id: clockMinute
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
                         height: 84
-                        verticalAlignment: Text.AlignVCenter
                         text: String(page.now.getMinutes()).padStart(2, "0")
-                        color: Theme.blue
-                        font.family: Theme.clockBoldFontFamily
-                        font.pixelSize: 100
-                        font.weight: Font.Bold
                     }
 
                     Text {
@@ -316,36 +308,24 @@ Item {
                         id: clockWeekday
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-                        text: Qt.formatDateTime(page.now, "dddd")
+                        text: Qt.formatDateTime(page.now, "dddd").toUpperCase()
                         color: Theme.yellow
                         font.family: Theme.clockBoldFontFamily
                         font.pixelSize: 36
                         font.weight: Font.Bold
                     }
 
-                    Row {
+                    Text {
                         id: weatherReading
                         anchors.top: parent.top
                         anchors.right: parent.right
-                        spacing: 12
-
-                        ThemeIcon {
-                            width: 52
-                            height: 52
-                            name: WeatherService.icon
-                            color: Theme.mauve
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 52
-                            verticalAlignment: Text.AlignVCenter
-                            text: WeatherService.temperature
-                            color: Theme.cyan
-                            font.family: Theme.clockBoldFontFamily
-                            font.weight: Font.Bold
-                            font.pixelSize: 60
-                        }
+                        height: 52
+                        verticalAlignment: Text.AlignVCenter
+                        text: WeatherService.temperature
+                        color: Theme.cyan
+                        font.family: Theme.clockBoldFontFamily
+                        font.weight: Font.Bold
+                        font.pixelSize: 60
                     }
 
                     Text {

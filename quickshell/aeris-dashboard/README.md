@@ -39,8 +39,10 @@ tile, and equal-width CPU/RAM and GPU/VRAM cards stacked at right. Weather, medi
 telemetry, controls, and the timer now use live services.
 
 The clock's weather uses Open-Meteo current conditions for the city in the user's
-local configuration, with day/night icons, condition textures, a ten-minute refresh,
-and labelled offline caching. Tap the weather reading to refresh. See
+local configuration, with condition textures, a ten-minute refresh, and labelled
+offline caching. Clear days gain a blue daylight field; nights show restrained
+twinkling stars and Open-Meteo's live lunar phase, illumination, and bright-phase
+halo. Tap the weather reading to refresh. See
 [weather setup](../../settings/weather.md); the layout and clock remain independent
 of network availability.
 

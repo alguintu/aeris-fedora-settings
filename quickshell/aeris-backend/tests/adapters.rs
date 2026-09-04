@@ -61,7 +61,7 @@ fn templates_parse_only_safe_frontmatter() {
 
 fn observation(now: f64) -> Value {
     json!({"current":{"temperature_2m":29.5,"weather_code":2,"is_day":1,"time":now-60.0},
-        "current_units":{"temperature_2m":"°C"}})
+        "current_units":{"temperature_2m":"°C"},"daily":{"moon_phase":[0.25]}})
 }
 
 #[test]
@@ -95,6 +95,9 @@ fn weather_codes_and_validation() {
         weather::normalize(&observation(now), now).unwrap()["temperature"],
         29.5
     );
+    let normalized = weather::normalize(&observation(now), now).unwrap();
+    assert_eq!(normalized["moonPhase"], 0.25);
+    assert!((normalized["moonIllumination"].as_f64().unwrap() - 0.5).abs() < 1e-12);
     for (field, value) in [
         ("temperature_2m", json!(true)),
         ("temperature_2m", json!(90)),
@@ -110,6 +113,11 @@ fn weather_codes_and_validation() {
     let mut data = observation(now);
     data["current_units"]["temperature_2m"] = json!("°F");
     assert!(weather::normalize(&data, now).is_err());
+    for value in [json!(-0.1), json!(1.1), json!("waxing"), json!(null)] {
+        let mut data = observation(now);
+        data["daily"]["moon_phase"] = json!([value]);
+        assert!(weather::normalize(&data, now).is_err());
+    }
     assert!(weather::location(&json!({"name":"X","latitude":true,"longitude":0})).is_err());
 }
 

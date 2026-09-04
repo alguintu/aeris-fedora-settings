@@ -8,6 +8,8 @@ ClippingRectangle {
     id: root
     property string condition: "unknown"
     property bool isDay: true
+    property real moonPhase: 0.75
+    property real moonIllumination: 0.5
     property bool animationEnabled: true
     property bool useCanvasRenderer: false
     property real fixedTime: -1
@@ -18,8 +20,13 @@ ClippingRectangle {
     readonly property bool fallback: useCanvasRenderer || softwareDaylight || accelerated.shaderFailed
     onConditionChanged: elapsed = 0
     readonly property bool moving: animationEnabled && visible && fixedTime < 0 && condition !== "unknown"
-    color: "transparent"
+    readonly property bool clearDay: condition === "clear" && isDay
+    color: clearDay ? "#467da3" : "transparent"
     radius: Theme.radius
+
+    Behavior on color {
+        ColorAnimation { duration: 500; easing.type: Easing.OutCubic }
+    }
 
     // Pause in place off-page; never catch up elapsed time after sleep/restore.
     Timer {
@@ -37,6 +44,8 @@ ClippingRectangle {
         visible: !root.fallback
         condition: root.useCanvasRenderer || root.softwareDaylight ? "unknown" : root.condition
         isDay: root.isDay
+        moonPhase: root.moonPhase
+        moonIllumination: root.moonIllumination
         elapsed: root.sceneTime
         transform: Scale { xScale: root.width / 480; yScale: root.height / 206 }
     }
@@ -53,8 +62,11 @@ ClippingRectangle {
             function onConditionChanged() { atmosphere.requestPaint() }
             function onIsDayChanged() { atmosphere.requestPaint() }
             function onFixedTimeChanged() { atmosphere.requestPaint() }
+            function onMoonPhaseChanged() { atmosphere.requestPaint() }
+            function onMoonIlluminationChanged() { atmosphere.requestPaint() }
         }
         onPaint: WeatherScene.paint(getContext("2d"), width, height,
-                                    root.condition, root.isDay, root.sceneTime)
+                                    root.condition, root.isDay, root.sceneTime,
+                                    root.moonPhase, root.moonIllumination)
     }
 }

@@ -8,7 +8,7 @@ vm.createContext(scene);
 vm.runInContext(fs.readFileSync(path.join(__dirname,
     '../quickshell/aeris-dashboard/components/WeatherScene.js'), 'utf8'), scene);
 
-function render(kind, time, day = true) {
+function render(kind, time, day = true, moonPhase = 0.75) {
     const operations = [];
     const gradient = { addColorStop: (...args) => operations.push(['stop', ...args]) };
     const ctx = new Proxy({}, {
@@ -21,7 +21,8 @@ function render(kind, time, day = true) {
         },
         set: (_, key, value) => { operations.push([key, value]); return true; }
     });
-    scene.paint(ctx, 480, 206, kind, day, time);
+    const illumination = (1 - Math.cos(moonPhase * Math.PI * 2)) / 2;
+    scene.paint(ctx, 480, 206, kind, day, time, moonPhase, illumination);
     return JSON.stringify(operations);
 }
 
@@ -35,6 +36,26 @@ for (const kind of ['clear', 'night', 'partly-cloudy', 'cloudy', 'fog', 'rain', 
 }
 test('partly cloudy changes illumination after sunset', () => {
     assert.notEqual(render('partly-cloudy', 3, true), render('partly-cloudy', 3, false));
+});
+test('night sky remains behind every known weather condition', () => {
+    for (const kind of ['night', 'partly-cloudy', 'cloudy', 'fog', 'rain', 'snow', 'storm']) {
+        const night = render(kind, 3, false);
+        assert.match(night, /arc/);
+        if (kind !== 'night') assert.notEqual(night, render(kind, 3, true));
+    }
+});
+test('moon terminator follows phase and star field stays lightly animated', () => {
+    const newMoon = render('night', 3, false, 0);
+    const firstQuarter = render('night', 3, false, 0.25);
+    const fullMoon = render('night', 3, false, 0.5);
+    const lastQuarter = render('night', 3, false, 0.75);
+    assert.notEqual(newMoon, firstQuarter);
+    assert.notEqual(firstQuarter, fullMoon);
+    assert.notEqual(firstQuarter, lastQuarter);
+    assert.ok((fullMoon.match(/createRadialGradient/g) || []).length
+        > (firstQuarter.match(/createRadialGradient/g) || []).length);
+    const operations = JSON.parse(firstQuarter);
+    assert.ok(operations.filter(op => op[0] === 'arc').length >= 39);
 });
 test('missing weather stays blank', () => {
     assert.equal(render('unknown', 0), JSON.stringify([['reset'], ['scale', 1, 1]]));

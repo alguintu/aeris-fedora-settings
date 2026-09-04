@@ -8,7 +8,7 @@ if [[ ! -x "$qsb_bin" ]]; then
     exit 1
 fi
 # Ship the compiled pack too: running the dashboard needs no compiler.
-for shader in daylight heatmap; do
+for shader in daylight heatmap chromatic-time media-wave; do
     "$qsb_bin" --glsl '100 es,120,150' --hlsl 50 --msl 12 \
         -o "$shader_dir/$shader.frag.qsb" "$shader_dir/$shader.frag"
 done

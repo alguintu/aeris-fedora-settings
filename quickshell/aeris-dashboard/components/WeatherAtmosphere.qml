@@ -7,11 +7,15 @@ Item {
     id: root
     property string condition: "unknown"
     property bool isDay: true
+    property real moonPhase: 0.75
+    property real moonIllumination: 0.5
     property real elapsed: 0
     readonly property bool storm: condition === "storm"
     readonly property bool broken: condition === "partly-cloudy"
     readonly property bool daylight: condition === "clear" || (broken && isDay)
-    readonly property bool night: condition === "night" || (broken && !isDay)
+    // Night illumination is the background state, not a competing condition.
+    // Weather layers remain in front, naturally obscuring it when dense.
+    readonly property bool night: condition === "night" || (!isDay && condition !== "unknown")
     readonly property bool deck: ["partly-cloudy", "cloudy", "rain", "storm", "snow"].indexOf(condition) >= 0
     readonly property bool shaderFailed: sun.item !== null && sun.item.status === ShaderEffect.Error
     width: 480
@@ -28,36 +32,36 @@ Item {
     }
 
     Loader {
+        anchors.fill: parent
         active: root.night
         sourceComponent: Item {
-            WeatherMist {
-                x: 145; y: -39; width: 180; height: 170
-                rgb: "150,172,209"; intensity: 0.09; density: 0.12
-            }
             Repeater {
-                model: 25
-                Rectangle {
+                // Three cached textures provide a fuller sky while only three
+                // scene-graph opacities breathe per frame.
+                model: 3
+                Canvas {
                     required property int index
-                    readonly property real radiusValue: 0.6 + Scene.seed(index + 80) * 0.9
-                    x: Scene.seed(index + 1) * 480 - radiusValue
-                    y: Scene.seed(index + 41) * 155 - radiusValue
-                    width: radiusValue * 2; height: width; radius: radiusValue
-                    color: "#d8dee9"
-                    opacity: 0.12 + 0.05 * Math.sin(root.elapsed * 0.8 + index * 2)
-                    antialiasing: true
+                    anchors.fill: parent
+                    opacity: (0.76 + 0.1 * Math.sin(root.elapsed * (0.42 + index * 0.09)
+                                                     + index * 2.1))
+                        * (0.94 - root.moonIllumination * 0.22)
+                    onPaint: {
+                        const ctx = getContext("2d")
+                        ctx.reset()
+                        Scene.starLayer(ctx, index, 3, 39)
+                    }
                 }
             }
             Canvas {
-                x: 195; y: 10; width: 75; height: 75
+                anchors.fill: parent
+                onMoonPhaseChanged: requestPaint()
+                property real moonPhase: root.moonPhase
+                property real moonIllumination: root.moonIllumination
+                onMoonIlluminationChanged: requestPaint()
                 onPaint: {
                     const ctx = getContext("2d")
-                    ctx.reset(); ctx.translate(-195, -10)
-                    ctx.fillStyle = "rgba(203,216,236,0.23)"
-                    ctx.beginPath(); ctx.moveTo(241, 22)
-                    ctx.bezierCurveTo(209, 13, 198, 59, 229, 68)
-                    ctx.bezierCurveTo(245, 74, 259, 61, 259, 51)
-                    ctx.bezierCurveTo(231, 66, 217, 37, 241, 22)
-                    ctx.closePath(); ctx.fill()
+                    ctx.reset()
+                    Scene.moon(ctx, 286, 42, 29, moonPhase, moonIllumination)
                 }
             }
         }

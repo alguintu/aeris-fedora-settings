@@ -7,21 +7,19 @@ Item {
     id: page
     readonly property var cards: [
         { label: "PROCESSOR", icon: "processor", accent: Theme.blue,
-          value: "Ryzen 9 5950X", lines: ["AMD · 16 cores / 32 threads", "2 CCDs · 64 MB L3 cache"] },
+          value: "Ryzen 9 5950X", lines: ["16 cores / 32 threads · 64 MB L3", "3.4 GHz base · 4.9 GHz boost"] },
         { label: "GRAPHICS", icon: "graphics-card", accent: Theme.green,
-          value: "Radeon RX 6900 XT", lines: ["ASUS TUF Gaming OC", "16 GB VRAM · 80 compute units"] },
+          value: "Radeon RX 6900 XT", lines: ["ASUS TUF Gaming OC", "16 GB VRAM · 80 CU"] },
         { label: "MEMORY", icon: "chip", accent: Theme.mauve,
-          value: "64 GB DDR4", lines: ["4 × 16 GB DIMMs", "3200 MT/s · recorded"] },
+          value: "64 GB PNY DDR4", lines: ["4 × 16GB DDR4 DIMMs", "PNY XLR8 EPIC-X RGB", "3200 MTs"] },
         { label: "CHASSIS", icon: "desktop-tower", accent: Theme.cyan,
-          value: "DeepCool CH260", lines: ["Grand Vision 360 White AIO", "MSI MAG A850GL PCIE5 · 850 W"] },
+          value: "DeepCool CH260", lines: ["Grand Vision 360 White AIO", "MSI MAG A850GL PCIE5 · 850 W", "OpenRGB + CoolerControl"] },
         { label: "MOTHERBOARD", icon: "processor", accent: Theme.teal,
           value: "B550M MORTAR WIFI", lines: ["MSI MAG · AM4 · MS-7C94", "BIOS 1.O1"] },
         { label: "STORAGE", icon: "harddisk", accent: Theme.yellow,
-          value: "5 physical drives", lines: ["990 PRO 1 TB · 860 EVO 1 TB", "BarraCuda 500 GB · IronWolf 4 TB", "Lexar NM620 512 GB · unmounted"] },
+          value: "2 NVMe · 3 SATA", lines: ["1TB 990 PRO · 512GB NM620", "1TB 860 EVO · 500GB BarraCuda", "4TB IronWolf HDD"] },
         { label: "SYSTEM", icon: "terminal", accent: Theme.orange,
-          value: "Fedora Linux 44", lines: ["KDE Plasma 6.7.4 · x86_64", "Linux 7.1.12-200.fc44.x86_64"] },
-        { label: "FANS & RGB", icon: "fan", accent: Theme.red,
-          value: "8 fans · 4 zones", lines: ["3 rad · 1 rear · 2 front · 2 GPU", "2 ARGB chains · RAM · GPU", "CoolerControl + OpenRGB"] }
+          value: "Fedora Linux 44", lines: ["KDE Plasma 6.7.4 · x86_64", "Linux 7.1.12-200.fc44.x86_64"] }
     ]
 
     RowLayout {
@@ -121,6 +119,72 @@ Item {
                                     font.pixelSize: 20
                                     elide: Text.ElideRight
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: 1
+                spacing: 12
+
+                DashboardTile {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentMargin: 14
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 14
+                        ThemeIcon { name: "fan"; color: Theme.red; width: 30; height: 30 }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { text: "THERMALRIGHT FANS"; color: Theme.red; font.family: Theme.fontFamily; font.pixelSize: 20 }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "EXHAUST · 3 RAD · 2 GPU"
+                                color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 18
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "INTAKE · 1 REAR · 2 FRONT"
+                                color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 18
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                DashboardTile {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentMargin: 14
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 14
+                        ThemeIcon { name: "aurora"; color: Theme.mauve; width: 30; height: 30 }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { text: "ARGB ZONES"; color: Theme.mauve; font.family: Theme.fontFamily; font.pixelSize: 20 }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "BACKPLANE + PSU · FANS"
+                                color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 18
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "DRAM · GPU"
+                                color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 18
+                                elide: Text.ElideRight
                             }
                         }
                     }

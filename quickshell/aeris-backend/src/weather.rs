@@ -114,9 +114,17 @@ pub fn normalize(data: &Value, now: f64) -> Result<Value> {
     if data["current_units"]["temperature_2m"] != "°C" {
         return Err("Unexpected temperature unit".into());
     }
+    let moon_phase = data["daily"]["moon_phase"]
+        .as_array()
+        .and_then(|values| values.first())
+        .and_then(Value::as_f64)
+        .filter(|n| n.is_finite() && (0.0..=1.0).contains(n))
+        .ok_or("Invalid weather moon phase")?;
+    let moon_illumination = (1.0 - (moon_phase * std::f64::consts::TAU).cos()) / 2.0;
     let (label, pattern, icon) = condition(code, day == 1);
     Ok(
-        json!({"temperature":temp,"code":code,"isDay":day==1,"description":label,"condition":pattern,"icon":icon,"observedAt":measured,"fetchedAt":now}),
+        json!({"temperature":temp,"code":code,"isDay":day==1,"description":label,"condition":pattern,"icon":icon,
+            "moonPhase":moon_phase,"moonIllumination":moon_illumination,"observedAt":measured,"fetchedAt":now}),
     )
 }
 pub fn cached(data: &Value, place: &Value, now: f64) -> Option<Value> {
@@ -124,8 +132,13 @@ pub fn cached(data: &Value, place: &Value, now: f64) -> Option<Value> {
         return None;
     }
     let old = &data["weather"];
-    let mut value = normalize(&json!({"current":{"temperature_2m":old["temperature"],"weather_code":old["code"],
-        "is_day":if old["isDay"].as_bool()? {1} else {0},"time":old["observedAt"]},"current_units":{"temperature_2m":"°C"}}),now).ok()?;
+    let mut value = normalize(
+        &json!({"current":{"temperature_2m":old["temperature"],"weather_code":old["code"],
+        "is_day":if old["isDay"].as_bool()? {1} else {0},"time":old["observedAt"]},
+        "current_units":{"temperature_2m":"°C"},"daily":{"moon_phase":[old["moonPhase"].clone()]}}),
+        now,
+    )
+    .ok()?;
     let fetched = old["fetchedAt"].as_f64()?;
     if !(0.0..MAX_AGE).contains(&(now - fetched)) {
         return None;
@@ -178,7 +191,7 @@ pub fn collect(force: bool) -> Value {
     let (config, cache) = paths();
     collect_with(&config, &cache, common::now(), force, |place, now| {
         let url = format!(
-            "https://api.open-meteo.com/v1/forecast?latitude={}&longitude={}&current=temperature_2m%2Cweather_code%2Cis_day&temperature_unit=celsius&timeformat=unixtime&timezone=auto&forecast_days=1",
+            "https://api.open-meteo.com/v1/forecast?latitude={}&longitude={}&current=temperature_2m%2Cweather_code%2Cis_day&daily=moon_phase&temperature_unit=celsius&timeformat=unixtime&timezone=auto&forecast_days=1",
             place["latitude"], place["longitude"]
         );
         let bytes = common::get(&url, Duration::from_secs(12), 131072, "Aeris-Weather/1.0")?;

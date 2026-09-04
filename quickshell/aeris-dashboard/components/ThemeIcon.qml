@@ -26,6 +26,7 @@ Item {
         "white-balance-sunny": "feather/sun",
         "power": "feather/power",
         "lights-off": "icons/lightbulb-off-outline",
+        "aurora": "icons/aurora",
         "coffee": "feather/coffee",
         "weather-windy": "feather/wind",
         "lightning-bolt": "feather/zap",

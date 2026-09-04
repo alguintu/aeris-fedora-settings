@@ -13,7 +13,7 @@ independent of this visual theme.
 - Active filled icons: Pictogrammers Material Design Icons 7.4.47, from
   https://github.com/Templarian/MaterialDesign-SVG/tree/9e04201d4557e729822fb57f62a316c3dea1d4a8.
   Apache 2.0; see `icons/LICENSE.txt`. SVG path fills are normalized to white for
-  runtime tinting. Used for fan, four-point party star, and media controls.
+  runtime tinting. Used for fan, four-point party star, aurora/ARGB, and media controls.
   Lights-off uses MDI `lightbulb-off-outline`, a slashed bulb, instead of a power symbol.
   Hardware headers use MDI `memory` (processor-shaped glyph) and
   `expansion-card` (graphics card), mapped as `processor` and `graphics-card`.
@@ -54,5 +54,9 @@ independent of this visual theme.
   Source: https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Iosevka/IosevkaNerdFont-Bold.ttf
   (Git blob `52297cad6da96820ff2bed8ccd577b91b37f2629`).
   SIL OFL; see `fonts/Iosevka-OFL.txt`. Dates retain the original regular face.
+- The chromatic clock's fitted companion mask uses the unmodified
+  **Noto Sans Condensed Bold** face from Fedora's
+  `google-noto-sans-fonts-20251201-2.fc44.noarch` package. It remains subject to
+  SIL OFL 1.1; see `fonts/Noto-OFL.txt` and `fonts/Noto-PROVENANCE.md`.
 
 These assets are local; normal dashboard startup needs no network requests.

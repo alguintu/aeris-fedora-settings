@@ -2,6 +2,8 @@ singleton Theme 1.0 Theme.qml
 singleton BackendService 1.0 BackendService.qml
 singleton DecorativeClock 1.0 DecorativeClock.qml
 DecorativeTick 1.0 DecorativeTick.qml
+ChromaticTime 1.0 ChromaticTime.qml
+ChromaticPulse 1.0 ChromaticPulse.qml
 ActionButton 1.0 ActionButton.qml
 CoolingModeButton 1.0 CoolingModeButton.qml
 CpuHeatmap 1.0 CpuHeatmap.qml

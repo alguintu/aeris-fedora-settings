@@ -20,11 +20,11 @@ Item {
     readonly property string title: root.hasPlayer
             ? ((root.mediaInfoPlayer ? root.mediaInfoPlayer.trackTitle : "")
                || root.player.trackTitle || "Unknown title")
-            : "Nothing playing"
+            : "SILENCE"
     readonly property string artist: root.hasPlayer
             ? ((root.mediaInfoPlayer ? root.mediaInfoPlayer.trackArtist : "")
                || root.player.trackArtist || "Unknown artist")
-            : "Open Spotify, a browser, VLC, or another media player"
+            : "ANONYMOUS"
     readonly property string album: root.hasPlayer
             ? ((root.mediaInfoPlayer ? root.mediaInfoPlayer.trackAlbum : "")
                || root.player.trackAlbum || "") : ""
@@ -302,16 +302,16 @@ Item {
                 contentInsideBorder: false
 
                 Rectangle {
+                    id: emptyArtwork
                     anchors.fill: parent
                     anchors.margins: 1
                     radius: Theme.radius - 1
                     color: Theme.inset
-                    ThemeIcon {
-                        anchors.centerIn: parent
-                        name: "music-note"
-                        color: root.hasPlayer ? Theme.mauve : Theme.blue
-                        width: 72
-                        height: 72
+                    visible: root.activeArtLayer < 0
+
+                    ChromaticPulse {
+                        anchors.fill: parent
+                        running: emptyArtwork.visible
                     }
                 }
 

@@ -69,21 +69,76 @@ function sun(ctx, t, strength) {
          "239,228,202", 0.06 * strength, 0.1)
 }
 
-function clearNight(ctx, t) {
-    mist(ctx, 235, 46, 90, 85, "150,172,209", 0.09, 0.12)
-    for (var i = 0; i < 25; ++i) {
+function starLayer(ctx, layer, layerCount, count) {
+    for (var i = layer; i < count; i += layerCount) {
         var x = seed(i + 1) * 480, y = seed(i + 41) * 155
-        var alpha = 0.12 + 0.05 * Math.sin(t * 0.8 + i * 2)
+        var alpha = 0.13 + seed(i + 470) * 0.1
         ctx.fillStyle = rgba("216,222,233", alpha)
         ctx.beginPath(); ctx.arc(x, y, 0.6 + seed(i + 80) * 0.9, 0, Math.PI * 2); ctx.fill()
     }
-    // Crescent silhouette, never a fake weather condition or moon-phase estimate.
-    ctx.fillStyle = "rgba(203,216,236,0.23)"
-    ctx.beginPath(); ctx.moveTo(241, 22)
-    ctx.bezierCurveTo(209, 13, 198, 59, 229, 68)
-    ctx.bezierCurveTo(245, 74, 259, 61, 259, 51)
-    ctx.bezierCurveTo(231, 66, 217, 37, 241, 22)
-    ctx.closePath(); ctx.fill()
+}
+
+function moon(ctx, cx, cy, radius, phase, illumination) {
+    phase = Math.max(0, Math.min(1, Number(phase)))
+    illumination = Math.max(0, Math.min(1, Number(illumination)))
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.rotate(-15 * Math.PI / 180)
+    cx = 0
+    cy = 0
+    var waxing = phase <= 0.5
+    var highlightX = cx + (waxing ? 1 : -1) * radius * 0.28 * (1 - illumination)
+    // The exterior halo belongs only to bright gibbous/full phases. Fade it
+    // in continuously so a changing phase can never visibly pop.
+    var halo = Math.max(0, Math.min(1, (illumination - 0.55) / 0.45))
+    if (halo > 0)
+        mist(ctx, highlightX, cy, radius * 1.6, radius * 1.5,
+             "203,218,244", halo * 0.18, 0.38)
+    // The unlit face is still physically present: keep a restrained full disc
+    // under the bright phase instead of making the missing portion transparent.
+    ctx.fillStyle = rgba("111,127,153", 0.11)
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill()
+    // Draw only the illuminated region. The terminator advances from a
+    // right-hand waxing crescent through full to a left-hand waning crescent.
+    var steps = 48
+    var terminator = waxing ? Math.cos(phase * Math.PI * 2)
+                            : -Math.cos(phase * Math.PI * 2)
+    ctx.beginPath()
+    for (var i = 0; i <= steps; ++i) {
+        var y = -radius + radius * 2 * i / steps
+        var edge = Math.sqrt(Math.max(0, radius * radius - y * y))
+        var x = terminator * edge
+        if (i === 0) ctx.moveTo(cx + x, cy + y)
+        else ctx.lineTo(cx + x, cy + y)
+    }
+    for (var j = steps; j >= 0; --j) {
+        var outerY = -radius + radius * 2 * j / steps
+        var outerX = Math.sqrt(Math.max(0, radius * radius - outerY * outerY))
+        ctx.lineTo(cx + (waxing ? outerX : -outerX), cy + outerY)
+    }
+    ctx.closePath()
+    var light = Math.sqrt(illumination)
+    // Luminance stays inside the active face: a bright, cool center falls off
+    // gently toward the lunar edge independently of the bright-phase halo.
+    var face = ctx.createRadialGradient(highlightX, cy - radius * 0.18,
+                                        radius * 0.04, cx, cy, radius * 1.18)
+    face.addColorStop(0, rgba("239,246,255", 0.46 + light * 0.28))
+    face.addColorStop(0.56, rgba("216,229,248", 0.36 + light * 0.20))
+    face.addColorStop(1, rgba("184,202,226", 0.24 + light * 0.13))
+    ctx.fillStyle = face
+    ctx.fill()
+    ctx.restore()
+}
+
+function clearNight(ctx, t, phase, illumination) {
+    for (var layer = 0; layer < 3; ++layer) {
+        ctx.save()
+        ctx.globalAlpha = (0.76 + 0.1 * Math.sin(t * (0.42 + layer * 0.09) + layer * 2.1))
+            * (0.94 - illumination * 0.22)
+        starLayer(ctx, layer, 3, 39)
+        ctx.restore()
+    }
+    moon(ctx, 286, 42, 29, phase, illumination)
 }
 
 function cloud(ctx, x, y, size, opacity, dark) {
@@ -218,16 +273,21 @@ function lightning(ctx, t) {
     ctx.restore()
 }
 
-function paint(ctx, width, height, kind, isDay, t) {
+function paint(ctx, width, height, kind, isDay, t, moonPhase, moonIllumination) {
     ctx.reset()
     ctx.scale(width / 480, height / 206)
+    moonPhase = moonPhase === undefined ? 0.75 : moonPhase
+    moonIllumination = moonIllumination === undefined ? 0.5 : moonIllumination
+    // Night is a backdrop shared by every nighttime condition. Fog, rain,
+    // snow, storm, and cloud layers are drawn over it below.
+    if (kind === "night" || (!isDay && kind !== "unknown"))
+        clearNight(ctx, t, moonPhase, moonIllumination)
     if (kind === "clear") sun(ctx, t, 1)
-    else if (kind === "night") clearNight(ctx, t)
+    else if (kind === "night") { /* backdrop already painted */ }
     else if (kind === "fog") fog(ctx, t)
     else if (["partly-cloudy", "cloudy", "rain", "storm", "snow"].indexOf(kind) >= 0) {
         if (kind === "partly-cloudy") {
             if (isDay) sun(ctx, t, 0.7)
-            else clearNight(ctx, t)
         }
         if (kind === "rain" || kind === "storm") rain(ctx, t, kind === "storm")
         if (kind === "snow") snow(ctx, t)
