@@ -1,0 +1,47 @@
+{
+  "method": "Both backend stacks run concurrently in separate temporary cgroups; 10s warmup then three 20s windows; microsecond CPU accounting; stdout discarded equally; each includes an equal Rust supervisor; no QML/rendering in these groups; normal dashboard remains on Rust",
+  "results": [
+    {
+      "cpuPercentOneLogicalCPU": 0.21562932482145808,
+      "implementation": "python",
+      "includesEqualSleepingSupervisor": true,
+      "seconds": 20.000062624,
+      "window": 1
+    },
+    {
+      "cpuPercentOneLogicalCPU": 0.14911453309257397,
+      "implementation": "rust",
+      "includesEqualSleepingSupervisor": true,
+      "seconds": 20.000062624,
+      "window": 1
+    },
+    {
+      "cpuPercentOneLogicalCPU": 0.21980431658441887,
+      "implementation": "python",
+      "includesEqualSleepingSupervisor": true,
+      "seconds": 20.000062184,
+      "window": 2
+    },
+    {
+      "cpuPercentOneLogicalCPU": 0.16153949774139362,
+      "implementation": "rust",
+      "includesEqualSleepingSupervisor": true,
+      "seconds": 20.000062184,
+      "window": 2
+    },
+    {
+      "cpuPercentOneLogicalCPU": 0.21602934301156204,
+      "implementation": "python",
+      "includesEqualSleepingSupervisor": true,
+      "seconds": 20.000060824,
+      "window": 3
+    },
+    {
+      "cpuPercentOneLogicalCPU": 0.13991957447659012,
+      "implementation": "rust",
+      "includesEqualSleepingSupervisor": true,
+      "seconds": 20.000060824,
+      "window": 3
+    }
+  ]
+}

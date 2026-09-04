@@ -1,0 +1,26 @@
+{
+  "decorativeFps": 60,
+  "gpuCycle": [
+    99,
+    45,
+    90,
+    15
+  ],
+  "mediaPresentation": "hidden in both cases; playback untouched",
+  "order": [
+    "python",
+    "rust",
+    "rust",
+    "python",
+    "python",
+    "rust"
+  ],
+  "originalCollapsed": "false",
+  "originalPage": "1",
+  "physicalGpuStress": false,
+  "restore": "Remove only the experiment runtime drop-in, restart default Rust, restore page/visibility",
+  "secondsPerGpuStep": 5,
+  "secondsPerSample": 40,
+  "warmupSeconds": 15,
+  "weatherPreview": "rain"
+}

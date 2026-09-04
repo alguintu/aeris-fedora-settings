@@ -1,0 +1,30 @@
+{
+  "backend": "rust",
+  "decorativeFps": 60,
+  "frameTiming": "QQuickWindow frameSwapped delivery intervals, millisecond wall clock; not physical scanout",
+  "gpuCycle": [
+    99,
+    45,
+    90,
+    15
+  ],
+  "mediaPresentation": "hidden equally; actual player and hardware controls untouched",
+  "order": [
+    "opengl",
+    "vulkan",
+    "vulkan",
+    "opengl"
+  ],
+  "originalCollapsed": "false",
+  "originalPage": "1",
+  "physicalGpuStress": false,
+  "restore": "Remove owned runtime drop-in; restart configured renderer and restore original page/visibility",
+  "secondsPerGpuStep": 5,
+  "secondsPerSample": 30,
+  "warmupSeconds": 8,
+  "weather": [
+    "clear",
+    "rain",
+    "storm"
+  ]
+}

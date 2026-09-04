@@ -1,0 +1,396 @@
+{
+  "date": "2026-09-04",
+  "cpuUnits": "percent of one logical CPU",
+  "broad": [
+    {
+      "label": "baseline",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 8.315,
+      "gpuEngineBusyPercent": {
+        "gfx": 1.0016,
+        "compute": 0
+      },
+      "threadCpuPercent": {
+        "QSGRenderThread": 2.042,
+        "quickshell": 1.892,
+        "quickshell:gl0": 1.793,
+        "quickshe:gdrv0": 0.847,
+        "quickshell:cs0": 0.398,
+        "metrics.py": 0.349,
+        "WaylandEventThr": 0.299,
+        "tomatctl.py": 0.199,
+        "coolingctl.py": 0.149,
+        "rgbctl.py": 0.1,
+        "sleepctl.py": 0.05
+      },
+      "serviceMemoryMiB": 160.3,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 34.9,
+      "wholeGpuBusyPercentMean": 3.8,
+      "paused": ""
+    },
+    {
+      "label": "no-weather",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 7.162,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.8883,
+        "compute": 0.0004
+      },
+      "threadCpuPercent": {
+        "quickshell": 1.743,
+        "QSGRenderThread": 1.643,
+        "quickshell:gl0": 1.444,
+        "quickshe:gdrv0": 0.747,
+        "quickshell:cs0": 0.398,
+        "metrics.py": 0.398,
+        "WaylandEventThr": 0.199,
+        "tomatctl.py": 0.199,
+        "coolingctl.py": 0.1,
+        "sleepctl.py": 0.05
+      },
+      "serviceMemoryMiB": 160.3,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 35,
+      "wholeGpuBusyPercentMean": 6.05,
+      "paused": "weather"
+    },
+    {
+      "label": "no-cpu",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 6.546,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.7402,
+        "compute": 0.0001
+      },
+      "threadCpuPercent": {
+        "quickshell": 1.594,
+        "QSGRenderThread": 1.395,
+        "quickshell:gl0": 1.245,
+        "quickshe:gdrv0": 0.697,
+        "metrics.py": 0.398,
+        "quickshell:cs0": 0.349,
+        "WaylandEventThr": 0.249,
+        "tomatctl.py": 0.199,
+        "coolingctl.py": 0.149,
+        "sleepctl.py": 0.05
+      },
+      "serviceMemoryMiB": 159.1,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 34.5,
+      "wholeGpuBusyPercentMean": 4,
+      "paused": "weather,cpu"
+    },
+    {
+      "label": "no-gpu",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 3.425,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.4098,
+        "compute": 0.0007
+      },
+      "threadCpuPercent": {
+        "QSGRenderThread": 0.747,
+        "quickshell:gl0": 0.647,
+        "quickshell": 0.398,
+        "quickshe:gdrv0": 0.299,
+        "metrics.py": 0.299,
+        "quickshell:cs0": 0.149,
+        "coolingctl.py": 0.149,
+        "WaylandEventThr": 0.1,
+        "tomatctl.py": 0.1,
+        "sleepctl.py": 0.1
+      },
+      "serviceMemoryMiB": 160.6,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 34.15,
+      "wholeGpuBusyPercentMean": 4.3,
+      "paused": "weather,gpu"
+    },
+    {
+      "label": "no-memory",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 7.561,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.8172,
+        "compute": 0.0003
+      },
+      "threadCpuPercent": {
+        "quickshell": 1.843,
+        "QSGRenderThread": 1.793,
+        "quickshell:gl0": 1.544,
+        "quickshe:gdrv0": 0.847,
+        "quickshell:cs0": 0.398,
+        "metrics.py": 0.398,
+        "WaylandEventThr": 0.299,
+        "coolingctl.py": 0.149,
+        "tomatctl.py": 0.1,
+        "QThread": 0.05,
+        "sleepctl.py": 0.05,
+        "rgbctl.py": 0.05
+      },
+      "serviceMemoryMiB": 161.7,
+      "residentVramMiB": 127.4,
+      "wholeGpuBoardWattsMean": 33.25,
+      "wholeGpuBusyPercentMean": 5.55,
+      "paused": "weather,memory"
+    },
+    {
+      "label": "no-heatmaps",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 1.242,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.0128,
+        "compute": 0
+      },
+      "threadCpuPercent": {
+        "metrics.py": 0.349,
+        "quickshell": 0.199,
+        "tomatctl.py": 0.149,
+        "coolingctl.py": 0.149,
+        "sleepctl.py": 0.1,
+        "QSGRenderThread": 0.05,
+        "quickshell:gl0": 0.05
+      },
+      "serviceMemoryMiB": 160.7,
+      "residentVramMiB": 127.4,
+      "wholeGpuBoardWattsMean": 32.3,
+      "wholeGpuBusyPercentMean": 2.4,
+      "paused": "weather,cpu,gpu,memory"
+    },
+    {
+      "label": "no-media",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 7.364,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.7997,
+        "compute": 0.0003
+      },
+      "threadCpuPercent": {
+        "quickshell": 1.893,
+        "QSGRenderThread": 1.694,
+        "quickshell:gl0": 1.395,
+        "quickshe:gdrv0": 0.747,
+        "quickshell:cs0": 0.349,
+        "metrics.py": 0.349,
+        "WaylandEventThr": 0.199,
+        "coolingctl.py": 0.149,
+        "tomatctl.py": 0.1
+      },
+      "serviceMemoryMiB": 161.1,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 32.65,
+      "wholeGpuBusyPercentMean": 4.2,
+      "paused": "weather,media"
+    },
+    {
+      "label": "no-pomodoro",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 7.243,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.7712,
+        "compute": 0.0002
+      },
+      "threadCpuPercent": {
+        "quickshell": 1.793,
+        "QSGRenderThread": 1.693,
+        "quickshell:gl0": 1.394,
+        "quickshe:gdrv0": 0.747,
+        "quickshell:cs0": 0.398,
+        "metrics.py": 0.349,
+        "WaylandEventThr": 0.249,
+        "tomatctl.py": 0.149,
+        "coolingctl.py": 0.149,
+        "sleepctl.py": 0.05
+      },
+      "serviceMemoryMiB": 165.2,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 32.65,
+      "wholeGpuBusyPercentMean": 5.05,
+      "paused": "weather,pomodoro"
+    },
+    {
+      "label": "static",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 1.141,
+      "gpuEngineBusyPercent": {
+        "gfx": 0,
+        "compute": 0
+      },
+      "threadCpuPercent": {
+        "metrics.py": 0.299,
+        "tomatctl.py": 0.149,
+        "coolingctl.py": 0.149,
+        "quickshell": 0.1,
+        "sleepctl.py": 0.05
+      },
+      "serviceMemoryMiB": 159.1,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 32.1,
+      "wholeGpuBusyPercentMean": 2.35,
+      "paused": "weather,cpu,gpu,memory,metrics"
+    },
+    {
+      "label": "collapsed",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 1.084,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.0005,
+        "compute": 0
+      },
+      "threadCpuPercent": {
+        "metrics.py": 0.349,
+        "tomatctl.py": 0.199,
+        "coolingctl.py": 0.149,
+        "quickshell": 0.1,
+        "sleepctl.py": 0.05
+      },
+      "serviceMemoryMiB": 158.4,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 34.5,
+      "wholeGpuBusyPercentMean": 4.75,
+      "paused": "weather,cpu,gpu,memory,metrics"
+    },
+    {
+      "label": "frozen-end",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 7.585,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.7735,
+        "compute": 0.0004
+      },
+      "threadCpuPercent": {
+        "quickshell": 1.793,
+        "QSGRenderThread": 1.793,
+        "quickshell:gl0": 1.494,
+        "quickshe:gdrv0": 0.797,
+        "quickshell:cs0": 0.398,
+        "metrics.py": 0.349,
+        "WaylandEventThr": 0.299,
+        "tomatctl.py": 0.199,
+        "sleepctl.py": 0.1,
+        "coolingctl.py": 0.1,
+        "rgbctl.py": 0.05
+      },
+      "serviceMemoryMiB": 159.7,
+      "residentVramMiB": 129.4,
+      "wholeGpuBoardWattsMean": 33.05,
+      "wholeGpuBusyPercentMean": 4.9,
+      "paused": "weather"
+    }
+  ],
+  "gpuFocus": [
+    {
+      "label": "no-weather",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 6.977,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.7894,
+        "compute": 0.0004
+      },
+      "threadCpuPercent": {
+        "quickshell": 1.793,
+        "QSGRenderThread": 1.544,
+        "quickshell:gl0": 1.345,
+        "quickshe:gdrv0": 0.747,
+        "metrics.py": 0.398,
+        "quickshell:cs0": 0.349,
+        "WaylandEventThr": 0.249,
+        "tomatctl.py": 0.1,
+        "coolingctl.py": 0.1,
+        "sleepctl.py": 0.05
+      },
+      "wholeCompositorCpuPercent": 4.681,
+      "wholeCompositorGpuEngineBusyPercent": null,
+      "serviceMemoryMiB": 160.9,
+      "residentVramMiB": 131.4,
+      "wholeGpuBoardWattsMean": 33.9,
+      "wholeGpuBusyPercentMean": 5.55,
+      "paused": "weather"
+    },
+    {
+      "label": "no-gpu-blend",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 5.007,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.5137,
+        "compute": 0.0024
+      },
+      "threadCpuPercent": {
+        "quickshell": 1.594,
+        "QSGRenderThread": 0.896,
+        "quickshell:gl0": 0.747,
+        "quickshe:gdrv0": 0.448,
+        "metrics.py": 0.349,
+        "WaylandEventThr": 0.199,
+        "quickshell:cs0": 0.199,
+        "tomatctl.py": 0.149,
+        "coolingctl.py": 0.149,
+        "sleepctl.py": 0.1
+      },
+      "wholeCompositorCpuPercent": 3.536,
+      "wholeCompositorGpuEngineBusyPercent": null,
+      "serviceMemoryMiB": 162,
+      "residentVramMiB": 131.4,
+      "wholeGpuBoardWattsMean": 34.25,
+      "wholeGpuBusyPercentMean": 3.85,
+      "paused": "weather,gpu-blend"
+    },
+    {
+      "label": "no-gpu-paint",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 3.705,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.3379,
+        "compute": 0.0023
+      },
+      "threadCpuPercent": {
+        "quickshell": 0.747,
+        "QSGRenderThread": 0.747,
+        "quickshell:gl0": 0.598,
+        "metrics.py": 0.349,
+        "quickshe:gdrv0": 0.299,
+        "WaylandEventThr": 0.149,
+        "quickshell:cs0": 0.149,
+        "tomatctl.py": 0.149,
+        "coolingctl.py": 0.1,
+        "sleepctl.py": 0.05
+      },
+      "wholeCompositorCpuPercent": 3.586,
+      "wholeCompositorGpuEngineBusyPercent": null,
+      "serviceMemoryMiB": 162,
+      "residentVramMiB": 131.4,
+      "wholeGpuBoardWattsMean": 33.8,
+      "wholeGpuBusyPercentMean": 3.35,
+      "paused": "weather,gpu-paint"
+    },
+    {
+      "label": "no-gpu",
+      "seconds": 20.08,
+      "cpuPercentOneLogicalCPU": 3.417,
+      "gpuEngineBusyPercent": {
+        "gfx": 0.3409,
+        "compute": 0.0016
+      },
+      "threadCpuPercent": {
+        "QSGRenderThread": 0.697,
+        "quickshell:gl0": 0.647,
+        "quickshell": 0.398,
+        "metrics.py": 0.398,
+        "quickshe:gdrv0": 0.349,
+        "quickshell:cs0": 0.149,
+        "tomatctl.py": 0.149,
+        "coolingctl.py": 0.1,
+        "WaylandEventThr": 0.05,
+        "sleepctl.py": 0.05
+      },
+      "wholeCompositorCpuPercent": 3.486,
+      "wholeCompositorGpuEngineBusyPercent": null,
+      "serviceMemoryMiB": 159.4,
+      "residentVramMiB": 131.4,
+      "wholeGpuBoardWattsMean": 33.15,
+      "wholeGpuBusyPercentMean": 4.25,
+      "paused": "weather,gpu"
+    }
+  ]
+}

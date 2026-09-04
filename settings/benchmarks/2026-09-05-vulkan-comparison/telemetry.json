@@ -1,0 +1,1142 @@
+[
+  {
+    "cpuCcds": [
+      [
+        [
+          3.8,
+          7.7
+        ],
+        [
+          0.0,
+          4.0
+        ],
+        [
+          8.0,
+          4.0
+        ],
+        [
+          4.0,
+          0.0
+        ],
+        [
+          0.0,
+          7.7
+        ],
+        [
+          8.0,
+          3.8
+        ],
+        [
+          3.8,
+          7.7
+        ],
+        [
+          3.8,
+          0.0
+        ]
+      ],
+      [
+        [
+          3.8,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.77,
+    "cpuTemp": 50.875,
+    "cpuUsage": 1.6,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 3.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11354820608,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531636,
+    "vramTotal": 17163091968,
+    "vramUsed": 2272350208
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          3.0,
+          2.1
+        ],
+        [
+          5.0,
+          2.0
+        ],
+        [
+          3.0,
+          4.0
+        ],
+        [
+          9.0,
+          6.9
+        ],
+        [
+          2.9,
+          0.0
+        ],
+        [
+          7.8,
+          2.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          3.0,
+          3.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.58,
+    "cpuTemp": 50.25,
+    "cpuUsage": 2.0,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 3.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11322519552,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531637,
+    "vramTotal": 17163091968,
+    "vramUsed": 2268975104
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          5.1,
+          2.9
+        ],
+        [
+          2.0,
+          2.0
+        ],
+        [
+          6.0,
+          5.0
+        ],
+        [
+          2.0,
+          1.0
+        ],
+        [
+          4.0,
+          7.9
+        ],
+        [
+          4.0,
+          1.0
+        ],
+        [
+          3.0,
+          3.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          3.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.75,
+    "cpuTemp": 49.625,
+    "cpuUsage": 1.8,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 3.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11317538816,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531638,
+    "vramTotal": 17163091968,
+    "vramUsed": 2253381632
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          2.0,
+          3.9
+        ],
+        [
+          6.0,
+          1.0
+        ],
+        [
+          3.0,
+          2.0
+        ],
+        [
+          7.8,
+          3.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          5.9,
+          1.0
+        ],
+        [
+          2.0,
+          1.0
+        ],
+        [
+          2.0,
+          3.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          2.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          2.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.86,
+    "cpuTemp": 48.625,
+    "cpuUsage": 1.6,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 1.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11317465088,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531639,
+    "vramTotal": 17163091968,
+    "vramUsed": 2260398080
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          2.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          7.9,
+          1.0
+        ],
+        [
+          4.0,
+          1.0
+        ],
+        [
+          7.1,
+          3.0
+        ],
+        [
+          3.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          3.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.78,
+    "cpuTemp": 47.75,
+    "cpuUsage": 1.5,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 2.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11313983488,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531640,
+    "vramTotal": 17163091968,
+    "vramUsed": 2262249472
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          4.0,
+          0.0
+        ],
+        [
+          4.0,
+          1.0
+        ],
+        [
+          2.0,
+          1.0
+        ],
+        [
+          9.2,
+          2.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          11.8,
+          4.9
+        ],
+        [
+          3.0,
+          2.0
+        ],
+        [
+          2.0,
+          4.0
+        ]
+      ],
+      [
+        [
+          3.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2.9,
+          0.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          1.0
+        ],
+        [
+          2.9,
+          0.0
+        ],
+        [
+          2.0,
+          2.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.89,
+    "cpuTemp": 48.5,
+    "cpuUsage": 2.2,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 10.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11312762880,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531641,
+    "vramTotal": 17163091968,
+    "vramUsed": 2250293248
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          3.1,
+          2.0
+        ],
+        [
+          3.0,
+          3.0
+        ],
+        [
+          4.0,
+          2.0
+        ],
+        [
+          7.0,
+          5.9
+        ],
+        [
+          3.0,
+          2.9
+        ],
+        [
+          3.0,
+          8.1
+        ],
+        [
+          2.0,
+          2.0
+        ],
+        [
+          3.0,
+          1.0
+        ]
+      ],
+      [
+        [
+          2.0,
+          0.0
+        ],
+        [
+          2.0,
+          2.0
+        ],
+        [
+          2.9,
+          0.0
+        ],
+        [
+          2.0,
+          2.0
+        ],
+        [
+          1.0,
+          5.9
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          4.0,
+          0.0
+        ],
+        [
+          1.0,
+          2.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.79,
+    "cpuTemp": 48.25,
+    "cpuUsage": 2.6,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 5.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11313836032,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531642,
+    "vramTotal": 17163091968,
+    "vramUsed": 2247852032
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          3.0,
+          0.0
+        ],
+        [
+          3.0,
+          1.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          5.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          5.0,
+          1.0
+        ],
+        [
+          3.0,
+          0.0
+        ],
+        [
+          1.0,
+          2.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          4.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          3.9,
+          1.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    ],
+    "cpuClock": 3.01,
+    "cpuTemp": 47.25,
+    "cpuUsage": 1.3,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 3.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11312005120,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531643,
+    "vramTotal": 17163091968,
+    "vramUsed": 2247852032
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          2.0,
+          2.0
+        ],
+        [
+          5.9,
+          3.0
+        ],
+        [
+          4.0,
+          1.0
+        ],
+        [
+          10.1,
+          3.0
+        ],
+        [
+          3.0,
+          0.0
+        ],
+        [
+          3.0,
+          1.0
+        ],
+        [
+          2.0,
+          1.0
+        ],
+        [
+          4.0,
+          3.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          1.0,
+          3.0
+        ],
+        [
+          2.0,
+          1.0
+        ],
+        [
+          3.9,
+          1.0
+        ],
+        [
+          0.0,
+          2.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.67,
+    "cpuTemp": 47.5,
+    "cpuUsage": 1.9,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 51.0,
+    "gpuUsage": 3.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11336421376,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531644,
+    "vramTotal": 17163091968,
+    "vramUsed": 2271580160
+  },
+  {
+    "cpuCcds": [
+      [
+        [
+          1.0,
+          2.0
+        ],
+        [
+          2.0,
+          2.0
+        ],
+        [
+          3.0,
+          1.0
+        ],
+        [
+          4.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          5.1,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          2.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          3.9,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    ],
+    "cpuClock": 2.8,
+    "cpuTemp": 46.625,
+    "cpuUsage": 1.2,
+    "drives": [
+      {
+        "label": "System",
+        "mount": "/",
+        "total": 997426462720,
+        "used": 67558875136
+      },
+      {
+        "label": "Workspace",
+        "mount": "/mnt/workspace",
+        "total": 1000202043392,
+        "used": 32709066752
+      },
+      {
+        "label": "Documents",
+        "mount": "/mnt/documents",
+        "total": 500105740288,
+        "used": 20434944
+      },
+      {
+        "label": "Storage",
+        "mount": "/mnt/storage",
+        "total": 4000785104896,
+        "used": 614324166656
+      }
+    ],
+    "gpuHotspot": 59.0,
+    "gpuTemp": 50.0,
+    "gpuUsage": 2.0,
+    "mountedDiskFree": 5773820899328,
+    "mountedDiskTotal": 6501187624960,
+    "physicalDiskTotal": 7013414854656,
+    "ramTotal": 67322503168,
+    "ramUsed": 11334049792,
+    "rootTotal": 997426462720,
+    "rootUsed": 67558875136,
+    "timestamp": 1788531645,
+    "vramTotal": 17163091968,
+    "vramUsed": 2271580160
+  }
+]
