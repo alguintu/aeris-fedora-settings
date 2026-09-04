@@ -17,6 +17,11 @@ independent of this visual theme.
   Lights-off uses MDI `lightbulb-off-outline`, a slashed bulb, instead of a power symbol.
   Hardware headers use MDI `memory` (processor-shaped glyph) and
   `expansion-card` (graphics card), mapped as `processor` and `graphics-card`.
+  The specs-page chassis header uses upstream MDI `desktop-tower`, from the
+  same pinned revision, with only its fill normalized to white.
+  Weather also uses `weather-cloudy`, `weather-night-partly-cloudy`, `weather-fog`,
+  `weather-rainy`, `weather-snowy`, and `weather-lightning-rainy` from that revision.
+  Original paths are retained; only the fill is normalized for tinting.
   The storage tile uses `harddisk-tight.svg`, the same upright `harddisk` paths
   with the viewBox cropped to `4 2 16 20` so the visible icon width matches its
   capacity label. The original padded asset is also retained.

@@ -5,17 +5,29 @@ import QtQuick.Controls as Controls
 // Reusable presentation of the shared Tomat daemon, never a local timer.
 Item {
     id: root
+    property bool presentationActive: true
     readonly property int stageCount: TomatService.state.sessions
     readonly property int currentStage: Math.min(stageCount - 1, TomatService.state.session - 1)
     readonly property string stageLabel: !TomatService.healthy ? "OFFLINE"
         : TomatService.state.stageLabel ? TomatService.state.stageLabel
         : TomatService.state.phase === "Break" ? "SHORT BREAK"
         : TomatService.state.phase === "LongBreak" ? "LONG BREAK" : "WORK"
-    readonly property real progress: TomatService.state.progress
+    property bool seekAwaiting: false
+    property int requestedElapsed: 0
+    property int requestedDuration: 1500
+    readonly property real progress: scrub.adjusting ? scrub.previewProgress
+        : seekAwaiting ? requestedElapsed / requestedDuration : TomatService.state.progress
+    readonly property int remaining: scrub.adjusting ? scrub.capturedDuration - scrub.previewElapsed
+        : seekAwaiting ? requestedDuration - requestedElapsed : TomatService.state.remaining
     readonly property color phaseColor: TomatService.state.phase === "Work" || TomatService.idle
         ? Theme.mauve : Theme.green
-    onProgressChanged: dial.requestPaint()
-    onPhaseColorChanged: dial.requestPaint()
+    onProgressChanged: if (presentationActive) dial.requestPaint()
+    onPhaseColorChanged: if (presentationActive) dial.requestPaint()
+    onPresentationActiveChanged: if (presentationActive) dial.requestPaint()
+    Connections {
+        target: TomatService
+        function onCommandCompleted(success) { root.seekAwaiting = false }
+    }
 
     ClippingRectangle {
         anchors.fill: parent
@@ -82,6 +94,23 @@ Item {
                 GradientStop { position: 1; color: "#48000000" }
             }
         }
+
+        TimerScrubber {
+            id: scrub
+            anchors.fill: parent
+            enabled: root.presentationActive && TomatService.healthy && !TomatService.pending
+                && !TomatService.idle && TomatService.state.canSeek === true && !TomatService.pickerOpen
+            duration: TomatService.state.duration
+            progress: TomatService.state.progress
+            revision: TomatService.state.revision || ""
+            onAdjustingChanged: TomatService.scrubbing = adjusting
+            onCommitted: (elapsedSeconds, expectedRevision) => {
+                root.requestedElapsed = elapsedSeconds
+                root.requestedDuration = capturedDuration
+                root.seekAwaiting = true
+                TomatService.seek(elapsedSeconds, expectedRevision)
+            }
+        }
     }
 
     Column {
@@ -145,8 +174,8 @@ Item {
         id: countdown
         anchors.left: parent.left
         y: parent.height * 0.29
-        text: TomatService.healthy ? String(Math.floor(TomatService.state.remaining / 60)).padStart(2, "0")
-            + ":" + String(TomatService.state.remaining % 60).padStart(2, "0") : "--:--"
+        text: TomatService.healthy ? String(Math.floor(root.remaining / 60)).padStart(2, "0")
+            + ":" + String(root.remaining % 60).padStart(2, "0") : "--:--"
         color: Theme.text
         font.family: Theme.clockBoldFontFamily
         font.weight: Font.Bold
@@ -158,7 +187,8 @@ Item {
         anchors.left: countdown.left
         anchors.top: countdown.bottom
         anchors.topMargin: 2
-        text: !TomatService.healthy ? "UNAVAILABLE" : TomatService.pending ? "UPDATING"
+        text: !TomatService.healthy ? "UNAVAILABLE" : scrub.adjusting ? "RELEASE TO SET"
+            : TomatService.commandError ? "TRY AGAIN" : TomatService.pending ? "UPDATING"
             : TomatService.idle ? "READY" : TomatService.state.paused ? "PAUSED" : "REMAINING"
         font.family: Theme.fontFamily
         font.pixelSize: 13

@@ -2,12 +2,52 @@
 
 1920×480 control surface for the TeNizo touchscreen on `DP-3`.
 
+All dashboard adapters now use the combined
+[Rust backend](../aeris-backend/README.md). Build it with
+`bash scripts/build-dashboard-backend.sh` before a manual launch; the dashboard
+installer builds it automatically. Five persistent watchers share one native
+process; weather/artwork and control commands invoke the same binary on demand.
+The Rust backend starts with the dashboard at login. Python adapters remain only
+as an explicit rollback/comparison baseline, not as default runtime dependencies.
+
+## Vulkan and panel motion
+
+The launcher now defaults to Vulkan; this also applies to the login service.
+The existing QSB shader packs include SPIR-V, so the heatmaps and weather retain
+their design. An explicit `QSG_RHI_BACKEND=opengl` overrides the default for
+compatibility or comparisons. Check the **actual** running API with:
+
+```bash
+bash scripts/run-dashboard.sh ipc call dashboard renderingStatus
+```
+
+Minimize slides the whole panel down in 220ms with a restrained fade; restore
+slides it back in 260ms. Widget dimensions and the selected page are unchanged.
+The temporary compositing layer exists only during motion. Controls are disabled
+while moving, the restore handle remains available, and hidden heatmap/weather
+presentation stops while services continue. Rapid reversal resumes from the
+current position. Swipe pages retain 14px side gutters each (28px between pages).
+
+See the [matched Vulkan/OpenGL results](../../settings/dashboard-vulkan-2026-09-05.md)
+for CPU/GPU tradeoffs, validation, reproduction, and the service rollback procedure.
+
 ## September 4 checkpoint
 
 The Idle layout has media at left with unified lighting/fan groups underneath,
 clock/weather at top-middle with sleep and storage below, a full-height Pomodoro
-tile, and equal-width CPU/RAM and GPU/VRAM cards stacked at right. Weather remains
-a visual mockup; the media, telemetry, controls, and timer use live services.
+tile, and equal-width CPU/RAM and GPU/VRAM cards stacked at right. Weather, media,
+telemetry, controls, and the timer now use live services.
+
+The clock's weather uses Open-Meteo current conditions for the city in the user's
+local configuration, with day/night icons, condition textures, a ten-minute refresh,
+and labelled offline caching. Tap the weather reading to refresh. See
+[weather setup](../../settings/weather.md); the layout and clock remain independent
+of network availability.
+
+Weather uses a GPU daylight shader, cached cloud/fog textures, and scene-graph
+precipitation. Hidden pages pause presentation work while live services continue.
+See [rendering and performance](../../settings/dashboard-performance.md) for
+measurements, shader rebuild instructions, and the reference-renderer comparison.
 
 Tomat runs independently of the dashboard. Tap its stage label/dots to choose an
 Obsidian routine: Classic, Deep Work, or Light Work. Templates supply durations,
@@ -17,15 +57,22 @@ installation, template schema, switching behavior, and tests. Reusable seed note
 are in `tomat/templates/` at the repository root; the actual vault remains the
 editable source of truth. Custom work-time nudges/animations are still deferred.
 
-The surface is organized as three horizontally swipeable modes:
+The surface is organized as four horizontally swipeable modes:
 
+- **PC Specs** — hardware showcase to the left of Idle, marked by a CPU icon in
+  navigation. Its first pass shows CPU, GPU, RAM, motherboard, five physical
+  drives, OS, chassis, and fans/RGB in a dated build snapshot.
+  See [sources and scope](../../settings/pc-specs.md).
 - **Idle** — clock, CPU/GPU heatmaps, media, storage, and lighting controls.
 - **Work** — workspace launchers, live load, and honest placeholders for project,
   Git, task, and focus integrations.
 - **AI Focus** — local-model status plus live GPU, VRAM, and thermal context.
 
-Drag anywhere left or right to move between modes. Three compact page dots also
-support direct touch navigation. Tile controls keep short taps while the drag
+Idle remains the startup page. Swipe right from Idle to reach PC Specs, or tap
+the CPU icon. IPC indices are now Specs=0, Idle=1, Work=2, AI Focus=3.
+
+Drag anywhere left or right to move between modes. The CPU icon and three compact
+page dots also support direct touch navigation. Tile controls keep short taps while the drag
 gesture only takes over after its movement threshold is crossed. A slow drag
 settles after 180 pixels, leaving room to
 cancel by releasing earlier. A fast flick can settle after 36 pixels when its
@@ -107,10 +154,10 @@ still fades the controls.
 Query or change the same interface from a terminal:
 
 ```bash
-./quickshell/aeris-dashboard/services/rgbctl.py status
-./quickshell/aeris-dashboard/services/rgbctl.py set night
-./quickshell/aeris-dashboard/services/rgbctl.py set day
-./quickshell/aeris-dashboard/services/rgbctl.py set work
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend rgb status
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend rgb set night
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend rgb set day
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend rgb set work
 ```
 
 ## Aeris cooling controls
@@ -138,14 +185,14 @@ The same modes are callable from QuickShell IPC or the terminal:
 ./scripts/run-dashboard.sh ipc call dashboard setCoolingMode performance
 ./scripts/run-dashboard.sh ipc call dashboard setCoolingMode firmware
 
-./quickshell/aeris-dashboard/services/coolingctl.py status
-./quickshell/aeris-dashboard/services/coolingctl.py set default
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend cooling status
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend cooling set default
 ```
 
 Run the telemetry adapter independently with:
 
 ```bash
-python3 quickshell/aeris-dashboard/services/metrics.py --once
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend metrics --once
 ```
 
 ## Compute and memory groups
@@ -218,7 +265,14 @@ Disabling it releases only KDE's manual request, not other applications' blocker
 
 `plasma/org.aeris.sleepbridge` is an invisible Plasma applet that shares the
 tray's `InhibitionControl` singleton. The dashboard helper sends requests through
-Plasma's scripting API and reads the resulting manual state once per second.
+Plasma's scripting API over a persistent D-Bus connection. PowerDevil inhibition
+changes trigger a debounced read of the confirmed manual state (about 200ms),
+instead of launching `busctl` and evaluating a script every second. A 30-second
+fallback check catches missed signals; unavailable Plasma retries every two
+seconds. Owner-change notifications also trigger a refresh after service restarts.
+The helper now uses the Rust backend's native libdbus connection; no Python or
+GLib event loop is needed. The reference Python adapter remains available only
+through the explicit `AERIS_DASHBOARD_BACKEND=python` rollback.
 This deliberately uses KDE's private `batterymonitor` QML module (tested on
 Plasma 6.7.4); a future KDE update may require adapting the bridge.
 
@@ -229,9 +283,9 @@ The previous independent `aeris-keep-awake.service` is stopped during migration.
 
 ```bash
 bash scripts/install-sleep-bridge.sh
-python3 quickshell/aeris-dashboard/services/sleepctl.py status
-python3 quickshell/aeris-dashboard/services/sleepctl.py set on
-python3 quickshell/aeris-dashboard/services/sleepctl.py set off
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend sleep status
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend sleep set on
+quickshell/aeris-dashboard/bin/aeris-dashboard-backend sleep set off
 ```
 
 Custom Pomodoro activities/reminders, a full Media page, music-reactive lighting, and the

@@ -1,6 +1,7 @@
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls as Controls
 import "../components"
 
 Item {
@@ -8,6 +9,9 @@ Item {
 
     property var metrics: ({})
     property bool metricsHealthy: false
+    property bool animationsActive: true
+    property string profilingPaused: ""
+    function profilePaused(name) { return profilingPaused.split(",").indexOf(name) !== -1 }
     property date now
     property string lightingMode: "unknown"
     property bool lightingHealthy: false
@@ -58,6 +62,7 @@ Item {
         contentMargin: 24
 
         MediaControls {
+            visible: !page.profilePaused("media")
             anchors.fill: parent
         }
     }
@@ -89,16 +94,23 @@ Item {
                         Layout.preferredHeight: 24
                         title: "CPU"
                         iconName: "processor"
-                        detail: "RYZEN 9 5950X"
-                        eyebrow: Math.round(page.metrics.cpuUsage) + "% · "
+                        detail: "R9 5950X " + (page.metrics.cpuClock > 0
+                                ? page.metrics.cpuClock.toFixed(1) : "--") + "GHz"
+                        detailHint: "Representative clock of the busiest logical CPU, not an all-core average. One frequency read per second."
+                        eyebrow: Math.round(page.metrics.cpuUsage) + "% "
                                  + page.temperature(page.metrics.cpuTemp)
                         accent: Theme.teal
                     }
 
                     CpuHeatmap {
+                        animationEnabled: page.animationsActive && !page.profilePaused("cpu")
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        ccds: page.metrics.cpuCcds || []
+                        Binding on ccds {
+                            when: !page.profilePaused("cpu")
+                            value: page.metrics.cpuCcds || []
+                            restoreMode: Binding.RestoreNone
+                        }
                     }
                 }
             }
@@ -125,6 +137,7 @@ Item {
                     }
 
                     MemoryHeatmap {
+                        animationEnabled: page.animationsActive && !page.profilePaused("memory")
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         field: "ram"
@@ -171,6 +184,9 @@ Item {
                     }
 
                     GpuHeatmap {
+                        profilingNoBlend: page.profilePaused("gpu-blend")
+                        profilingNoPaint: page.profilePaused("gpu-paint")
+                        animationEnabled: page.animationsActive && !page.profilePaused("gpu")
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         utilization: page.metrics.gpuUsage || 0
@@ -200,6 +216,7 @@ Item {
                     }
 
                     MemoryHeatmap {
+                        animationEnabled: page.animationsActive && !page.profilePaused("memory")
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         field: "vram"
@@ -240,7 +257,12 @@ Item {
                     WeatherPattern {
                         anchors.fill: parent
                         anchors.margins: -18
-                        condition: "partly-cloudy"
+                        condition: WeatherService.condition
+                        isDay: WeatherService.previewMode ? WeatherService.previewMode !== "night"
+                            : WeatherService.state.isDay !== false
+                        animationEnabled: page.animationsActive && !page.profilePaused("weather")
+                        useCanvasRenderer: WeatherService.renderingBackend === "canvas"
+                        fixedTime: WeatherService.fixedAnimationTime
                     }
 
                     Text {
@@ -303,7 +325,6 @@ Item {
 
                     Row {
                         id: weatherReading
-                        // Visual placeholders; no live weather provider yet.
                         anchors.top: parent.top
                         anchors.right: parent.right
                         spacing: 12
@@ -311,16 +332,15 @@ Item {
                         ThemeIcon {
                             width: 52
                             height: 52
-                            name: "weather-partly-cloudy"
+                            name: WeatherService.icon
                             color: Theme.mauve
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             height: 52
-                            // Mock temperature, not a live measurement.
                             verticalAlignment: Text.AlignVCenter
-                            text: "28°C"
+                            text: WeatherService.temperature
                             color: Theme.cyan
                             font.family: Theme.clockBoldFontFamily
                             font.weight: Font.Bold
@@ -333,10 +353,34 @@ Item {
                         anchors.right: parent.right
                         anchors.top: weatherReading.bottom
                         anchors.topMargin: 6
-                        text: "Partly cloudy"
-                        color: Theme.mauve
+                        text: (WeatherService.stale ? "Cached: " : "") + WeatherService.description
+                        width: Math.min(implicitWidth, 240)
+                        horizontalAlignment: Text.AlignRight
+                        elide: Text.ElideRight
+                        color: WeatherService.stale ? Theme.orange : Theme.mauve
                         font.family: Theme.fontFamily
                         font.pixelSize: 20
+                    }
+
+                    Item {
+                        anchors.top: weatherReading.top
+                        anchors.right: parent.right
+                        width: Math.max(weatherReading.width, weatherDescription.width)
+                        height: 96
+                        Accessible.role: Accessible.Button
+                        Accessible.name: "Refresh weather for " + (WeatherService.state.location || "configured location")
+                        Accessible.onPressAction: WeatherService.refresh(true)
+                        Controls.ToolTip.visible: weatherHover.hovered
+                        Controls.ToolTip.text: (WeatherService.state.location || "Set location")
+                            + " · " + WeatherService.description + (WeatherService.stale ? " (cached)" : "")
+                            + (WeatherService.available ? " · Updated " + Qt.formatDateTime(new Date(WeatherService.state.fetchedAt * 1000), "h:mm AP") : "")
+                            + "\nModel conditions by Open-Meteo · tap to refresh"
+                        HoverHandler { id: weatherHover }
+                        TapHandler {
+                            gesturePolicy: TapHandler.ReleaseWithinBounds
+                            grabPermissions: PointerHandler.TakeOverForbidden
+                            onTapped: WeatherService.refresh(true)
+                        }
                     }
                 }
             }
@@ -347,6 +391,8 @@ Item {
                 height: middleBand.height
                 accent: Theme.mauve
                 PomodoroTile {
+                    visible: !page.profilePaused("pomodoro")
+                    presentationActive: page.animationsActive && !page.profilePaused("pomodoro")
                     anchors.fill: parent
                 }
             }

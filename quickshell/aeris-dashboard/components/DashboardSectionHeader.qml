@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls as Controls
 
 RowLayout {
     id: root
@@ -7,6 +8,7 @@ RowLayout {
     property string title: ""
     property string iconName: ""
     property string detail: ""
+    property string detailHint: ""
     property string eyebrow: ""
     property color accent: Theme.teal
 
@@ -44,6 +46,11 @@ RowLayout {
         font.pixelSize: 18
         font.weight: Font.DemiBold
         elide: Text.ElideRight
+        Accessible.description: root.detailHint
+        HoverHandler { id: detailHover }
+        Controls.ToolTip.visible: detailHover.hovered && root.detailHint.length > 0
+        Controls.ToolTip.delay: 700
+        Controls.ToolTip.text: root.detailHint
     }
 
     Text {

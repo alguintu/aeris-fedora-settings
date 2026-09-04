@@ -1,7 +1,11 @@
 singleton Theme 1.0 Theme.qml
+singleton BackendService 1.0 BackendService.qml
+singleton DecorativeClock 1.0 DecorativeClock.qml
+DecorativeTick 1.0 DecorativeTick.qml
 ActionButton 1.0 ActionButton.qml
 CoolingModeButton 1.0 CoolingModeButton.qml
 CpuHeatmap 1.0 CpuHeatmap.qml
+HeatmapSurface 1.0 HeatmapSurface.qml
 DashboardHeaderLabel 1.0 DashboardHeaderLabel.qml
 DashboardSectionHeader 1.0 DashboardSectionHeader.qml
 DashboardTile 1.0 DashboardTile.qml
@@ -12,8 +16,16 @@ MediaControls 1.0 MediaControls.qml
 MediaTransportButton 1.0 MediaTransportButton.qml
 MemoryHeatmap 1.0 MemoryHeatmap.qml
 MetricBar 1.0 MetricBar.qml
+PageViewport 1.0 PageViewport.qml
+SlideReveal 1.0 SlideReveal.qml
+FrameProbe 1.0 FrameProbe.qml
 ThemeIcon 1.0 ThemeIcon.qml
 PomodoroTile 1.0 PomodoroTile.qml
+TimerScrubber 1.0 TimerScrubber.qml
 RoutinePicker 1.0 RoutinePicker.qml
 singleton TomatService 1.0 TomatService.qml
 WeatherPattern 1.0 WeatherPattern.qml
+WeatherAtmosphere 1.0 WeatherAtmosphere.qml
+WeatherDaylight 1.0 WeatherDaylight.qml
+WeatherMist 1.0 WeatherMist.qml
+singleton WeatherService 1.0 WeatherService.qml

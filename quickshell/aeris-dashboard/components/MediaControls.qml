@@ -172,11 +172,10 @@ Item {
             return
 
         root.artLookupRunningKey = root.artLookupKey
-        artLookupProcess.command = [
-            "python3", Quickshell.shellPath("services/media_art.py"),
+        artLookupProcess.command = BackendService.command("artwork", [
             "--title", root.title,
             "--artist", root.artist
-        ]
+        ])
         artLookupProcess.running = true
     }
 
@@ -274,15 +273,8 @@ Item {
                 ? MprisLoopState.Playlist : MprisLoopState.None
     }
 
-    Timer {
-        interval: 1000
-        repeat: true
-        running: root.hasPlayer && root.player.isPlaying
-        onTriggered: {
-            if (root.hasPlayer)
-                root.player.positionChanged()
-        }
-    }
+    // No scrubber/time readout in this layout: do not poll MPRIS position.
+    // Metadata and transport state continue to arrive through MPRIS signals.
 
     ColumnLayout {
         anchors.fill: parent

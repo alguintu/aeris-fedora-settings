@@ -4,6 +4,10 @@ Item {
     id: root
 
     property real utilization: 0
+    property bool animationEnabled: true
+    property bool profilingNoBlend: false
+    property bool profilingNoPaint: false
+    onProfilingNoPaintChanged: if (!profilingNoPaint) updateColors()
     property real smoothedUtilization: 0
     property real lowLoadResidence: 0
     property int activeCount: 0
@@ -45,7 +49,7 @@ Item {
                 const ny = y + dy
                 if (nx < 0 || nx >= columns || ny < 0 || ny >= rows)
                     continue
-                if (units.get(ny * columns + nx).active)
+                if (units[ny * columns + nx].active)
                     score += (dx === 0 || dy === 0) ? 5 : 2
             }
         }
@@ -59,7 +63,7 @@ Item {
         const candidates = []
         let totalWeight = 0
         for (let index = 0; index < unitCount; ++index) {
-            const cell = units.get(index)
+            const cell = units[index]
             if (cell.active)
                 continue
             const weight = 0.35 + neighborScore(index) * 4 + cell.heat * 2
@@ -81,7 +85,7 @@ Item {
         let lowestScore = 999
         let lowestHeat = 999
         for (let index = 0; index < unitCount; ++index) {
-            const cell = units.get(index)
+            const cell = units[index]
             if (!cell.active)
                 continue
             const score = neighborScore(index)
@@ -98,8 +102,8 @@ Item {
         const index = chooseWeightedInactive()
         if (index < 0)
             return
-        units.setProperty(index, "active", true)
-        units.setProperty(index, "heat", Math.max(0.12, units.get(index).heat))
+        units[index].active = true
+        units[index].heat = Math.max(0.12, units[index].heat)
         activeCount += 1
     }
 
@@ -107,7 +111,7 @@ Item {
         const index = chooseFringeActive()
         if (index < 0)
             return
-        units.setProperty(index, "active", false)
+        units[index].active = false
         activeCount -= 1
     }
 
@@ -115,26 +119,41 @@ Item {
         const previous = chooseFringeActive()
         if (previous < 0)
             return
-        units.setProperty(previous, "active", false)
+        units[previous].active = false
         activeCount -= 1
         activateOne()
     }
 
-    ListModel { id: units }
+    // The renderer receives one color frame, so these cells no longer need
+    // observable QML model roles or per-cell change notifications.
+    property var units: []
 
     Component.onCompleted: {
         for (let index = 0; index < unitCount; ++index)
-            units.append({"heat": 0.0, "active": false})
+            units.push({"heat": 0.0, "active": false})
+        updateColors()
     }
+
+    function updateColors() {
+        if (!units || units.length !== unitCount) return
+        const colors = []
+        for (let i = 0; i < units.length; ++i) colors.push(root.heatColor(units[i].heat))
+        if (!root.profilingNoPaint) surface.cellColors = colors
+    }
+    onIdleColorChanged: updateColors()
+    onTealColorChanged: updateColors()
+    onOrangeColorChanged: updateColors()
+    onRedColorChanged: updateColors()
 
     Timer {
         interval: 100
         repeat: true
-        running: true
+        running: root.animationEnabled && root.visible
 
         onTriggered: {
             const requested = Math.max(0, Math.min(100, root.utilization || 0))
-            root.smoothedUtilization += (requested - root.smoothedUtilization) * 0.14
+            root.smoothedUtilization = Math.abs(requested - root.smoothedUtilization) < 0.01
+                ? requested : root.smoothedUtilization + (requested - root.smoothedUtilization) * 0.14
             const saturated = requested >= root.saturationThreshold
             const target = saturated
                     ? root.unitCount
@@ -163,38 +182,28 @@ Item {
                 root.lowLoadResidence = 0
             }
 
+            let heatChanged = false
             for (let index = 0; index < root.unitCount; ++index) {
-                const cell = units.get(index)
+                const cell = root.units[index]
                 const nextHeat = cell.active
                         ? Math.min(1, cell.heat + 0.014)
                         : Math.max(0, cell.heat - 0.024)
-                if (nextHeat !== cell.heat)
-                    units.setProperty(index, "heat", nextHeat)
+                if (nextHeat !== cell.heat) {
+                    cell.heat = nextHeat
+                    heatChanged = true
+                }
             }
+            if (heatChanged) root.updateColors()
         }
     }
 
-    Grid {
+    HeatmapSurface {
+        id: surface
         anchors.fill: parent
+        animationEnabled: root.animationEnabled && !root.profilingNoBlend && !root.profilingNoPaint
         columns: root.columns
         rows: root.rows
-        columnSpacing: 4
-        rowSpacing: 3
-
-        Repeater {
-            model: units
-
-            Rectangle {
-                required property real heat
-                width: (parent.width - (root.columns - 1) * parent.columnSpacing) / root.columns
-                height: (parent.height - (root.rows - 1) * parent.rowSpacing) / root.rows
-                radius: 2
-                color: root.heatColor(heat)
-                border.color: Theme.border
-                border.width: 1
-
-                Behavior on color { ColorAnimation { duration: 220 } }
-            }
-        }
+        gapX: 4
+        gapY: 3
     }
 }

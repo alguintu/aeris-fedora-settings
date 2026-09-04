@@ -12,12 +12,13 @@ Item {
     property string errorText: ""
     property string commandError: ""
     property bool pickerOpen: false
+    property bool scrubbing: false
     signal commandCompleted(bool success)
     readonly property bool idle: state.phase === "Idle"
 
     function apply(data) {
         try {
-            const result = JSON.parse(data)
+            const result = typeof data === "string" ? JSON.parse(data) : data
             healthy = result.ok === true
             errorText = result.error || ""
             if (healthy) state = result
@@ -32,7 +33,7 @@ Item {
         if (idle && action !== "toggle") return
         pending = true
         commandError = ""
-        command.command = ["python3", Quickshell.shellPath("services/tomatctl.py"), action]
+        command.command = BackendService.command("tomat", [action])
         command.running = true
     }
 
@@ -40,24 +41,45 @@ Item {
         if (!healthy || pending || ["next", "now"].indexOf(mode) < 0) return
         pending = true
         commandError = ""
-        command.command = ["python3", Quickshell.shellPath("services/tomatctl.py"), "select", identifier, mode]
+        command.command = BackendService.command("tomat", ["select", identifier, mode])
         command.running = true
     }
 
+    function seek(elapsedSeconds, revision) {
+        if (!BackendService.useNative || !healthy || pending || idle || !state.canSeek) return
+        if (!Number.isInteger(elapsedSeconds) || elapsedSeconds < 0 || elapsedSeconds >= state.duration) return
+        pending = true
+        commandError = ""
+        command.command = BackendService.command("tomat", ["seek", String(elapsedSeconds), String(revision)])
+        command.running = true
+    }
+
+    Component.onCompleted: {
+        if (BackendService.useNative && BackendService.tomatState) apply(BackendService.tomatState)
+    }
+    Connections {
+        target: BackendService
+        function onEventReceived(service, payload) {
+            if (service === "tomat" && !root.pending) root.apply(payload)
+        }
+        function onConnectedChanged() {
+            if (BackendService.useNative && !BackendService.connected) root.healthy = false
+        }
+    }
     Process {
         id: watcher
         command: ["python3", Quickshell.shellPath("services/tomatctl.py"), "watch"]
-        running: true
+        running: !BackendService.useNative
         stdout: SplitParser { onRead: data => { if (!root.pending) root.apply(data) } }
         onExited: {
             root.healthy = false
-            reconnect.restart()
+            if (!BackendService.useNative) reconnect.restart()
         }
     }
     Timer {
         id: reconnect
         interval: 2000
-        onTriggered: watcher.running = true
+        onTriggered: { if (!BackendService.useNative) watcher.running = true }
     }
     Process {
         id: command

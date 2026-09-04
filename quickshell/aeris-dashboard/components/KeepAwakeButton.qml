@@ -35,7 +35,7 @@ Rectangle {
 
     function applyStatus(data) {
         try {
-            const status = JSON.parse(data)
+            const status = typeof data === "string" ? JSON.parse(data) : data
             root.healthy = status.ok === true
             if (root.healthy)
                 root.awake = status.active === true
@@ -51,28 +51,39 @@ Rectangle {
             return
         root.requestedAwake = !root.awake
         root.pending = true
-        commandProcess.command = ["python3", Quickshell.shellPath("services/sleepctl.py"),
-                                  "set", root.requestedAwake ? "on" : "off"]
+        commandProcess.command = BackendService.command("sleep", ["set", root.requestedAwake ? "on" : "off"])
         commandProcess.running = true
     }
 
+    Component.onCompleted: {
+        if (BackendService.useNative && BackendService.awakeState) applyStatus(BackendService.awakeState)
+    }
+    Connections {
+        target: BackendService
+        function onEventReceived(service, payload) {
+            if (service === "awake" && !root.pending) root.applyStatus(payload)
+        }
+        function onConnectedChanged() {
+            if (BackendService.useNative && !BackendService.connected) root.healthy = false
+        }
+    }
     Process {
         id: statusProcess
         command: ["python3", Quickshell.shellPath("services/sleepctl.py"), "watch"]
-        running: true
+        running: !BackendService.useNative
         stdout: SplitParser {
             onRead: data => { if (!root.pending) root.applyStatus(data) }
         }
         onExited: {
             root.healthy = false
-            restartTimer.start()
+            if (!BackendService.useNative) restartTimer.start()
         }
     }
 
     Timer {
         id: restartTimer
         interval: 2000
-        onTriggered: statusProcess.running = true
+        onTriggered: { if (!BackendService.useNative) statusProcess.running = true }
     }
 
     Process {

@@ -12,7 +12,8 @@ if [[ ${1:-} == "--check" ]]; then
     cmp --silent "$unit_source" "$unit_target"
     systemctl --user is-enabled --quiet "$unit_name"
     systemctl --user is-active --quiet "$unit_name"
-    python3 "$repo_root/quickshell/aeris-dashboard/services/sleepctl.py" status
+    "$repo_root/quickshell/aeris-dashboard/bin/aeris-dashboard-backend" --version
+    "$repo_root/quickshell/aeris-dashboard/bin/aeris-dashboard-backend" sleep status
     echo "$unit_name is installed, enabled, and running."
     exit 0
 fi
@@ -22,6 +23,7 @@ if [[ $# -gt 0 ]]; then
     exit 2
 fi
 
+bash "$script_dir/build-dashboard-backend.sh"
 install -Dm0644 "$unit_source" "$unit_target"
 bash "$script_dir/install-sleep-bridge.sh"
 systemctl --user daemon-reload

@@ -5,6 +5,11 @@ Item {
 
     property real ramUtilization: 0
     property real vramUtilization: 0
+    property bool animationEnabled: true
+    property bool settled: false
+    onRamUtilizationChanged: settled = false
+    onVramUtilizationChanged: settled = false
+    onFieldChanged: settled = false
     property string field: "both"
     property real smoothedRam: 0
     property real smoothedVram: 0
@@ -18,6 +23,33 @@ Item {
     property color vramColor: Theme.mauve
     property color orangeColor: Theme.orange
     property color redColor: Theme.red
+    // Most utilization changes do not change the pressure color. Resolve it once,
+    // not separately for every memory square on every smoothing tick.
+    readonly property color currentRamColor: pressureColor(ramColor, smoothedRam)
+    readonly property color currentVramColor: pressureColor(vramColor, smoothedVram)
+    property var ramColors: []
+    property var vramColors: []
+    readonly property int filledVramUnits: Math.round(smoothedVram * unitCount / 100)
+    onCurrentRamColorChanged: updateColors()
+    onCurrentVramColorChanged: updateColors()
+    onFilledVramUnitsChanged: updateColors()
+    onIdleColorChanged: updateColors()
+
+    function updateColors() {
+        if (!ramUnits || ramUnits.length !== root.unitCount) return
+        if (root.field !== "vram") {
+            const colors = []
+            for (let i = 0; i < root.unitCount; ++i)
+                colors.push(root.mix(root.idleColor, root.currentRamColor, ramUnits[i].heat))
+            root.ramColors = colors
+        }
+        if (root.field !== "ram") {
+            const colors = []
+            for (let i = 0; i < root.unitCount; ++i)
+                colors.push(i < root.filledVramUnits ? root.currentVramColor : root.idleColor)
+            root.vramColors = colors
+        }
+    }
 
     // Fit the entire grid, including gaps, without stretching or clipping cells.
     function fittedGap(availableWidth, availableHeight) {
@@ -53,7 +85,7 @@ Item {
     function randomCell(active) {
         const candidates = []
         for (let index = 0; index < unitCount; ++index) {
-            if (ramUnits.get(index).active === active)
+            if (ramUnits[index].active === active)
                 candidates.push(index)
         }
         return candidates.length
@@ -65,8 +97,8 @@ Item {
         const index = randomCell(false)
         if (index < 0)
             return
-        ramUnits.setProperty(index, "active", true)
-        ramUnits.setProperty(index, "heat", Math.max(0.16, ramUnits.get(index).heat))
+        ramUnits[index].active = true
+        ramUnits[index].heat = Math.max(0.16, ramUnits[index].heat)
         ramActiveCount += 1
     }
 
@@ -74,27 +106,36 @@ Item {
         const index = randomCell(true)
         if (index < 0)
             return
-        ramUnits.setProperty(index, "active", false)
+        ramUnits[index].active = false
         ramActiveCount -= 1
     }
 
-    ListModel { id: ramUnits }
+    property var ramUnits: []
 
     Component.onCompleted: {
         for (let index = 0; index < unitCount; ++index)
-            ramUnits.append({"active": false, "heat": 0.0})
+            ramUnits.push({"active": false, "heat": 0.0})
+        updateColors()
     }
 
     Timer {
         interval: 100
         repeat: true
-        running: true
+        running: root.animationEnabled && root.visible && !root.settled
 
         onTriggered: {
             const requestedRam = Math.max(0, Math.min(100, root.ramUtilization || 0))
             const requestedVram = Math.max(0, Math.min(100, root.vramUtilization || 0))
-            root.smoothedRam += (requestedRam - root.smoothedRam) * 0.18
-            root.smoothedVram += (requestedVram - root.smoothedVram) * 0.18
+            if (root.field !== "vram")
+                root.smoothedRam = Math.abs(requestedRam - root.smoothedRam) < 0.01
+                    ? requestedRam : root.smoothedRam + (requestedRam - root.smoothedRam) * 0.18
+            if (root.field !== "ram")
+                root.smoothedVram = Math.abs(requestedVram - root.smoothedVram) < 0.01
+                    ? requestedVram : root.smoothedVram + (requestedVram - root.smoothedVram) * 0.18
+            if (root.field === "vram") {
+                root.settled = root.smoothedVram === requestedVram
+                return
+            }
 
             const ramTarget = Math.round(root.smoothedRam * root.unitCount / 100)
             const difference = ramTarget - root.ramActiveCount
@@ -107,14 +148,21 @@ Item {
                     root.deactivateRam()
             }
 
+            let heatChanging = false
             for (let index = 0; index < root.unitCount; ++index) {
-                const cell = ramUnits.get(index)
+                const cell = root.ramUnits[index]
                 const nextHeat = cell.active
                         ? Math.min(1, cell.heat + 0.07)
                         : Math.max(0, cell.heat - 0.08)
-                if (nextHeat !== cell.heat)
-                    ramUnits.setProperty(index, "heat", nextHeat)
+                if (nextHeat !== cell.heat) {
+                    cell.heat = nextHeat
+                    heatChanging = true
+                }
             }
+            root.settled = !heatChanging && Math.abs(ramTarget - root.ramActiveCount) <= 1
+                && root.smoothedRam === requestedRam
+                && (root.field === "ram" || root.smoothedVram === requestedVram)
+            if (heatChanging) root.updateColors()
         }
     }
 
@@ -127,37 +175,19 @@ Item {
             width: root.field === "both" ? (root.width - 21) / 2 : root.width
             height: root.height
 
-            Grid {
+            HeatmapSurface {
                 id: ramGrid
                 readonly property real cellSize: root.fittedCellSize(parent.width, parent.height)
-
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
-                width: root.columns * cellSize + (root.columns - 1) * columnSpacing
-                height: root.rows * cellSize + (root.rows - 1) * rowSpacing
+                width: root.columns * cellSize + (root.columns - 1) * gapX
+                height: root.rows * cellSize + (root.rows - 1) * gapY
                 columns: root.columns
                 rows: root.rows
-                columnSpacing: root.fittedGap(parent.width, parent.height)
-                rowSpacing: columnSpacing
-
-                Repeater {
-                    model: ramUnits
-
-                    Rectangle {
-                        required property bool active
-                        required property real heat
-                        width: ramGrid.cellSize
-                        height: ramGrid.cellSize
-                        radius: 2
-                        color: root.mix(root.idleColor,
-                                        root.pressureColor(root.ramColor, root.smoothedRam),
-                                        heat)
-                        border.color: Theme.border
-                        border.width: 1
-
-                        Behavior on color { ColorAnimation { duration: 220 } }
-                    }
-                }
+                gapX: root.fittedGap(parent.width, parent.height)
+                gapY: gapX
+                animationEnabled: root.animationEnabled
+                cellColors: root.ramColors
             }
         }
 
@@ -166,37 +196,19 @@ Item {
             width: root.field === "both" ? (root.width - 21) / 2 : root.width
             height: root.height
 
-            Grid {
+            HeatmapSurface {
                 id: vramGrid
                 readonly property real cellSize: root.fittedCellSize(parent.width, parent.height)
-                readonly property int filledUnits: Math.round(root.smoothedVram * root.unitCount / 100)
-
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
-                width: root.columns * cellSize + (root.columns - 1) * columnSpacing
-                height: root.rows * cellSize + (root.rows - 1) * rowSpacing
+                width: root.columns * cellSize + (root.columns - 1) * gapX
+                height: root.rows * cellSize + (root.rows - 1) * gapY
                 columns: root.columns
                 rows: root.rows
-                columnSpacing: root.fittedGap(parent.width, parent.height)
-                rowSpacing: columnSpacing
-
-                Repeater {
-                    model: root.unitCount
-
-                    Rectangle {
-                        required property int index
-                        width: vramGrid.cellSize
-                        height: vramGrid.cellSize
-                        radius: 2
-                        color: index < vramGrid.filledUnits
-                                ? root.pressureColor(root.vramColor, root.smoothedVram)
-                                : root.idleColor
-                        border.color: Theme.border
-                        border.width: 1
-
-                        Behavior on color { ColorAnimation { duration: 220 } }
-                    }
-                }
+                gapX: root.fittedGap(parent.width, parent.height)
+                gapY: gapX
+                animationEnabled: root.animationEnabled
+                cellColors: root.vramColors
             }
         }
     }
