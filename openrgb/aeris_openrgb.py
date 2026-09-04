@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
+import colorsys
 import glob
+import json
 import logging
 import math
+import os
 import signal
+import socket
+import stat
 import time
 from pathlib import Path
 
@@ -78,6 +83,16 @@ def scale_color(color, brightness):
 def mask_jrainbow2_color(color):
     """Clear JRAINBOW2's two control-flag bits from each color channel."""
     return tuple(channel & 0xFC for channel in color)
+
+
+def rainbow_frame(count, now, period_seconds, spatial_cycles, brightness, phase_offset=0.0):
+    frame = []
+    for index in range(count):
+        position = index / max(1, count)
+        hue = (position * spatial_cycles - now / period_seconds + phase_offset) % 1.0
+        red, green, blue = colorsys.hsv_to_rgb(hue, 1.0, brightness)
+        frame.append((round(red * 255), round(green * 255), round(blue * 255)))
+    return frame
 
 
 def fan_workload_color(value, low, middle, high, palette, brightness):
@@ -165,6 +180,95 @@ class ThermalOverride:
             self.active = True
             self.pending_since = None
         return self.active
+
+
+class RuntimeModeController:
+    MODES = ("work", "night", "day", "off", "party")
+
+    def __init__(self, path, default_mode):
+        if default_mode not in self.MODES:
+            raise RuntimeError(f"invalid default lighting mode: {default_mode!r}")
+        self.path = Path(path)
+        self.mode = default_mode
+        self.thermal_override = False
+        self.listener = None
+        self._open()
+
+    def _open(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if self.path.exists() or self.path.is_socket():
+            mode = self.path.lstat().st_mode
+            if not stat.S_ISSOCK(mode):
+                raise RuntimeError(f"refusing non-socket control path: {self.path}")
+            probe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                probe.settimeout(0.2)
+                probe.connect(str(self.path))
+            except OSError:
+                self.path.unlink()
+            else:
+                raise RuntimeError(f"another Aeris lighting controller owns {self.path}")
+            finally:
+                probe.close()
+
+        self.listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.listener.bind(str(self.path))
+        os.chmod(self.path, 0o600)
+        self.listener.listen(4)
+        self.listener.setblocking(False)
+
+    def status(self):
+        return {
+            "ok": True,
+            "mode": self.mode,
+            "modes": list(self.MODES),
+            "thermalOverride": self.thermal_override,
+        }
+
+    def _handle(self, request):
+        command = request.get("command")
+        if command == "status":
+            return self.status(), False
+        if command != "set":
+            return {"ok": False, "error": "unknown command"}, False
+        mode = request.get("mode")
+        if mode not in self.MODES:
+            return {"ok": False, "error": f"invalid mode: {mode!r}"}, False
+        changed = mode != self.mode
+        self.mode = mode
+        return self.status(), changed
+
+    def poll(self):
+        changed = False
+        while True:
+            try:
+                connection, _ = self.listener.accept()
+            except BlockingIOError:
+                break
+            with connection:
+                connection.settimeout(0.2)
+                try:
+                    payload = connection.recv(4096)
+                    request = json.loads(payload.decode("utf-8"))
+                    response, request_changed = self._handle(request)
+                    changed = changed or request_changed
+                except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    response = {"ok": False, "error": str(exc)}
+                try:
+                    connection.sendall((json.dumps(response) + "\n").encode("utf-8"))
+                except OSError:
+                    pass
+        return changed
+
+    def close(self):
+        if self.listener is not None:
+            self.listener.close()
+            self.listener = None
+        try:
+            if self.path.is_socket():
+                self.path.unlink()
+        except OSError:
+            pass
 
 
 class Telemetry:
@@ -263,6 +367,8 @@ class Lighting:
         self.last_motherboard_frame = None
         self.last_cpu_color = None
         self.last_gpu_color = None
+        self.last_cpu_frame = None
+        self.last_gpu_frame = None
 
         self._ensure_direct(self.motherboard)
         for device in self.accents:
@@ -276,6 +382,13 @@ class Lighting:
             ", ".join(d.name for d in self.gpu_devices),
         )
 
+    def invalidate_cache(self):
+        self.last_motherboard_frame = None
+        self.last_cpu_color = None
+        self.last_gpu_color = None
+        self.last_cpu_frame = None
+        self.last_gpu_frame = None
+
     @staticmethod
     def _ensure_direct(device):
         active_mode = device.modes[device.active_mode]
@@ -287,23 +400,33 @@ class Lighting:
                 f"device {device.name!r} did not enter Direct mode; refusing color writes"
             )
 
-    def apply_motherboard(self, workload, fans):
-        load_rgb = RGBColor(*workload)
-        fan_rgb = RGBColor(*mask_jrainbow2_color(fans))
+    def apply_motherboard_zones(self, workload, fans):
+        if len(workload) != len(self.workload_zone.leds):
+            raise RuntimeError("workload-zone frame length changed")
+        if len(fans) != len(self.fan_zone.leds):
+            raise RuntimeError("fan-zone frame length changed")
+        load_rgb = [RGBColor(*color) for color in workload]
+        fan_rgb = [RGBColor(*mask_jrainbow2_color(color)) for color in fans]
         frame = []
         for zone in self.motherboard.zones:
             if zone.name == self.workload_zone.name:
-                color = load_rgb
+                zone_frame = load_rgb
             elif zone.name == self.fan_zone.name:
-                color = fan_rgb
+                zone_frame = fan_rgb
             else:
-                color = RGBColor(0, 0, 0)
-            frame.extend([color] * len(zone.leds))
+                zone_frame = [RGBColor(0, 0, 0)] * len(zone.leds)
+            frame.extend(zone_frame)
         frame_key = tuple((color.red, color.green, color.blue) for color in frame)
         if frame_key == self.last_motherboard_frame:
             return
         self.motherboard.set_colors(frame, fast=True)
         self.last_motherboard_frame = frame_key
+
+    def apply_motherboard(self, workload, fans):
+        self.apply_motherboard_zones(
+            [workload] * len(self.workload_zone.leds),
+            [fans] * len(self.fan_zone.leds),
+        )
 
     def apply_cpu(self, cpu):
         if cpu == self.last_cpu_color:
@@ -312,6 +435,7 @@ class Lighting:
         for device in self.cpu_devices:
             device.set_color(cpu_rgb, fast=True)
         self.last_cpu_color = cpu
+        self.last_cpu_frame = None
 
     def apply_gpu(self, gpu):
         if gpu == self.last_gpu_color:
@@ -320,6 +444,58 @@ class Lighting:
         for device in self.gpu_devices:
             device.set_color(gpu_rgb, fast=True)
         self.last_gpu_color = gpu
+        self.last_gpu_frame = None
+
+    @staticmethod
+    def _device_frame_key(frames):
+        return tuple(tuple(frame) for frame in frames)
+
+    def apply_cpu_frames(self, frames):
+        frame_key = self._device_frame_key(frames)
+        if frame_key == self.last_cpu_frame:
+            return
+        for device, frame in zip(self.cpu_devices, frames):
+            device.set_colors([RGBColor(*color) for color in frame], fast=True)
+        self.last_cpu_frame = frame_key
+        self.last_cpu_color = None
+
+    def apply_gpu_frames(self, frames):
+        frame_key = self._device_frame_key(frames)
+        if frame_key == self.last_gpu_frame:
+            return
+        for device, frame in zip(self.gpu_devices, frames):
+            device.set_colors([RGBColor(*color) for color in frame], fast=True)
+        self.last_gpu_frame = frame_key
+        self.last_gpu_color = None
+
+    def apply_party_motherboard(self, now, cfg):
+        workload = rainbow_frame(
+            len(self.workload_zone.leds), now, cfg["period_seconds"],
+            cfg["spatial_cycles"], cfg["brightness"],
+        )
+        fans = rainbow_frame(
+            len(self.fan_zone.leds), now, cfg["period_seconds"],
+            cfg["spatial_cycles"], cfg["brightness"], cfg["fan_phase_offset"],
+        )
+        self.apply_motherboard_zones(workload, fans)
+
+    def apply_party_accents(self, now, cfg):
+        cpu_frames = []
+        for index, device in enumerate(self.cpu_devices):
+            cpu_frames.append(rainbow_frame(
+                len(device.leds), now, cfg["period_seconds"],
+                cfg["accent_spatial_cycles"], cfg["brightness"],
+                index * cfg["dimm_phase_offset"],
+            ))
+        gpu_frames = []
+        for device in self.gpu_devices:
+            gpu_frames.append(rainbow_frame(
+                len(device.leds), now, cfg["period_seconds"],
+                cfg["accent_spatial_cycles"], cfg["brightness"],
+                cfg["gpu_phase_offset"],
+            ))
+        self.apply_cpu_frames(cpu_frames)
+        self.apply_gpu_frames(gpu_frames)
 
     def apply_accents(self, cpu, gpu):
         self.apply_cpu(cpu)
@@ -347,6 +523,7 @@ def main():
     ram_palette = hardware_palette("ram")
     gpu_palette = hardware_palette("gpu")
     ram_idle = parse_color(device_palettes.get("ram", {}).get("idle", "000000"))
+    black = (0, 0, 0)
     alpha = float(cfg["smoothing_alpha"])
     workload_smoothing = cfg["workload_smoothing"]
     cpu_envelope = LoadEnvelope(
@@ -361,6 +538,8 @@ def main():
     )
     poll = float(cfg["poll_seconds"])
     pulse_cfg = cfg["high_load_pulse"]
+    mode_cfg = cfg["runtime_modes"]
+    party_cfg = mode_cfg["party"]
     telemetry = Telemetry(float(cfg["workload"]["gpu_power_watts_max"]))
     override_cfg = cfg["temperature_override"]
     thermal_override = ThermalOverride(
@@ -370,13 +549,37 @@ def main():
         float(override_cfg["gpu_exit_c"]),
         float(override_cfg["dwell_seconds"]),
     )
+    night_brightness = mode_cfg["night_brightness"]
+    night_colors = (
+        scale_color(chain_palette[1], float(night_brightness["workload_chain"])),
+        scale_color(fan_palette[1], float(night_brightness["fans"])),
+        scale_color(ram_palette[1], float(night_brightness["ram"])),
+        scale_color(gpu_palette[1], float(night_brightness["gpu"])),
+    )
+    day_cfg = mode_cfg["day"]
+    day_color = scale_color(
+        parse_color(day_cfg["color"]),
+        float(day_cfg["brightness"]),
+    )
+    day_colors = (day_color, day_color, day_color, day_color)
+    work_colors = [chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0]]
     smooth_cpu_temp = None
     smooth_gpu_temp = None
-    smooth_cpu = None
-    smooth_gpu = None
+    smooth_cpu = 0.0
+    smooth_gpu = 0.0
+    smooth_load = 0.0
     stop_requested = False
     last_loop_at = None
+    next_telemetry_at = 0.0
+    next_accent_render_at = 0.0
     max_loop_gap = float(cfg["safety"]["max_loop_gap_seconds"])
+    render_interval = min(
+        float(pulse_cfg["motherboard_render_interval_seconds"]),
+        float(party_cfg["motherboard_render_interval_seconds"]),
+    )
+    runtime_dir = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+    control_path = runtime_dir / mode_cfg["socket_name"]
+    controller = None
 
     def request_stop(_signum, _frame):
         nonlocal stop_requested
@@ -387,7 +590,9 @@ def main():
 
     try:
         lighting = Lighting(cfg)
-        lighting.apply(chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0])
+        controller = RuntimeModeController(control_path, mode_cfg["default"])
+        LOG.info("Runtime lighting control ready at %s (mode=%s)", control_path, controller.mode)
+        lighting.apply(*work_colors)
 
         while not stop_requested:
             loop_at = time.monotonic()
@@ -397,75 +602,119 @@ def main():
                     "possible suspend/resume, refusing the old hardware connection"
                 )
             last_loop_at = loop_at
-            cpu_temp, gpu_temp, workload, cpu_workload, gpu_workload = telemetry.sample()
-            if workload is None or gpu_workload is None:
-                lighting.apply(chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0])
-                time.sleep(poll)
-                continue
 
-            if cpu_temp is not None:
-                smooth_cpu_temp = cpu_temp if smooth_cpu_temp is None else smooth_cpu_temp * (1 - alpha) + cpu_temp * alpha
-            if gpu_temp is not None:
-                smooth_gpu_temp = gpu_temp if smooth_gpu_temp is None else smooth_gpu_temp * (1 - alpha) + gpu_temp * alpha
-            smooth_cpu = cpu_envelope.update(cpu_workload)
-            smooth_gpu = gpu_envelope.update(gpu_workload)
-            smooth_load = max(smooth_cpu, smooth_gpu)
-            wcfg = cfg["workload"]
-            override_was_active = thermal_override.active
-            temperature_override = thermal_override.update(smooth_cpu_temp, smooth_gpu_temp)
-            if temperature_override and not override_was_active:
-                LOG.warning("Temperature override entered: CPU=%s GPU=%s", smooth_cpu_temp, smooth_gpu_temp)
-            elif override_was_active and not temperature_override:
-                LOG.info("Temperature override cleared: CPU=%s GPU=%s", smooth_cpu_temp, smooth_gpu_temp)
+            if controller.poll():
+                lighting.invalidate_cache()
+                next_accent_render_at = 0.0
+                LOG.info("Runtime lighting mode changed to %s", controller.mode)
 
-            load_color = gradient(smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"], *chain_palette)
-            bcfg = cfg["fan_brightness"]
-            fan_color = fan_workload_color(
-                smooth_load, wcfg["idle"], wcfg["orange"], bcfg["off_workload"],
-                fan_palette, bcfg,
-            )
-            cpu_color = gradient(
-                smooth_cpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"],
-                ram_idle, ram_palette[1], ram_palette[2],
-            )
-            gpu_color = gradient(smooth_gpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"], *gpu_palette)
-            gpu_color = scale_color(
-                gpu_color,
-                subordinate_brightness(smooth_cpu, smooth_gpu, wcfg["idle"], wcfg["orange"]),
-            )
-            if temperature_override:
-                lighting.apply(chain_palette[2], fan_palette[2], ram_palette[2], gpu_palette[2])
-                time.sleep(poll)
-            else:
-                now = time.monotonic()
-                pulsed_load_color = high_load_pulse_color(load_color, smooth_load, now, pulse_cfg)
-                pulsed_cpu_color = high_load_pulse_color(cpu_color, smooth_cpu, now, pulse_cfg)
-                pulsed_gpu_color = high_load_pulse_color(gpu_color, smooth_gpu, now, pulse_cfg)
-                lighting.apply(pulsed_load_color, fan_color, pulsed_cpu_color, pulsed_gpu_color)
-                if smooth_load <= pulse_cfg["start_workload"]:
-                    time.sleep(poll)
+            if loop_at >= next_telemetry_at:
+                cpu_temp, gpu_temp, workload, cpu_workload, gpu_workload = telemetry.sample()
+                next_telemetry_at = loop_at + poll
+                if cpu_temp is not None:
+                    smooth_cpu_temp = (
+                        cpu_temp if smooth_cpu_temp is None
+                        else smooth_cpu_temp * (1 - alpha) + cpu_temp * alpha
+                    )
+                if gpu_temp is not None:
+                    smooth_gpu_temp = (
+                        gpu_temp if smooth_gpu_temp is None
+                        else smooth_gpu_temp * (1 - alpha) + gpu_temp * alpha
+                    )
+
+                override_was_active = thermal_override.active
+                temperature_override = thermal_override.update(smooth_cpu_temp, smooth_gpu_temp)
+                controller.thermal_override = temperature_override
+                if temperature_override and not override_was_active:
+                    LOG.warning(
+                        "Temperature override entered: CPU=%s GPU=%s",
+                        smooth_cpu_temp, smooth_gpu_temp,
+                    )
+                elif override_was_active and not temperature_override:
+                    LOG.info(
+                        "Temperature override cleared: CPU=%s GPU=%s",
+                        smooth_cpu_temp, smooth_gpu_temp,
+                    )
+
+                if workload is None or gpu_workload is None:
+                    smooth_cpu = 0.0
+                    smooth_gpu = 0.0
+                    smooth_load = 0.0
+                    work_colors = [chain_palette[0], fan_palette[0], ram_idle, gpu_palette[0]]
                 else:
-                    render_until = time.monotonic() + poll
-                    next_accent_render = now + pulse_cfg["accent_render_interval_seconds"]
-                    while not stop_requested:
-                        remaining = render_until - time.monotonic()
-                        if remaining <= 0:
-                            break
-                        time.sleep(min(pulse_cfg["motherboard_render_interval_seconds"], remaining))
-                        now = time.monotonic()
-                        pulsed_load_color = high_load_pulse_color(
-                            load_color, smooth_load, now, pulse_cfg,
+                    smooth_cpu = cpu_envelope.update(cpu_workload, loop_at)
+                    smooth_gpu = gpu_envelope.update(gpu_workload, loop_at)
+                    smooth_load = max(smooth_cpu, smooth_gpu)
+                    wcfg = cfg["workload"]
+                    bcfg = cfg["fan_brightness"]
+                    load_color = gradient(
+                        smooth_load, wcfg["idle"], wcfg["orange"], wcfg["maximum"],
+                        *chain_palette,
+                    )
+                    fan_color = fan_workload_color(
+                        smooth_load, wcfg["idle"], wcfg["orange"], bcfg["off_workload"],
+                        fan_palette, bcfg,
+                    )
+                    cpu_color = gradient(
+                        smooth_cpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"],
+                        ram_idle, ram_palette[1], ram_palette[2],
+                    )
+                    gpu_color = gradient(
+                        smooth_gpu, wcfg["idle"], wcfg["orange"], wcfg["maximum"],
+                        *gpu_palette,
+                    )
+                    gpu_color = scale_color(
+                        gpu_color,
+                        subordinate_brightness(
+                            smooth_cpu, smooth_gpu, wcfg["idle"], wcfg["orange"],
+                        ),
+                    )
+                    work_colors = [load_color, fan_color, cpu_color, gpu_color]
+
+            if thermal_override.active:
+                lighting.apply(chain_palette[2], fan_palette[2], ram_palette[2], gpu_palette[2])
+            elif controller.mode == "work":
+                if smooth_load > pulse_cfg["start_workload"]:
+                    lighting.apply_motherboard(
+                        high_load_pulse_color(work_colors[0], smooth_load, loop_at, pulse_cfg),
+                        work_colors[1],
+                    )
+                    if loop_at >= next_accent_render_at:
+                        lighting.apply_cpu(
+                            high_load_pulse_color(work_colors[2], smooth_cpu, loop_at, pulse_cfg)
                         )
-                        lighting.apply_motherboard(pulsed_load_color, fan_color)
-                        if now >= next_accent_render:
-                            if smooth_cpu > pulse_cfg["start_workload"]:
-                                lighting.apply_cpu(high_load_pulse_color(cpu_color, smooth_cpu, now, pulse_cfg))
-                            if smooth_gpu > pulse_cfg["start_workload"]:
-                                lighting.apply_gpu(high_load_pulse_color(gpu_color, smooth_gpu, now, pulse_cfg))
-                            next_accent_render = now + pulse_cfg["accent_render_interval_seconds"]
+                        lighting.apply_gpu(
+                            high_load_pulse_color(work_colors[3], smooth_gpu, loop_at, pulse_cfg)
+                        )
+                        next_accent_render_at = (
+                            loop_at + float(pulse_cfg["accent_render_interval_seconds"])
+                        )
+                else:
+                    lighting.apply(*work_colors)
+            elif controller.mode == "night":
+                lighting.apply(*night_colors)
+            elif controller.mode == "day":
+                lighting.apply(*day_colors)
+            elif controller.mode == "off":
+                lighting.apply(black, black, black, black)
+            elif controller.mode == "party":
+                lighting.apply_party_motherboard(loop_at, party_cfg)
+                if loop_at >= next_accent_render_at:
+                    lighting.apply_party_accents(loop_at, party_cfg)
+                    next_accent_render_at = (
+                        loop_at + float(party_cfg["accent_render_interval_seconds"])
+                    )
+            else:
+                raise RuntimeError(f"unexpected runtime mode: {controller.mode!r}")
+
+            elapsed = time.monotonic() - loop_at
+            time.sleep(max(0.0, render_interval - elapsed))
     except Exception as exc:
         LOG.error("OpenRGB safety stop; no reconnect will be attempted: %s", exc)
         return 1
+    finally:
+        if controller is not None:
+            controller.close()
 
     LOG.info("Stopping without changing controller modes or persistent state")
     return 0

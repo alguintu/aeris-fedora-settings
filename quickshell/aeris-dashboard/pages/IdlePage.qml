@@ -9,10 +9,16 @@ Item {
     property var metrics: ({})
     property bool metricsHealthy: false
     property date now
+    property string lightingMode: "unknown"
+    property bool lightingHealthy: false
+    property bool lightingPending: false
+    property string lightingError: ""
     property string coolingMode: "unknown"
     property bool coolingHealthy: false
     property bool coolingPending: false
     property string coolingError: ""
+
+    signal lightingModeRequested(string mode)
     signal coolingModeRequested(string mode)
 
     function percent(value, total) {
@@ -42,198 +48,611 @@ Item {
         return Math.pow(2, Math.round(Math.log(gibibytes) / Math.LN2)) + "GB"
     }
 
-    function hourText() {
-        const hour = page.now.getHours() % 12 || 12
-        return hour + ":" + String(page.now.getMinutes()).padStart(2, "0")
-    }
-
-    RowLayout {
-        id: topRow
+    DashboardTile {
+        id: mediaTile
         anchors.top: parent.top
         anchors.left: parent.left
+        width: 540
+        height: middleBand.rowHeight + controlGrid.spacing + controlGrid.tileSize
+        accent: Theme.mauve
+        contentMargin: 24
+
+        MediaControls {
+            anchors.fill: parent
+        }
+    }
+
+    DashboardTile {
+        id: cpuTile
+        anchors.top: parent.top
         anchors.right: parent.right
-        height: 176
-        spacing: 12
+        width: mediaTile.width
+        height: Math.round((parent.height - 12) / 2)
 
-        DashboardTile {
-            Layout.preferredWidth: 330
-            Layout.fillHeight: true
-            accent: "#d77ec3"
+        Item {
+            anchors.fill: parent
+            clip: true
 
-            Column {
-                anchors.fill: parent
-                spacing: 0
+            Item {
+                id: cpuSection
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: Math.round((parent.width - 21) * 0.595)
 
-                Row {
+                ColumnLayout {
+                    anchors.fill: parent
                     spacing: 10
-                    Text { text: page.hourText(); color: "#f7f8fa"; font.family: "Noto Sans"; font.pixelSize: 62; font.weight: Font.Light }
-                    Text { anchors.baseline: parent.children[0].baseline; text: page.now.getHours() >= 12 ? "PM" : "AM"; color: "#8ed170"; font.family: "Noto Sans"; font.pixelSize: 20; font.weight: Font.Medium }
-                }
-
-                Text { text: Qt.formatDateTime(page.now, "dddd  •  MMMM d"); color: "#b8aaf6"; font.family: "Noto Sans"; font.pixelSize: 17 }
-            }
-        }
-
-        DashboardTile {
-            Layout.preferredWidth: 460
-            Layout.fillHeight: true
-            title: "CPU"
-            eyebrow: Math.round(page.metrics.cpuUsage) + "%  ·  " + page.temperature(page.metrics.cpuTemp)
-            accent: "#77d7cb"
-
-            CpuHeatmap {
-                anchors.fill: parent
-                ccds: page.metrics.cpuCcds || []
-            }
-        }
-
-        DashboardTile {
-            Layout.preferredWidth: 460
-            Layout.fillHeight: true
-            title: "GPU"
-            eyebrow: Math.round(page.metrics.gpuUsage) + "%  ·  " + page.temperature(page.metrics.gpuTemp)
-            accent: "#77d7cb"
-
-            GpuHeatmap {
-                anchors.fill: parent
-                utilization: page.metrics.gpuUsage || 0
-            }
-        }
-
-        DashboardTile {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 10
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 18
-                    Layout.bottomMargin: 5
 
                     DashboardSectionHeader {
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: (parent.width - 21) / 2
-                        height: 18
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 24
+                        title: "CPU"
+                        iconName: "processor"
+                        detail: "RYZEN 9 5950X"
+                        eyebrow: Math.round(page.metrics.cpuUsage) + "% · "
+                                 + page.temperature(page.metrics.cpuTemp)
+                        accent: Theme.teal
+                    }
+
+                    CpuHeatmap {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        ccds: page.metrics.cpuCcds || []
+                    }
+                }
+            }
+
+            Item {
+                anchors.left: cpuSection.right
+                anchors.leftMargin: 21
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+
+                    DashboardSectionHeader {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 24
                         title: "RAM"
-                        eyebrow: Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100)
-                                 + "%  ·  " + page.nominalCapacity(page.metrics.ramTotal)
-                        accent: "#57bced"
+                        eyebrow: Math.round(page.percent(page.metrics.ramUsed,
+                                                         page.metrics.ramTotal) * 100)
+                                 + "% · " + page.nominalCapacity(page.metrics.ramTotal)
+                        accent: Theme.cyan
                     }
 
-                    DashboardSectionHeader {
-                        x: (parent.width + 21) / 2
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: (parent.width - 21) / 2
-                        height: 18
-                        title: "VRAM"
-                        eyebrow: Math.round(page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100)
-                                 + "%  ·  " + page.nominalCapacity(page.metrics.vramTotal)
-                        accent: "#a99bf5"
+                    MemoryHeatmap {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        field: "ram"
+                        ramUtilization: page.percent(page.metrics.ramUsed,
+                                                     page.metrics.ramTotal) * 100
                     }
-                }
-
-                MemoryHeatmap {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    ramUtilization: page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100
-                    vramUtilization: page.percent(page.metrics.vramUsed, page.metrics.vramTotal) * 100
                 }
             }
         }
     }
 
-    RowLayout {
-        anchors.top: topRow.bottom
+    DashboardTile {
+        id: gpuTile
+        anchors.top: cpuTile.bottom
         anchors.topMargin: 12
         anchors.bottom: parent.bottom
-        anchors.left: parent.left
+        anchors.left: cpuTile.left
         anchors.right: parent.right
-        spacing: 12
 
-        DashboardTile {
-            Layout.preferredWidth: 540
-            Layout.fillHeight: true
-            title: "LAUNCH"
-            eyebrow: "QUICK ACCESS"
-            accent: "#8ed170"
-
-            RowLayout {
-                anchors.centerIn: parent
-                spacing: 12
-                ActionButton { symbol: ">_"; label: "Terminal"; accent: "#d5dbe3"; onClicked: Quickshell.execDetached(["konsole"]) }
-                ActionButton { symbol: "◎"; label: "Firefox"; accent: "#f0aa58"; onClicked: Quickshell.execDetached(["firefox"]) }
-                ActionButton { symbol: "<>"; label: "Code"; accent: "#57bced"; onClicked: Quickshell.execDetached(["code"]) }
-                ActionButton { symbol: "▣"; label: "Files"; accent: "#77d7cb"; onClicked: Quickshell.execDetached(["dolphin"]) }
-            }
-        }
-
-        DashboardTile {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            title: "AT A GLANCE"
-            eyebrow: "CALM STATE"
-            accent: "#77d7cb"
-
-            RowLayout {
-                anchors.fill: parent
-                spacing: 26
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 5
-                    Text { text: "ROOT STORAGE"; color: "#8995a5"; font.family: "Noto Sans"; font.pixelSize: 11; font.letterSpacing: 1 }
-                    Text { text: page.bytes(page.metrics.rootUsed) + " / " + page.bytes(page.metrics.rootTotal); color: "#eef3f8"; font.family: "Noto Sans"; font.pixelSize: 20 }
-                    MetricBar { Layout.fillWidth: true; label: "NVMe"; progress: page.percent(page.metrics.rootUsed, page.metrics.rootTotal); valueText: Math.round(page.percent(page.metrics.rootUsed, page.metrics.rootTotal) * 100) + "%"; accent: "#57bced" }
-                }
-
-                Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#344050" }
-
-                ColumnLayout {
-                    Layout.preferredWidth: 300
-                    spacing: 5
-                    Text { text: "FOCUS TIMER"; color: "#8995a5"; font.family: "Noto Sans"; font.pixelSize: 11; font.letterSpacing: 1 }
-                    Text { text: "25:00"; color: "#f7f8fa"; font.family: "Noto Sans"; font.pixelSize: 36; font.weight: Font.Light }
-                    Text { text: "READY — CONTROL NEXT PASS"; color: "#d77ec3"; font.family: "Noto Sans"; font.pixelSize: 11; font.weight: Font.DemiBold }
-                }
-            }
-        }
         Item {
-            Layout.preferredWidth: 360
-            Layout.minimumWidth: 360
-            Layout.fillHeight: true
-            Row {
-                anchors.centerIn: parent
-                spacing: 12
-                CoolingModeButton {
-                    iconKind: "default"
-                    selected: page.coolingMode === "default"
-                    available: page.coolingHealthy
-                    busy: page.coolingPending
-                    onClicked: page.coolingModeRequested("default")
+            anchors.fill: parent
+            clip: true
+
+            Item {
+                id: gpuSection
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: Math.round((parent.width - 21) * 0.595)
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+
+                    DashboardSectionHeader {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 24
+                        title: "GPU"
+                        iconName: "graphics-card"
+                        detail: "RX 6900 XT"
+                        eyebrow: Math.round(page.metrics.gpuUsage) + "% · "
+                                 + page.temperature(page.metrics.gpuTemp)
+                        accent: Theme.teal
+                    }
+
+                    GpuHeatmap {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        utilization: page.metrics.gpuUsage || 0
+                    }
                 }
-                CoolingModeButton {
-                    iconKind: page.coolingMode === "performance" ? "performance" : "quiet"
-                    accent: page.coolingMode === "performance" ? "#f0aa58" : "#8ed170"
-                    selected: page.coolingMode === "quiet" || page.coolingMode === "performance"
-                    available: page.coolingHealthy
-                    busy: page.coolingPending
-                    onClicked: page.coolingModeRequested(
-                        page.coolingMode === "quiet" ? "performance" : "quiet")
+            }
+
+            Item {
+                anchors.left: gpuSection.right
+                anchors.leftMargin: 21
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+
+                    DashboardSectionHeader {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 24
+                        title: "VRAM"
+                        eyebrow: Math.round(page.percent(page.metrics.vramUsed,
+                                                         page.metrics.vramTotal) * 100)
+                                 + "% · " + page.nominalCapacity(page.metrics.vramTotal)
+                        accent: Theme.mauve
+                    }
+
+                    MemoryHeatmap {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        field: "vram"
+                        vramUtilization: page.percent(page.metrics.vramUsed,
+                                                      page.metrics.vramTotal) * 100
+                    }
                 }
-                CoolingModeButton {
-                    iconKind: "firmware"
-                    accent: "#a99bf5"
-                    selected: page.coolingMode === "firmware"
-                    available: page.coolingHealthy
-                    busy: page.coolingPending
-                    onClicked: page.coolingModeRequested("firmware")
+            }
+        }
+    }
+
+    Item {
+        id: middleBand
+        readonly property real rowHeight: Math.round((height - 12) / 2)
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.left: mediaTile.right
+        anchors.leftMargin: 12
+        anchors.right: cpuTile.left
+        anchors.rightMargin: 12
+
+        Row {
+            id: timeTiles
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: middleBand.rowHeight
+            spacing: 12
+
+            DashboardTile {
+                width: timeTiles.width - pomodoroTile.width - timeTiles.spacing
+                height: timeTiles.height
+                accent: Theme.blue
+
+                Item {
+                    anchors.fill: parent
+
+                    WeatherPattern {
+                        anchors.fill: parent
+                        anchors.margins: -18
+                        condition: "partly-cloudy"
+                    }
+
+                    Text {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        height: 84
+                        verticalAlignment: Text.AlignVCenter
+                        text: String(page.now.getHours() % 12 || 12).padStart(2, "0")
+                        color: Theme.blue
+                        font.family: Theme.clockBoldFontFamily
+                        font.pixelSize: 100
+                        font.weight: Font.Bold
+                    }
+
+                    Text {
+                        id: clockMinute
+                        anchors.left: parent.left
+                        anchors.bottom: parent.bottom
+                        height: 84
+                        verticalAlignment: Text.AlignVCenter
+                        text: String(page.now.getMinutes()).padStart(2, "0")
+                        color: Theme.blue
+                        font.family: Theme.clockBoldFontFamily
+                        font.pixelSize: 100
+                        font.weight: Font.Bold
+                    }
+
+                    Text {
+                        anchors.left: clockMinute.right
+                        anchors.leftMargin: 12
+                        anchors.baseline: clockMinute.baseline
+                        text: page.now.getHours() >= 12 ? "PM" : "AM"
+                        color: Theme.green
+                        font.family: Theme.clockBoldFontFamily
+                        font.pixelSize: 36
+                        font.weight: Font.Bold
+                    }
+
+                    Text {
+                        id: clockDate
+                        anchors.right: parent.right
+                        anchors.bottom: clockWeekday.top
+                        anchors.bottomMargin: 2
+                        text: Qt.formatDateTime(page.now, "MMM d")
+                        color: Theme.yellow
+                        font.family: Theme.clockFontFamily
+                        font.pixelSize: 24
+                    }
+
+                    Text {
+                        id: clockWeekday
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        text: Qt.formatDateTime(page.now, "dddd")
+                        color: Theme.yellow
+                        font.family: Theme.clockBoldFontFamily
+                        font.pixelSize: 36
+                        font.weight: Font.Bold
+                    }
+
+                    Row {
+                        id: weatherReading
+                        // Visual placeholders; no live weather provider yet.
+                        anchors.top: parent.top
+                        anchors.right: parent.right
+                        spacing: 12
+
+                        ThemeIcon {
+                            width: 52
+                            height: 52
+                            name: "weather-partly-cloudy"
+                            color: Theme.mauve
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            height: 52
+                            // Mock temperature, not a live measurement.
+                            verticalAlignment: Text.AlignVCenter
+                            text: "28°C"
+                            color: Theme.cyan
+                            font.family: Theme.clockBoldFontFamily
+                            font.weight: Font.Bold
+                            font.pixelSize: 60
+                        }
+                    }
+
+                    Text {
+                        id: weatherDescription
+                        anchors.right: parent.right
+                        anchors.top: weatherReading.bottom
+                        anchors.topMargin: 6
+                        text: "Partly cloudy"
+                        color: Theme.mauve
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 20
+                    }
+                }
+            }
+
+            DashboardTile {
+                id: pomodoroTile
+                width: 296
+                height: middleBand.height
+                accent: Theme.mauve
+                PomodoroTile {
+                    anchors.fill: parent
                 }
             }
         }
 
+        KeepAwakeButton {
+            id: keepAwake
+            contentMargin: cpuTile.contentMargin
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            width: controlGrid.tileSize
+            height: middleBand.rowHeight
+        }
+
+        DashboardTile {
+            // User-selected capacity label for the mounted storage summary.
+            anchors.left: keepAwake.right
+            anchors.leftMargin: 12
+            anchors.right: parent.right
+            anchors.rightMargin: pomodoroTile.width + 12
+            anchors.top: timeTiles.bottom
+            anchors.topMargin: 12
+            anchors.bottom: parent.bottom
+
+            Item {
+                id: diskSummary
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: diskLabelMetrics.tightBoundingRect.width
+
+                ThemeIcon {
+                    id: diskCapacityIcon
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    name: "harddisk-tight"
+                    color: Theme.blue
+                    width: diskLabelMetrics.tightBoundingRect.width
+                    height: width * 20 / 16
+                }
+
+                Item {
+                    id: diskCapacityInk
+                    anchors.left: parent.left
+                    anchors.top: diskCapacityIcon.bottom
+                    anchors.topMargin: 16
+                    width: parent.width
+                    height: diskLabelMetrics.tightBoundingRect.height
+
+                    Text {
+                        id: diskCapacityLabel
+                        // Align the ink bounds, not the font's invisible bearings.
+                        x: -diskLabelMetrics.tightBoundingRect.x
+                        y: -baselineOffset - diskLabelMetrics.tightBoundingRect.y
+                        text: "6.5TB"
+                        color: Theme.blue
+                        font.family: Theme.clockBoldFontFamily
+                        font.weight: Font.Bold
+                        font.pixelSize: 32
+                    }
+                }
+
+                Item {
+                    anchors.left: parent.left
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    height: diskFreeLineMetrics.tightBoundingRect.height
+
+                    Text {
+                        id: diskFreeLine
+                        x: -diskFreeLineMetrics.tightBoundingRect.x
+                        y: -baselineOffset - diskFreeLineMetrics.tightBoundingRect.y
+                        text: (page.metrics.mountedDiskTotal > 0
+                            && page.metrics.mountedDiskFree !== null
+                            && page.metrics.mountedDiskFree !== undefined
+                            ? Math.round(page.metrics.mountedDiskFree / page.metrics.mountedDiskTotal * 100) + "%"
+                            : "--%") + " FREE"
+                        color: Theme.green
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 18
+                        font.weight: Font.DemiBold
+                        wrapMode: Text.NoWrap
+                    }
+
+                    TextMetrics {
+                        id: diskFreeLineMetrics
+                        font: diskFreeLine.font
+                        text: diskFreeLine.text
+                    }
+                }
+
+            }
+
+            TextMetrics {
+                id: diskLabelMetrics
+                font: diskCapacityLabel.font
+                text: diskCapacityLabel.text
+            }
+
+            Rectangle {
+                id: diskDivider
+                anchors.left: diskSummary.right
+                anchors.leftMargin: 18
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 1
+                color: Theme.border
+            }
+
+            Column {
+                anchors.left: diskDivider.right
+                anchors.leftMargin: 18
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                spacing: (height - 4 * 35) / 3
+
+                Repeater {
+                    model: 4
+
+                    delegate: Item {
+                        id: driveRow
+                        required property int index
+                        readonly property var drive: (page.metrics.drives || [])[index] || null
+                        readonly property color accent: [Theme.red, Theme.green, Theme.yellow, Theme.cyan][index]
+                        width: parent.width
+                        height: 35
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            height: 23
+                            text: ["SYSTEM", "WORKSPACE", "DOCUMENTS", "STORAGE"][driveRow.index]
+                            color: driveRow.accent
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 18
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                        }
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: 8
+                            radius: 4
+                            color: Theme.inset
+
+                            Rectangle {
+                                width: parent.width * (driveRow.drive && driveRow.drive.total > 0
+                                    ? Math.max(0, Math.min(1, driveRow.drive.used / driveRow.drive.total)) : 0)
+                                height: parent.height
+                                radius: parent.radius
+                                color: driveRow.accent
+                                Behavior on width {
+                                    NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    Rectangle {
+        id: controlGrid
+        anchors.left: mediaTile.left
+        anchors.top: mediaTile.bottom
+        anchors.topMargin: spacing
+        width: (mediaTile.width - spacing) / 2
+        height: tileSize
+        radius: Theme.radius
+        readonly property real spacing: 12
+
+        readonly property real tileSize: (middleBand.rowHeight - spacing) / 2
+        readonly property real buttonWidth: (width - spacing * 2) / 3
+
+        readonly property var selectedButton: workLight.selected ? workLight
+            : dayNightLight.selected ? dayNightLight : partyOffLight.selected ? partyOffLight : null
+        readonly property var hoveredButton: workLight.hovered ? workLight
+            : dayNightLight.hovered ? dayNightLight : partyOffLight.hovered ? partyOffLight : null
+        readonly property bool pressed: workLight.pressed || dayNightLight.pressed || partyOffLight.pressed
+        readonly property var tintButton: hoveredButton || selectedButton
+        color: tintButton ? Theme.tintedSurface(tintButton.accent,
+            pressed ? 0.32 : selectedButton ? Theme.controlTint : 0.14) : Theme.surface
+        border.width: 0
+
+        Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutCubic } }
+
+        Row {
+            anchors.fill: parent
+            spacing: controlGrid.spacing
+
+            LightingModeButton {
+                id: workLight
+                flat: true
+                width: controlGrid.buttonWidth
+                height: controlGrid.tileSize
+                iconKind: "aeris"
+                accent: Theme.teal
+                selected: page.lightingMode === "work"
+                available: page.lightingHealthy
+                busy: page.lightingPending
+                onClicked: page.lightingModeRequested("work")
+            }
+
+            LightingModeButton {
+                id: dayNightLight
+                flat: true
+                width: controlGrid.buttonWidth
+                height: controlGrid.tileSize
+                iconKind: page.lightingMode === "day" ? "day" : "night"
+                accent: page.lightingMode === "day" ? Theme.text : Theme.green
+                selected: page.lightingMode === "night" || page.lightingMode === "day"
+                available: page.lightingHealthy
+                busy: page.lightingPending
+                onClicked: page.lightingModeRequested(
+                    page.lightingMode === "night" ? "day" : "night"
+                )
+            }
+
+            LightingModeButton {
+                id: partyOffLight
+                flat: true
+                width: controlGrid.buttonWidth
+                height: controlGrid.tileSize
+                iconKind: page.lightingMode === "off" ? "off" : "party"
+                accent: page.lightingMode === "off" ? Theme.muted : Theme.mauve
+                selected: page.lightingMode === "party" || page.lightingMode === "off"
+                available: page.lightingHealthy
+                busy: page.lightingPending
+                onClicked: page.lightingModeRequested(
+                    page.lightingMode === "party" ? "off" : "party"
+                )
+            }
+        }
+    }
+
+    Rectangle {
+        id: coolingGroup
+        anchors.left: controlGrid.right
+        anchors.leftMargin: controlGrid.spacing
+        anchors.top: controlGrid.top
+        width: controlGrid.width
+        height: controlGrid.tileSize
+        radius: Theme.radius
+
+        readonly property var selectedButton: defaultFan.selected ? defaultFan
+            : tunedFan.selected ? tunedFan : firmwareFan.selected ? firmwareFan : null
+        readonly property var hoveredButton: defaultFan.hovered ? defaultFan
+            : tunedFan.hovered ? tunedFan : firmwareFan.hovered ? firmwareFan : null
+        readonly property bool pressed: defaultFan.pressed || tunedFan.pressed || firmwareFan.pressed
+        readonly property var tintButton: hoveredButton || selectedButton
+        color: tintButton ? Theme.tintedSurface(tintButton.accent,
+            pressed ? 0.32 : selectedButton ? Theme.controlTint : 0.14) : Theme.surface
+        border.width: 0
+
+        Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutCubic } }
+
+        Row {
+            anchors.fill: parent
+            spacing: controlGrid.spacing
+
+            CoolingModeButton {
+                id: defaultFan
+                flat: true
+                width: controlGrid.buttonWidth
+                height: controlGrid.tileSize
+                iconKind: "default"
+                accent: Theme.teal
+                selected: page.coolingMode === "default"
+                available: page.coolingHealthy
+                busy: page.coolingPending
+                onClicked: page.coolingModeRequested("default")
+            }
+
+            CoolingModeButton {
+                id: tunedFan
+                flat: true
+                width: controlGrid.buttonWidth
+                height: controlGrid.tileSize
+                iconKind: page.coolingMode === "performance" ? "performance" : "quiet"
+                accent: page.coolingMode === "performance" ? Theme.yellow : Theme.green
+                selected: page.coolingMode === "quiet" || page.coolingMode === "performance"
+                available: page.coolingHealthy
+                busy: page.coolingPending
+                onClicked: page.coolingModeRequested(
+                    page.coolingMode === "quiet" ? "performance" : "quiet"
+                )
+            }
+
+            CoolingModeButton {
+                id: firmwareFan
+                flat: true
+                width: controlGrid.buttonWidth
+                height: controlGrid.tileSize
+                iconKind: "firmware"
+                accent: Theme.mauve
+                selected: page.coolingMode === "firmware"
+                available: page.coolingHealthy
+                busy: page.coolingPending
+                onClicked: page.coolingModeRequested("firmware")
+            }
+        }
     }
 }

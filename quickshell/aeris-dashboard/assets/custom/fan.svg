@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Aeris custom fan: the original four-blade geometry, now filled. -->
+  <g fill="#ffffff">
+    <circle cx="32" cy="32" r="4"/>
+    <g transform="translate(32 32)">
+      <path d="M5-2C12-16 24-18 25-9C25-2 14 3 6 3Z"/>
+      <path transform="rotate(90)" d="M5-2C12-16 24-18 25-9C25-2 14 3 6 3Z"/>
+      <path transform="rotate(180)" d="M5-2C12-16 24-18 25-9C25-2 14 3 6 3Z"/>
+      <path transform="rotate(270)" d="M5-2C12-16 24-18 25-9C25-2 14 3 6 3Z"/>
+    </g>
+  </g>
+</svg>

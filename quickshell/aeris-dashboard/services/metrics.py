@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
 import shutil
 import time
 from pathlib import Path
@@ -14,6 +16,7 @@ from typing import Any
 HWMON_ROOT = Path("/sys/class/hwmon")
 DRM_ROOT = Path("/sys/class/drm")
 CPU_ROOT = Path("/sys/devices/system/cpu")
+BLOCK_ROOT = Path("/sys/block")
 
 
 def read_text(path: Path) -> str | None:
@@ -121,6 +124,63 @@ def memory_bytes() -> tuple[int, int]:
     return total - values["MemAvailable"], total
 
 
+def physical_disk_capacity() -> int | None:
+    """Count whole physical disks once, excluding partitions and virtual devices."""
+    total = 0
+    found = False
+    for disk in BLOCK_ROOT.glob("*"):
+        if not (disk / "device").exists() or "virtual" in disk.resolve().parts:
+            continue
+        sectors = read_number(disk / "size")
+        if sectors is not None and sectors > 0:
+            # Linux sysfs reports size in 512-byte sectors, even for 4K disks.
+            total += int(sectors) * 512
+            found = True
+    return total if found else None
+
+
+def mounted_disk_space() -> tuple[int | None, int | None]:
+    """Usable capacity and user-available space on unique mounted local filesystems."""
+    total = available = 0
+    seen = set()
+    try:
+        for line in Path("/proc/self/mountinfo").read_text(encoding="utf-8").splitlines():
+            before, after = line.split(" - ", 1)
+            fs_type, source, *_ = after.split()
+            if not source.startswith("/dev/"):
+                continue
+            mount_fields = before.split()
+            # Btrfs subvolumes can have different statvfs IDs while sharing
+            # the same filesystem capacity. Mountinfo's device ID is shared.
+            key = (fs_type, mount_fields[2])
+            if key in seen:
+                continue
+            mountpoint = re.sub(r"\\([0-7]{3})", lambda m: chr(int(m[1], 8)), mount_fields[4])
+            stats = os.statvfs(mountpoint)
+            seen.add(key)
+            total += stats.f_blocks * stats.f_frsize
+            available += stats.f_bavail * stats.f_frsize
+    except (OSError, ValueError):
+        return None, None
+    return (total, available) if total > 0 else (None, None)
+
+
+def drive_usage() -> list[dict[str, Any]]:
+    drives = []
+    for label, mount in (("System", "/"), ("Workspace", "/mnt/workspace"),
+                         ("Documents", "/mnt/documents"), ("Storage", "/mnt/storage")):
+        entry = {"label": label, "mount": mount, "used": None, "total": None}
+        try:
+            # Do not report the root filesystem if a data drive is unmounted.
+            if os.path.ismount(mount):
+                usage = shutil.disk_usage(mount)
+                entry.update(used=usage.used, total=usage.total)
+        except OSError:
+            pass
+        drives.append(entry)
+    return drives
+
+
 def hwmon_dir(driver_name: str) -> Path | None:
     for candidate in sorted(HWMON_ROOT.glob("hwmon*")):
         if read_text(candidate / "name") == driver_name:
@@ -158,6 +218,7 @@ def collect(
 ) -> dict[str, Any]:
     ram_used, ram_total = memory_bytes()
     root_disk = shutil.disk_usage("/")
+    mounted_total, mounted_free = mounted_disk_space()
     device = gpu_device()
 
     return {
@@ -174,6 +235,10 @@ def collect(
         "ramTotal": ram_total,
         "rootUsed": root_disk.used,
         "rootTotal": root_disk.total,
+        "physicalDiskTotal": physical_disk_capacity(),
+        "mountedDiskTotal": mounted_total,
+        "mountedDiskFree": mounted_free,
+        "drives": drive_usage(),
         "timestamp": int(time.time()),
     }
 

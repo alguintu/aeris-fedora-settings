@@ -7,16 +7,17 @@ Rectangle {
     default property alias tileContent: contentItem.data
     property string title: ""
     property string eyebrow: ""
-    property color accent: "#77d7cb"
+    property color accent: Theme.teal
+    property real contentMargin: 18
 
-    radius: 18
-    color: "#dc151c29"
-    border.color: "#4c4d5a70"
-    border.width: 1
+    radius: Theme.radius
+    color: Theme.surface
+    border.color: Theme.border
+    border.width: 0
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 18
+        anchors.margins: root.contentMargin
         spacing: 10
 
         DashboardSectionHeader {

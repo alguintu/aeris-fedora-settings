@@ -1,0 +1,12 @@
+[Unit]
+Description=Aeris Tomat Pomodoro backend
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/tomat daemon run
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

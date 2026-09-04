@@ -1,10 +1,10 @@
 # Aeris OpenRGB lighting
 
-> **Approved attended runtime:** the exact upstream rc3.1 RPM is installed,
+> **Approved automatic runtime:** the exact upstream rc3.1 RPM is installed,
 > version-locked, and recorded in the runtime approval file. The fail-closed
 > Direct-mode server and daemon passed controlled canary and workload tests on
-> 2026-09-03. Both user services remain disabled; normal operation is currently
-> started manually and must continue to follow the
+> 2026-09-03. `aeris-openrgb.service` is enabled for user-session startup and
+> pulls in its audited SDK-server dependency. Normal operation must continue to follow the
 > [OpenRGB hardware-safety policy](rgb-safety.md).
 
 ## Components
@@ -25,6 +25,40 @@
 
 The pinned Python dependencies are listed in `openrgb/requirements.txt`. The
 virtual environment and generated caches are deliberately excluded from Git.
+
+## Runtime modes and dashboard control
+
+The daemon exposes a user-only Unix socket at
+`$XDG_RUNTIME_DIR/aeris-openrgb.sock`. The Quickshell dashboard and the
+`rgbctl.py` helper use this narrow JSON command interface; neither connects to
+OpenRGB directly. Mode state is volatile and defaults to Work after every daemon
+start.
+
+| Mode | Behavior |
+|---|---|
+| Work | Existing calibrated load-responsive curve, smoothing, pulse, and thermal override |
+| Night | Static per-device orange anchors at low configured brightness |
+| Day | Uniform white Direct frames at 90% configured brightness |
+| Off | Black Direct frames, without selecting a hardware Off mode |
+| Party | Software spatial Rainbow rendered entirely through Direct frames |
+
+All five daemon states retain the single OpenRGB SDK connection and the already-audited
+Direct mode. Switching modes performs no profile load, controller effect change,
+autonomous-mode selection, or persistent save. Party is capped at the existing
+high-load cadence: motherboard frames no faster than 150 ms and ENE/GPU accents
+no faster than 300 ms. The temperature-warning override remains authoritative
+in every mode, including Off.
+
+Night and Day share one dashboard tile. Selecting it from another mode enters
+Night; tapping the already-selected tile alternates Night and Day. Day sends
+`#FFFFFF` scaled to 0.90 (`230,230,230`) to every mapped zone and device. The
+dashboard changes the selected tile from an orange moon to a white sun only
+after the daemon reports the new state.
+
+Party currently uses an eight-second software Rainbow cycle. PipeWire capture is
+available on the machine, so music synchronization is technically feasible, but
+it is deferred until capture-node selection, privacy behavior, beat/envelope
+processing, and failure fallback are designed and tested.
 
 ## Logical mapping
 
@@ -192,10 +226,12 @@ journalctl --user -u aeris-openrgb.service -u aeris-openrgb-server.service
 journalctl --user -u aeris-openrgb.service -u aeris-openrgb-server.service -f
 ```
 
-Both services remain disabled. The approved runtime file now contains the exact
-installed RPM identity, but automatic boot activation has not been authorized.
-The service declares `Requires=` and `After=` on the SDK server, but neither unit
-retries a failure.
+`aeris-openrgb.service` is enabled and defaults to Work at user-session startup.
+Its SDK-server unit is deliberately not enabled independently: the parent pulls
+it in through `Requires=` and orders itself after the server. The server remains
+in its startup state for 10 seconds after launch so device discovery completes
+before the daemon validates the exact inventory. Neither unit retries a failure;
+any startup anomaly remains fail-closed.
 
 ## Validation history
 

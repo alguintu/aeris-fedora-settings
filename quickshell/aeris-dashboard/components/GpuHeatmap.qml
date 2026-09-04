@@ -11,10 +11,10 @@ Item {
     property int rows: 8
     readonly property int unitCount: columns * rows
     readonly property real saturationThreshold: 98
-    property color idleColor: "#29424b"
-    property color tealColor: "#59b9ad"
-    property color orangeColor: "#f0a04b"
-    property color redColor: "#ef5d65"
+    property color idleColor: Theme.heatIdle
+    property color tealColor: Theme.teal
+    property color orangeColor: Theme.orange
+    property color redColor: Theme.red
 
     function mix(first, second, amount) {
         const t = Math.max(0, Math.min(1, amount))
@@ -190,7 +190,7 @@ Item {
                 height: (parent.height - (root.rows - 1) * parent.rowSpacing) / root.rows
                 radius: 2
                 color: root.heatColor(heat)
-                border.color: "#3d5260"
+                border.color: Theme.border
                 border.width: 1
 
                 Behavior on color { ColorAnimation { duration: 220 } }

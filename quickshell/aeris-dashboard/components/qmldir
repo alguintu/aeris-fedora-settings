@@ -1,0 +1,19 @@
+singleton Theme 1.0 Theme.qml
+ActionButton 1.0 ActionButton.qml
+CoolingModeButton 1.0 CoolingModeButton.qml
+CpuHeatmap 1.0 CpuHeatmap.qml
+DashboardHeaderLabel 1.0 DashboardHeaderLabel.qml
+DashboardSectionHeader 1.0 DashboardSectionHeader.qml
+DashboardTile 1.0 DashboardTile.qml
+GpuHeatmap 1.0 GpuHeatmap.qml
+KeepAwakeButton 1.0 KeepAwakeButton.qml
+LightingModeButton 1.0 LightingModeButton.qml
+MediaControls 1.0 MediaControls.qml
+MediaTransportButton 1.0 MediaTransportButton.qml
+MemoryHeatmap 1.0 MemoryHeatmap.qml
+MetricBar 1.0 MetricBar.qml
+ThemeIcon 1.0 ThemeIcon.qml
+PomodoroTile 1.0 PomodoroTile.qml
+RoutinePicker 1.0 RoutinePicker.qml
+singleton TomatService 1.0 TomatService.qml
+WeatherPattern 1.0 WeatherPattern.qml

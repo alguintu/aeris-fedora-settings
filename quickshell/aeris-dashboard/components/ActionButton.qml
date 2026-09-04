@@ -7,8 +7,9 @@ Rectangle {
     signal clicked()
 
     property string symbol: "◇"
+    property string iconName: "star-four-points"
     property string label: "Action"
-    property color accent: "#77d7cb"
+    property color accent: Theme.teal
 
     implicitWidth: 104
     implicitHeight: 88
@@ -23,20 +24,19 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 7
 
-        Text {
+        ThemeIcon {
             Layout.alignment: Qt.AlignHCenter
-            text: root.symbol
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
+            name: root.iconName
             color: root.accent
-            font.family: "Noto Sans Symbols 2"
-            font.pixelSize: 28
-            font.weight: Font.DemiBold
         }
 
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: root.label
             color: "#e7ecf2"
-            font.family: "Noto Sans"
+            font.family: Theme.fontFamily
             font.pixelSize: 12
             font.weight: Font.Medium
         }

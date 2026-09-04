@@ -10,9 +10,13 @@ recur. See the [upstream warning](https://gitlab.com/CalcProgrammer1/OpenRGB/-/b
 
 ## Current Aeris state
 
-- `aeris-openrgb.service` and `aeris-openrgb-server.service` remain disabled and
-  inactive as systemd units. An attended server and daemon were started manually
-  after the safety gate passed on 2026-09-03; this does not enable boot startup.
+- `aeris-openrgb.service` was explicitly enabled for user-session startup on
+  2026-09-03 after the attended runtime was accepted. It pulls in
+  `aeris-openrgb-server.service` as a required dependency; the server is not
+  enabled independently. OpenRGB launches first, remains in startup for a
+  10-second discovery window, and only then may the fail-closed daemon validate
+  the exact inventory and begin volatile Direct-mode frames. Neither unit has an
+  automatic restart policy.
 - The installed package is upstream's official Fedora rc3.1 RPM,
   `openrgb-0.9.2026^1.0rc3.1-0.fc43.x86_64`, built from exact release-tag commit
   `5e81e26fcc65d3dacfb76b0a30ec0142ec7bb131`. Its installed binary SHA-256 is
@@ -91,7 +95,10 @@ device is not assumed read-only.
 3. **Direct mode during normal runtime.** Never select an MSI or ENE hardware
    effect during the dynamic service. Switching to Direct is allowed once per
    audited process start and only if the device is not already in Direct mode.
-   A manually approved static boot-state save is the only exception.
+   A manually approved static boot-state save is the only exception. Dashboard
+   Work, Night, Off, and Party selections may choose only software frame
+   generators on that existing Direct connection. Off means black Direct frames;
+   Party means a software Rainbow, never controller effects.
 4. **No broad detection, blind relaunch, or rescans.** The normal OpenRGB
    detector configuration must be
    either fully quarantined or restricted to exactly:

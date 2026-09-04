@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 170">
+  <!-- Oversized silhouettes extend past the tile; QML softens and rounds the crop. -->
+  <g fill="#d8dee9" transform="translate(62 24) scale(.72)">
+    <path opacity=".075" transform="translate(-70 -58) scale(3.2)" d="M20 50C9 50 2 43 2 33S10 16 21 16C24 6 33 1 44 1C57 1 67 10 69 21C72 19 76 18 80 18C91 18 99 25 99 35S91 50 80 50Z"/>
+    <path opacity=".085" transform="translate(82 42) scale(3.6)" d="M20 50C9 50 2 43 2 33S10 16 21 16C24 6 33 1 44 1C57 1 67 10 69 21C72 19 76 18 80 18C91 18 99 25 99 35S91 50 80 50Z"/>
+    <path opacity=".045" transform="translate(306 -34) scale(2.8)" d="M20 50C9 50 2 43 2 33S10 16 21 16C24 6 33 1 44 1C57 1 67 10 69 21C72 19 76 18 80 18C91 18 99 25 99 35S91 50 80 50Z"/>
+  </g>
+</svg>

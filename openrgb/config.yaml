@@ -56,6 +56,28 @@ high_load_pulse:
   motherboard_render_interval_seconds: 0.15
   accent_render_interval_seconds: 0.30
 
+runtime_modes:
+  default: "work"
+  socket_name: "aeris-openrgb.sock"
+  night_brightness:
+    workload_chain: 0.12
+    fans: 0.12
+    ram: 0.08
+    gpu: 0.12
+  day:
+    color: "FFFFFF"
+    brightness: 0.90
+  party:
+    period_seconds: 8.0
+    spatial_cycles: 1.0
+    accent_spatial_cycles: 1.0
+    brightness: 0.70
+    fan_phase_offset: 0.00
+    dimm_phase_offset: 0.10
+    gpu_phase_offset: 0.20
+    motherboard_render_interval_seconds: 0.15
+    accent_render_interval_seconds: 0.30
+
 openrgb:
   host: "127.0.0.1"
   port: 6742

@@ -30,15 +30,15 @@ Item {
             Layout.fillHeight: true
             title: "WORK MODE"
             eyebrow: "READY"
-            accent: "#57bced"
+            accent: Theme.cyan
 
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 4
-                Text { text: "DEEP WORKSPACE"; color: "#f2f5f8"; font.family: "Noto Sans"; font.pixelSize: 27; font.weight: Font.DemiBold; font.letterSpacing: 1 }
-                Text { Layout.fillWidth: true; text: "Fast access, live load, and the current session at a glance."; color: "#aab5c2"; font.family: "Noto Sans"; font.pixelSize: 13; wrapMode: Text.WordWrap }
+                Text { text: "DEEP WORKSPACE"; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 27; font.weight: Font.DemiBold; font.letterSpacing: 1 }
+                Text { Layout.fillWidth: true; text: "Fast access, live load, and the current session at a glance."; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 13; wrapMode: Text.WordWrap }
                 Item { Layout.fillHeight: true }
-                Text { text: "Swipe either direction to change context"; color: "#6fc8f2"; font.family: "Noto Sans"; font.pixelSize: 11 }
+                Text { text: "Swipe either direction to change context"; color: Theme.cyan; font.family: Theme.fontFamily; font.pixelSize: 11 }
             }
         }
 
@@ -47,14 +47,14 @@ Item {
             Layout.fillHeight: true
             title: "LIVE LOAD"
             eyebrow: page.metricsHealthy ? "1 HZ" : "OFFLINE"
-            accent: "#77d7cb"
+            accent: Theme.teal
 
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 3
-                MetricBar { Layout.fillWidth: true; label: "CPU"; progress: page.metrics.cpuUsage / 100; valueText: Math.round(page.metrics.cpuUsage) + "%  " + page.temperature(page.metrics.cpuTemp); accent: "#ef648c" }
-                MetricBar { Layout.fillWidth: true; label: "GPU"; progress: page.metrics.gpuUsage / 100; valueText: Math.round(page.metrics.gpuUsage) + "%  " + page.temperature(page.metrics.gpuTemp); accent: "#8ed170" }
-                MetricBar { Layout.fillWidth: true; label: "RAM"; progress: page.percent(page.metrics.ramUsed, page.metrics.ramTotal); valueText: Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100) + "%"; accent: "#57bced" }
+                MetricBar { Layout.fillWidth: true; label: "CPU"; progress: page.metrics.cpuUsage / 100; valueText: Math.round(page.metrics.cpuUsage) + "%  " + page.temperature(page.metrics.cpuTemp); accent: Theme.red }
+                MetricBar { Layout.fillWidth: true; label: "GPU"; progress: page.metrics.gpuUsage / 100; valueText: Math.round(page.metrics.gpuUsage) + "%  " + page.temperature(page.metrics.gpuTemp); accent: Theme.green }
+                MetricBar { Layout.fillWidth: true; label: "RAM"; progress: page.percent(page.metrics.ramUsed, page.metrics.ramTotal); valueText: Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100) + "%"; accent: Theme.cyan }
             }
         }
 
@@ -63,7 +63,7 @@ Item {
             Layout.fillHeight: true
             title: "SESSION"
             eyebrow: "LOCAL"
-            accent: "#a99bf5"
+            accent: Theme.mauve
 
             RowLayout {
                 anchors.fill: parent
@@ -74,13 +74,13 @@ Item {
                     radius: 18
                     color: "#2e2844"
                     border.color: "#7258a0"
-                    Text { anchors.centerIn: parent; text: "<>"; color: "#b69cf4"; font.family: "Noto Sans"; font.pixelSize: 25; font.weight: Font.Bold }
+                    Text { anchors.centerIn: parent; text: "<>"; color: Theme.mauve; font.family: Theme.fontFamily; font.pixelSize: 25; font.weight: Font.Bold }
                 }
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 3
-                    Text { text: "No active project adapter"; color: "#eef3f8"; font.family: "Noto Sans"; font.pixelSize: 20; font.weight: Font.Medium }
-                    Text { Layout.fillWidth: true; text: "Project, Git, and task context will land here without inventing state."; color: "#9ca8b8"; font.family: "Noto Sans"; font.pixelSize: 13; wrapMode: Text.WordWrap }
+                    Text { text: "No active project adapter"; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 20; font.weight: Font.Medium }
+                    Text { Layout.fillWidth: true; text: "Project, Git, and task context will land here without inventing state."; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 13; wrapMode: Text.WordWrap }
                 }
             }
         }
@@ -99,15 +99,15 @@ Item {
             Layout.fillHeight: true
             title: "WORKSPACE"
             eyebrow: "TOUCH LAUNCH"
-            accent: "#57bced"
+            accent: Theme.cyan
 
             RowLayout {
                 anchors.centerIn: parent
                 spacing: 18
-                ActionButton { symbol: ">_"; label: "Terminal"; accent: "#d5dbe3"; onClicked: Quickshell.execDetached(["konsole"]) }
-                ActionButton { symbol: "<>"; label: "Code"; accent: "#57bced"; onClicked: Quickshell.execDetached(["code"]) }
-                ActionButton { symbol: "▣"; label: "Files"; accent: "#77d7cb"; onClicked: Quickshell.execDetached(["dolphin"]) }
-                ActionButton { symbol: "◎"; label: "Firefox"; accent: "#f0aa58"; onClicked: Quickshell.execDetached(["firefox"]) }
+                ActionButton { iconName: "terminal"; label: "Terminal"; accent: Theme.text; onClicked: Quickshell.execDetached(["konsole"]) }
+                ActionButton { iconName: "code"; label: "Code"; accent: Theme.cyan; onClicked: Quickshell.execDetached(["code"]) }
+                ActionButton { iconName: "folder"; label: "Files"; accent: Theme.teal; onClicked: Quickshell.execDetached(["dolphin"]) }
+                ActionButton { iconName: "globe"; label: "Firefox"; accent: Theme.yellow; onClicked: Quickshell.execDetached(["firefox"]) }
             }
         }
 
@@ -116,14 +116,14 @@ Item {
             Layout.fillHeight: true
             title: "ACTIVE WORK"
             eyebrow: "CONNECTOR PENDING"
-            accent: "#8ed170"
+            accent: Theme.green
 
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 10
-                Text { text: "TODAY'S CONTEXT"; color: "#8995a5"; font.family: "Noto Sans"; font.pixelSize: 11; font.letterSpacing: 1.2 }
-                Text { text: "Choose a project to make this mode situational."; color: "#eef3f8"; font.family: "Noto Sans"; font.pixelSize: 22; font.weight: Font.Medium }
-                Text { Layout.fillWidth: true; text: "Next: bind repository status, running services, tasks, and a real focus timer."; color: "#aab5c2"; font.family: "Noto Sans"; font.pixelSize: 13; wrapMode: Text.WordWrap }
+                Text { text: "TODAY'S CONTEXT"; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 11; font.letterSpacing: 1.2 }
+                Text { text: "Choose a project to make this mode situational."; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 22; font.weight: Font.Medium }
+                Text { Layout.fillWidth: true; text: "Next: bind repository status, running services, tasks, and a real focus timer."; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 13; wrapMode: Text.WordWrap }
                 Item { Layout.fillHeight: true }
                 Row {
                     spacing: 8
@@ -136,7 +136,7 @@ Item {
                             radius: 16
                             color: "#30262f3c"
                             border.color: "#4a526072"
-                            Text { id: tagText; anchors.centerIn: parent; text: modelData; color: "#aab5c2"; font.family: "Noto Sans"; font.pixelSize: 10; font.weight: Font.DemiBold; font.letterSpacing: 0.6 }
+                            Text { id: tagText; anchors.centerIn: parent; text: modelData; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 10; font.weight: Font.DemiBold; font.letterSpacing: 0.6 }
                         }
                     }
                 }

@@ -5,17 +5,33 @@ Item {
 
     property real ramUtilization: 0
     property real vramUtilization: 0
+    property string field: "both"
     property real smoothedRam: 0
     property real smoothedVram: 0
     property int ramActiveCount: 0
-    property int columns: 19
-    property int rows: 8
+    property int columns: 14
+    property int rows: 10
+    property real cellGap: 3
     readonly property int unitCount: columns * rows
-    property color idleColor: "#263b45"
-    property color ramColor: "#57bced"
-    property color vramColor: "#a99bf5"
-    property color orangeColor: "#f0a04b"
-    property color redColor: "#ef5d65"
+    property color idleColor: Theme.heatIdle
+    property color ramColor: Theme.cyan
+    property color vramColor: Theme.mauve
+    property color orangeColor: Theme.orange
+    property color redColor: Theme.red
+
+    // Fit the entire grid, including gaps, without stretching or clipping cells.
+    function fittedGap(availableWidth, availableHeight) {
+        return Math.max(0, Math.min(cellGap,
+            availableWidth / Math.max(1, columns - 1),
+            availableHeight / Math.max(1, rows - 1)))
+    }
+
+    function fittedCellSize(availableWidth, availableHeight) {
+        const gap = fittedGap(availableWidth, availableHeight)
+        return Math.max(0, Math.min(
+            (availableWidth - (columns - 1) * gap) / columns,
+            (availableHeight - (rows - 1) * gap) / rows))
+    }
 
     function mix(first, second, amount) {
         const t = Math.max(0, Math.min(1, amount))
@@ -104,23 +120,25 @@ Item {
 
     Row {
         anchors.fill: parent
-        spacing: 21
+        spacing: root.field === "both" ? 21 : 0
 
         Item {
-            width: (root.width - 21) / 2
+            visible: root.field !== "vram"
+            width: root.field === "both" ? (root.width - 21) / 2 : root.width
             height: root.height
 
             Grid {
                 id: ramGrid
-                readonly property real cellSize: Math.max(3,
-                    (height - (root.rows - 1) * rowSpacing) / root.rows)
+                readonly property real cellSize: root.fittedCellSize(parent.width, parent.height)
 
-                anchors.fill: parent
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                width: root.columns * cellSize + (root.columns - 1) * columnSpacing
+                height: root.rows * cellSize + (root.rows - 1) * rowSpacing
                 columns: root.columns
                 rows: root.rows
-                columnSpacing: Math.max(0,
-                    (width - root.columns * cellSize) / (root.columns - 1))
-                rowSpacing: 2
+                columnSpacing: root.fittedGap(parent.width, parent.height)
+                rowSpacing: columnSpacing
 
                 Repeater {
                     model: ramUnits
@@ -134,7 +152,7 @@ Item {
                         color: root.mix(root.idleColor,
                                         root.pressureColor(root.ramColor, root.smoothedRam),
                                         heat)
-                        border.color: "#3d5260"
+                        border.color: Theme.border
                         border.width: 1
 
                         Behavior on color { ColorAnimation { duration: 220 } }
@@ -144,21 +162,23 @@ Item {
         }
 
         Item {
-            width: (root.width - 21) / 2
+            visible: root.field !== "ram"
+            width: root.field === "both" ? (root.width - 21) / 2 : root.width
             height: root.height
 
             Grid {
                 id: vramGrid
-                readonly property real cellSize: Math.max(3,
-                    (height - (root.rows - 1) * rowSpacing) / root.rows)
+                readonly property real cellSize: root.fittedCellSize(parent.width, parent.height)
                 readonly property int filledUnits: Math.round(root.smoothedVram * root.unitCount / 100)
 
-                anchors.fill: parent
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                width: root.columns * cellSize + (root.columns - 1) * columnSpacing
+                height: root.rows * cellSize + (root.rows - 1) * rowSpacing
                 columns: root.columns
                 rows: root.rows
-                columnSpacing: Math.max(0,
-                    (width - root.columns * cellSize) / (root.columns - 1))
-                rowSpacing: 2
+                columnSpacing: root.fittedGap(parent.width, parent.height)
+                rowSpacing: columnSpacing
 
                 Repeater {
                     model: root.unitCount
@@ -171,7 +191,7 @@ Item {
                         color: index < vramGrid.filledUnits
                                 ? root.pressureColor(root.vramColor, root.smoothedVram)
                                 : root.idleColor
-                        border.color: "#3d5260"
+                        border.color: Theme.border
                         border.width: 1
 
                         Behavior on color { ColorAnimation { duration: 220 } }

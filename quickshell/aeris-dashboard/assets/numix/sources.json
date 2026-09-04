@@ -1,0 +1,77 @@
+{
+  "upstream": "https://github.com/numixproject/numix-icon-theme",
+  "revision": "c876b63326530034e3ac3f9cc66a13b445aca230",
+  "modifications": "Local aliases; SVG paint colors normalized to white for runtime tinting. Coffee/wind viewBoxes have reduced empty padding for consistent visual size. Processor uses 48px because upstream 24px is empty.",
+  "icons": [
+    {
+      "name": "moon-waning-crescent",
+      "path": "Numix/scalable/status/weather-clear-night-symbolic.svg",
+      "resolved": "Numix/scalable/status/weather-clear-night-symbolic.svg"
+    },
+    {
+      "name": "white-balance-sunny",
+      "path": "Numix/scalable/status/weather-clear-symbolic.svg",
+      "resolved": "Numix/scalable/status/weather-clear-symbolic.svg"
+    },
+    {
+      "name": "star-four-points",
+      "path": "Numix/scalable/status/starred-symbolic.svg",
+      "resolved": "Numix/scalable/status/starred-symbolic.svg"
+    },
+    {
+      "name": "power",
+      "path": "Numix/scalable/actions/system-shutdown-symbolic.svg",
+      "resolved": "Numix/scalable/actions/system-shutdown-symbolic.svg"
+    },
+    {
+      "name": "weather-windy",
+      "path": "Numix/24/status/weather-windy.svg",
+      "resolved": "Numix/24/status/weather-windy.svg"
+    },
+    {
+      "name": "chip",
+      "path": "Numix/48/devices/processor.svg",
+      "resolved": "Numix/48/devices/processor.svg"
+    },
+    {
+      "name": "coffee",
+      "path": "Numix/24/panel/caffeine-cup-full.svg",
+      "resolved": "Numix/24/panel/caffeine-cup-full.svg"
+    },
+    {
+      "name": "skip-previous",
+      "path": "Numix/scalable/actions/media-skip-backward-symbolic.svg",
+      "resolved": "Numix/scalable/actions/media-skip-backward-symbolic.svg"
+    },
+    {
+      "name": "skip-next",
+      "path": "Numix/scalable/actions/media-skip-forward-symbolic.svg",
+      "resolved": "Numix/scalable/actions/media-skip-forward-symbolic.svg"
+    },
+    {
+      "name": "play",
+      "path": "Numix/scalable/actions/media-playback-start-symbolic.svg",
+      "resolved": "Numix/scalable/actions/media-playback-start-symbolic.svg"
+    },
+    {
+      "name": "pause",
+      "path": "Numix/scalable/actions/media-playback-pause-symbolic.svg",
+      "resolved": "Numix/scalable/actions/media-playback-pause-symbolic.svg"
+    },
+    {
+      "name": "music-note",
+      "path": "Numix/scalable/mimetypes/audio-x-generic-symbolic.svg",
+      "resolved": "Numix/scalable/mimetypes/audio-x-generic-symbolic.svg"
+    },
+    {
+      "name": "chevron-down",
+      "path": "Numix/scalable/actions/pan-down-symbolic.svg",
+      "resolved": "Numix/scalable/actions/pan-down-symbolic.svg"
+    },
+    {
+      "name": "chevron-up",
+      "path": "Numix/scalable/actions/pan-up-symbolic.svg",
+      "resolved": "Numix/scalable/actions/pan-up-symbolic.svg"
+    }
+  ]
+}

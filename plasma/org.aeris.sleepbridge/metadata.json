@@ -1,0 +1,14 @@
+{
+    "KPlugin": {
+        "Id": "org.aeris.sleepbridge",
+        "Name": "Aeris Sleep Toggle Bridge",
+        "Description": "Invisible bridge to the native Plasma power applet controller",
+        "Version": "1.0.0",
+        "License": "MIT",
+        "Category": "System Information",
+        "Icon": "system-suspend",
+        "Authors": [{ "Name": "Aeris" }]
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure": "Plasma/Applet"
+}

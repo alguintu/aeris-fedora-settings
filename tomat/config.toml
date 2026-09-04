@@ -1,0 +1,18 @@
+# Aeris baseline. Activity reminders and dashboard controls are not wired yet.
+[timer]
+work = 25.0
+break = 5.0
+long_break = 15.0
+sessions = 4
+auto_advance = "none"
+
+[sound]
+mode = "embedded"
+volume = 0.5
+
+[notification]
+enabled = true
+urgency = "normal"
+
+[display]
+text_format = "{time}"

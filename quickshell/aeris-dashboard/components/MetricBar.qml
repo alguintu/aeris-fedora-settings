@@ -7,7 +7,7 @@ Item {
     property string label: ""
     property string valueText: "--"
     property real progress: 0
-    property color accent: "#77d7cb"
+    property color accent: Theme.teal
 
     implicitHeight: 34
 
@@ -19,7 +19,7 @@ Item {
             Layout.preferredWidth: 46
             text: root.label
             color: "#cbd3dd"
-            font.family: "Noto Sans"
+            font.family: Theme.fontFamily
             font.pixelSize: 13
             font.weight: Font.DemiBold
         }
@@ -47,7 +47,7 @@ Item {
             horizontalAlignment: Text.AlignRight
             text: root.valueText
             color: "#f4f7fa"
-            font.family: "Noto Sans"
+            font.family: Theme.fontFamily
             font.pixelSize: 13
             font.weight: Font.Medium
         }

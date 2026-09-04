@@ -1,7 +1,9 @@
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import QtQuick.Effects
 import "pages" as Pages
+import "components" as Components
 
 ShellRoot {
     id: root
@@ -14,6 +16,10 @@ ShellRoot {
     property bool lastSwipeCommitted: false
     property bool dashboardCollapsed: false
     property bool metricsHealthy: false
+    property string lightingMode: "unknown"
+    property bool lightingHealthy: false
+    property bool lightingPending: false
+    property string lightingError: ""
     property string coolingMode: "unknown"
     property bool coolingHealthy: false
     property bool coolingPending: false
@@ -37,6 +43,30 @@ ShellRoot {
     SystemClock {
         id: systemClock
         precision: SystemClock.Seconds
+    }
+
+    function applyLightingStatus(data) {
+        try {
+            const status = JSON.parse(data)
+            root.lightingHealthy = status.ok === true
+            root.lightingMode = status.mode || "unknown"
+            root.lightingError = status.error || ""
+        } catch (error) {
+            root.lightingHealthy = false
+            root.lightingMode = "unknown"
+            root.lightingError = "Invalid daemon status"
+            console.warn("Aeris RGB status parse failure:", error)
+        }
+    }
+
+    function setLightingMode(mode) {
+        if (root.lightingPending || !root.lightingHealthy)
+            return
+        root.lightingPending = true
+        rgbCommandProcess.command = [
+            "python3", Quickshell.shellPath("services/rgbctl.py"), "set", mode
+        ]
+        rgbCommandProcess.running = true
     }
 
     function applyCoolingStatus(data) {
@@ -92,6 +122,37 @@ ShellRoot {
     }
 
     Process {
+        id: rgbStatusProcess
+        command: ["python3", Quickshell.shellPath("services/rgbctl.py"), "watch"]
+        running: true
+
+        stdout: SplitParser {
+            onRead: data => root.applyLightingStatus(data)
+        }
+
+        onExited: rgbStatusRestart.start()
+    }
+
+    Timer {
+        id: rgbStatusRestart
+        interval: 2000
+        onTriggered: rgbStatusProcess.running = true
+    }
+
+    Process {
+        id: rgbCommandProcess
+        running: false
+
+        stdout: SplitParser {
+            onRead: data => root.applyLightingStatus(data)
+        }
+
+        onExited: {
+            root.lightingPending = false
+        }
+    }
+
+    Process {
         id: coolingStatusProcess
         command: ["python3", Quickshell.shellPath("services/coolingctl.py"), "watch"]
         running: true
@@ -127,11 +188,17 @@ ShellRoot {
         readonly property real swipeVelocity: root.lastSwipeVelocity
         readonly property bool swipeCommitted: root.lastSwipeCommitted
         readonly property bool collapsed: root.dashboardCollapsed
+        readonly property string lightingMode: root.lightingMode
+        readonly property bool lightingHealthy: root.lightingHealthy
         readonly property string coolingMode: root.coolingMode
         readonly property bool coolingHealthy: root.coolingHealthy
 
         function setMode(mode: int): void {
             root.currentMode = Math.max(0, Math.min(root.modeNames.length - 1, mode))
+        }
+
+        function setLightingMode(mode: string): void {
+            root.setLightingMode(mode)
         }
 
         function setCoolingMode(mode: string): void {
@@ -185,12 +252,12 @@ ShellRoot {
                     fillMode: Image.PreserveAspectCrop
                     sourceSize.width: 1920
                     sourceSize.height: 1080
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    visible: !root.dashboardCollapsed
-                    color: "#b00b111c"
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        blurEnabled: true
+                        blurMax: 48
+                        blur: 0.85
+                    }
                 }
 
                 Item {
@@ -229,6 +296,11 @@ ShellRoot {
                             metrics: root.metrics
                             metricsHealthy: root.metricsHealthy
                             now: systemClock.date
+                            lightingMode: root.lightingMode
+                            lightingHealthy: root.lightingHealthy
+                            lightingPending: root.lightingPending
+                            lightingError: root.lightingError
+                            onLightingModeRequested: mode => root.setLightingMode(mode)
                             coolingMode: root.coolingMode
                             coolingHealthy: root.coolingHealthy
                             coolingPending: root.coolingPending
@@ -254,7 +326,7 @@ ShellRoot {
 
                 DragHandler {
                     id: swipeHandler
-                    enabled: !root.dashboardCollapsed
+                    enabled: !root.dashboardCollapsed && !Components.TomatService.pickerOpen
                     property real retainedTranslation: 0
                     property real retainedVelocity: 0
                     property double lastMovementAt: 0
@@ -325,8 +397,8 @@ ShellRoot {
                     height: 28
                     radius: 14
                     z: 20
-                    color: "#e31a2230"
-                    border.color: "#53607182"
+                    color: Components.Theme.surface
+                    border.color: Components.Theme.border
 
                     Row {
                         anchors.centerIn: parent
@@ -347,7 +419,7 @@ ShellRoot {
                                     width: index === root.currentMode ? 18 : 8
                                     height: 8
                                     radius: 4
-                                    color: index === root.currentMode ? "#e2c4ff" : "#8995a5"
+                                    color: index === root.currentMode ? Components.Theme.mauve : Components.Theme.muted
 
                                     Behavior on width {
                                         NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
@@ -366,7 +438,7 @@ ShellRoot {
                             width: 1
                             height: 14
                             anchors.verticalCenter: parent.verticalCenter
-                            color: "#53607182"
+                            color: Components.Theme.border
                         }
 
                         Rectangle {
@@ -374,14 +446,12 @@ ShellRoot {
                             height: 24
                             color: "transparent"
 
-                            Text {
+                            Components.ThemeIcon {
                                 anchors.centerIn: parent
-                                anchors.verticalCenterOffset: -2
-                                text: "⌄"
-                                color: "#b8aaf6"
-                                font.family: "Noto Sans"
-                                font.pixelSize: 20
-                                font.weight: Font.DemiBold
+                                name: "chevron-down"
+                                color: Components.Theme.mauve
+                                width: 20
+                                height: 20
                             }
 
                             TapHandler {
@@ -401,17 +471,15 @@ ShellRoot {
                     height: 28
                     radius: 14
                     z: 20
-                    color: "#e31a2230"
-                    border.color: "#53607182"
+                    color: Components.Theme.surface
+                    border.color: Components.Theme.border
 
-                    Text {
+                    Components.ThemeIcon {
                         anchors.centerIn: parent
-                        anchors.verticalCenterOffset: 2
-                        text: "⌃"
-                        color: "#e2c4ff"
-                        font.family: "Noto Sans"
-                        font.pixelSize: 20
-                        font.weight: Font.DemiBold
+                        name: "chevron-up"
+                        color: Components.Theme.mauve
+                        width: 20
+                        height: 20
                     }
 
                     TapHandler {

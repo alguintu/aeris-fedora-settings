@@ -1,8 +1,8 @@
 import QtQuick
 
 Text {
-    color: "#eef3f8"
-    font.family: "Noto Sans"
-    font.pixelSize: 16
+    color: Theme.text
+    font.family: Theme.fontFamily
+    font.pixelSize: 18
     font.weight: Font.DemiBold
 }
