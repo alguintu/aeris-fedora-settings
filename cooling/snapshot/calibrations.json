@@ -1,0 +1,1382 @@
+{
+  "calibrations": [
+    {
+      "device_uid": "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7",
+      "channel_name": "fan1",
+      "calibration": {
+        "up_curve": [
+          {
+            "duty": 0,
+            "rpm": 405
+          },
+          {
+            "duty": 2,
+            "rpm": 403
+          },
+          {
+            "duty": 4,
+            "rpm": 402
+          },
+          {
+            "duty": 6,
+            "rpm": 403
+          },
+          {
+            "duty": 8,
+            "rpm": 403
+          },
+          {
+            "duty": 10,
+            "rpm": 403
+          },
+          {
+            "duty": 12,
+            "rpm": 402
+          },
+          {
+            "duty": 14,
+            "rpm": 402
+          },
+          {
+            "duty": 16,
+            "rpm": 403
+          },
+          {
+            "duty": 18,
+            "rpm": 403
+          },
+          {
+            "duty": 20,
+            "rpm": 402
+          },
+          {
+            "duty": 22,
+            "rpm": 431
+          },
+          {
+            "duty": 24,
+            "rpm": 488
+          },
+          {
+            "duty": 26,
+            "rpm": 554
+          },
+          {
+            "duty": 28,
+            "rpm": 605
+          },
+          {
+            "duty": 30,
+            "rpm": 660
+          },
+          {
+            "duty": 35,
+            "rpm": 786
+          },
+          {
+            "duty": 40,
+            "rpm": 907
+          },
+          {
+            "duty": 45,
+            "rpm": 1045
+          },
+          {
+            "duty": 50,
+            "rpm": 1173
+          },
+          {
+            "duty": 55,
+            "rpm": 1282
+          },
+          {
+            "duty": 60,
+            "rpm": 1380
+          },
+          {
+            "duty": 65,
+            "rpm": 1490
+          },
+          {
+            "duty": 70,
+            "rpm": 1597
+          },
+          {
+            "duty": 75,
+            "rpm": 1690
+          },
+          {
+            "duty": 80,
+            "rpm": 1791
+          },
+          {
+            "duty": 85,
+            "rpm": 1880
+          },
+          {
+            "duty": 90,
+            "rpm": 1944
+          },
+          {
+            "duty": 95,
+            "rpm": 2006
+          },
+          {
+            "duty": 100,
+            "rpm": 2158
+          }
+        ],
+        "down_curve": [
+          {
+            "duty": 0,
+            "rpm": 404
+          },
+          {
+            "duty": 2,
+            "rpm": 403
+          },
+          {
+            "duty": 4,
+            "rpm": 403
+          },
+          {
+            "duty": 6,
+            "rpm": 404
+          },
+          {
+            "duty": 8,
+            "rpm": 403
+          },
+          {
+            "duty": 10,
+            "rpm": 404
+          },
+          {
+            "duty": 15,
+            "rpm": 404
+          },
+          {
+            "duty": 20,
+            "rpm": 442
+          },
+          {
+            "duty": 25,
+            "rpm": 543
+          },
+          {
+            "duty": 30,
+            "rpm": 711
+          },
+          {
+            "duty": 35,
+            "rpm": 827
+          },
+          {
+            "duty": 40,
+            "rpm": 961
+          },
+          {
+            "duty": 45,
+            "rpm": 1072
+          },
+          {
+            "duty": 50,
+            "rpm": 1209
+          },
+          {
+            "duty": 55,
+            "rpm": 1305
+          },
+          {
+            "duty": 60,
+            "rpm": 1415
+          },
+          {
+            "duty": 65,
+            "rpm": 1515
+          },
+          {
+            "duty": 70,
+            "rpm": 1619
+          },
+          {
+            "duty": 75,
+            "rpm": 1711
+          },
+          {
+            "duty": 80,
+            "rpm": 1804
+          },
+          {
+            "duty": 85,
+            "rpm": 1898
+          },
+          {
+            "duty": 90,
+            "rpm": 1993
+          },
+          {
+            "duty": 95,
+            "rpm": 2065
+          },
+          {
+            "duty": 100,
+            "rpm": 2154
+          }
+        ],
+        "kick_duration_ms": 7000,
+        "min_start_duty": 0,
+        "min_sustain_duty": 4,
+        "min_stable_duty": 4,
+        "max_eff_duty": 100,
+        "rpm_max": 2158,
+        "curve_kind": "Smooth",
+        "warnings": [],
+        "was_rpm_only": false,
+        "kick_boost_override": null,
+        "kick_duration_override_ms": null,
+        "walk_after_kick_override": null,
+        "timestamp": "2026-09-03T18:24:41.028333804+08:00"
+      }
+    },
+    {
+      "device_uid": "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7",
+      "channel_name": "fan3",
+      "calibration": {
+        "up_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 2,
+            "rpm": 0
+          },
+          {
+            "duty": 4,
+            "rpm": 0
+          },
+          {
+            "duty": 6,
+            "rpm": 0
+          },
+          {
+            "duty": 8,
+            "rpm": 0
+          },
+          {
+            "duty": 10,
+            "rpm": 0
+          },
+          {
+            "duty": 12,
+            "rpm": 0
+          },
+          {
+            "duty": 14,
+            "rpm": 0
+          },
+          {
+            "duty": 16,
+            "rpm": 0
+          },
+          {
+            "duty": 18,
+            "rpm": 0
+          },
+          {
+            "duty": 20,
+            "rpm": 0
+          },
+          {
+            "duty": 22,
+            "rpm": 0
+          },
+          {
+            "duty": 24,
+            "rpm": 0
+          },
+          {
+            "duty": 26,
+            "rpm": 0
+          },
+          {
+            "duty": 28,
+            "rpm": 0
+          },
+          {
+            "duty": 30,
+            "rpm": 0
+          },
+          {
+            "duty": 35,
+            "rpm": 0
+          },
+          {
+            "duty": 40,
+            "rpm": 992
+          },
+          {
+            "duty": 45,
+            "rpm": 1120
+          },
+          {
+            "duty": 50,
+            "rpm": 1238
+          },
+          {
+            "duty": 55,
+            "rpm": 1348
+          },
+          {
+            "duty": 60,
+            "rpm": 1444
+          },
+          {
+            "duty": 65,
+            "rpm": 1556
+          },
+          {
+            "duty": 70,
+            "rpm": 1664
+          },
+          {
+            "duty": 75,
+            "rpm": 1762
+          },
+          {
+            "duty": 80,
+            "rpm": 1866
+          },
+          {
+            "duty": 85,
+            "rpm": 1960
+          },
+          {
+            "duty": 90,
+            "rpm": 2037
+          },
+          {
+            "duty": 95,
+            "rpm": 2076
+          },
+          {
+            "duty": 100,
+            "rpm": 2185
+          }
+        ],
+        "down_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 2,
+            "rpm": 0
+          },
+          {
+            "duty": 4,
+            "rpm": 0
+          },
+          {
+            "duty": 6,
+            "rpm": 0
+          },
+          {
+            "duty": 8,
+            "rpm": 0
+          },
+          {
+            "duty": 10,
+            "rpm": 0
+          },
+          {
+            "duty": 12,
+            "rpm": 0
+          },
+          {
+            "duty": 14,
+            "rpm": 0
+          },
+          {
+            "duty": 16,
+            "rpm": 0
+          },
+          {
+            "duty": 18,
+            "rpm": 0
+          },
+          {
+            "duty": 20,
+            "rpm": 0
+          },
+          {
+            "duty": 22,
+            "rpm": 0
+          },
+          {
+            "duty": 24,
+            "rpm": 0
+          },
+          {
+            "duty": 26,
+            "rpm": 0
+          },
+          {
+            "duty": 28,
+            "rpm": 0
+          },
+          {
+            "duty": 30,
+            "rpm": 0
+          },
+          {
+            "duty": 32,
+            "rpm": 0
+          },
+          {
+            "duty": 34,
+            "rpm": 0
+          },
+          {
+            "duty": 36,
+            "rpm": 898
+          },
+          {
+            "duty": 38,
+            "rpm": 958
+          },
+          {
+            "duty": 40,
+            "rpm": 1006
+          },
+          {
+            "duty": 42,
+            "rpm": 1070
+          },
+          {
+            "duty": 44,
+            "rpm": 1114
+          },
+          {
+            "duty": 46,
+            "rpm": 1156
+          },
+          {
+            "duty": 48,
+            "rpm": 1207
+          },
+          {
+            "duty": 50,
+            "rpm": 1277
+          },
+          {
+            "duty": 55,
+            "rpm": 1366
+          },
+          {
+            "duty": 60,
+            "rpm": 1470
+          },
+          {
+            "duty": 65,
+            "rpm": 1587
+          },
+          {
+            "duty": 70,
+            "rpm": 1687
+          },
+          {
+            "duty": 75,
+            "rpm": 1796
+          },
+          {
+            "duty": 80,
+            "rpm": 1877
+          },
+          {
+            "duty": 85,
+            "rpm": 1967
+          },
+          {
+            "duty": 90,
+            "rpm": 2058
+          },
+          {
+            "duty": 95,
+            "rpm": 2142
+          },
+          {
+            "duty": 100,
+            "rpm": 2205
+          }
+        ],
+        "kick_duration_ms": 10000,
+        "min_start_duty": 40,
+        "min_sustain_duty": 40,
+        "min_stable_duty": 40,
+        "max_eff_duty": 100,
+        "rpm_max": 2205,
+        "curve_kind": "Smooth",
+        "warnings": [],
+        "was_rpm_only": false,
+        "kick_boost_override": null,
+        "kick_duration_override_ms": null,
+        "walk_after_kick_override": null,
+        "timestamp": "2026-09-03T18:08:06.068324870+08:00"
+      }
+    },
+    {
+      "device_uid": "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7",
+      "channel_name": "fan4",
+      "calibration": {
+        "up_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 2,
+            "rpm": 0
+          },
+          {
+            "duty": 4,
+            "rpm": 0
+          },
+          {
+            "duty": 6,
+            "rpm": 0
+          },
+          {
+            "duty": 8,
+            "rpm": 0
+          },
+          {
+            "duty": 10,
+            "rpm": 0
+          },
+          {
+            "duty": 12,
+            "rpm": 0
+          },
+          {
+            "duty": 14,
+            "rpm": 0
+          },
+          {
+            "duty": 16,
+            "rpm": 0
+          },
+          {
+            "duty": 18,
+            "rpm": 0
+          },
+          {
+            "duty": 20,
+            "rpm": 0
+          },
+          {
+            "duty": 22,
+            "rpm": 0
+          },
+          {
+            "duty": 24,
+            "rpm": 0
+          },
+          {
+            "duty": 26,
+            "rpm": 423
+          },
+          {
+            "duty": 28,
+            "rpm": 466
+          },
+          {
+            "duty": 30,
+            "rpm": 518
+          },
+          {
+            "duty": 35,
+            "rpm": 606
+          },
+          {
+            "duty": 40,
+            "rpm": 687
+          },
+          {
+            "duty": 45,
+            "rpm": 768
+          },
+          {
+            "duty": 50,
+            "rpm": 846
+          },
+          {
+            "duty": 55,
+            "rpm": 914
+          },
+          {
+            "duty": 60,
+            "rpm": 967
+          },
+          {
+            "duty": 65,
+            "rpm": 1026
+          },
+          {
+            "duty": 70,
+            "rpm": 1108
+          },
+          {
+            "duty": 75,
+            "rpm": 1165
+          },
+          {
+            "duty": 80,
+            "rpm": 1213
+          },
+          {
+            "duty": 85,
+            "rpm": 1267
+          },
+          {
+            "duty": 90,
+            "rpm": 1325
+          },
+          {
+            "duty": 95,
+            "rpm": 1368
+          },
+          {
+            "duty": 100,
+            "rpm": 1415
+          }
+        ],
+        "down_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 1,
+            "rpm": 0
+          },
+          {
+            "duty": 3,
+            "rpm": 0
+          },
+          {
+            "duty": 5,
+            "rpm": 0
+          },
+          {
+            "duty": 7,
+            "rpm": 0
+          },
+          {
+            "duty": 9,
+            "rpm": 0
+          },
+          {
+            "duty": 11,
+            "rpm": 0
+          },
+          {
+            "duty": 13,
+            "rpm": 0
+          },
+          {
+            "duty": 15,
+            "rpm": 0
+          },
+          {
+            "duty": 17,
+            "rpm": 0
+          },
+          {
+            "duty": 19,
+            "rpm": 0
+          },
+          {
+            "duty": 21,
+            "rpm": 0
+          },
+          {
+            "duty": 23,
+            "rpm": 0
+          },
+          {
+            "duty": 25,
+            "rpm": 409
+          },
+          {
+            "duty": 27,
+            "rpm": 464
+          },
+          {
+            "duty": 29,
+            "rpm": 506
+          },
+          {
+            "duty": 31,
+            "rpm": 544
+          },
+          {
+            "duty": 33,
+            "rpm": 579
+          },
+          {
+            "duty": 35,
+            "rpm": 624
+          },
+          {
+            "duty": 40,
+            "rpm": 698
+          },
+          {
+            "duty": 45,
+            "rpm": 777
+          },
+          {
+            "duty": 50,
+            "rpm": 853
+          },
+          {
+            "duty": 55,
+            "rpm": 914
+          },
+          {
+            "duty": 60,
+            "rpm": 983
+          },
+          {
+            "duty": 65,
+            "rpm": 1048
+          },
+          {
+            "duty": 70,
+            "rpm": 1112
+          },
+          {
+            "duty": 75,
+            "rpm": 1165
+          },
+          {
+            "duty": 80,
+            "rpm": 1234
+          },
+          {
+            "duty": 85,
+            "rpm": 1275
+          },
+          {
+            "duty": 90,
+            "rpm": 1323
+          },
+          {
+            "duty": 95,
+            "rpm": 1366
+          },
+          {
+            "duty": 100,
+            "rpm": 1411
+          }
+        ],
+        "kick_duration_ms": 7000,
+        "min_start_duty": 26,
+        "min_sustain_duty": 35,
+        "min_stable_duty": 35,
+        "max_eff_duty": 95,
+        "rpm_max": 1415,
+        "curve_kind": "Smooth",
+        "warnings": [],
+        "was_rpm_only": false,
+        "kick_boost_override": null,
+        "kick_duration_override_ms": null,
+        "walk_after_kick_override": null,
+        "timestamp": "2026-09-03T18:40:22.027647055+08:00"
+      }
+    },
+    {
+      "device_uid": "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7",
+      "channel_name": "fan5",
+      "calibration": {
+        "up_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 2,
+            "rpm": 0
+          },
+          {
+            "duty": 4,
+            "rpm": 0
+          },
+          {
+            "duty": 6,
+            "rpm": 0
+          },
+          {
+            "duty": 8,
+            "rpm": 0
+          },
+          {
+            "duty": 10,
+            "rpm": 0
+          },
+          {
+            "duty": 12,
+            "rpm": 0
+          },
+          {
+            "duty": 14,
+            "rpm": 0
+          },
+          {
+            "duty": 16,
+            "rpm": 0
+          },
+          {
+            "duty": 18,
+            "rpm": 0
+          },
+          {
+            "duty": 20,
+            "rpm": 0
+          },
+          {
+            "duty": 22,
+            "rpm": 0
+          },
+          {
+            "duty": 24,
+            "rpm": 4897
+          },
+          {
+            "duty": 26,
+            "rpm": 5357
+          },
+          {
+            "duty": 28,
+            "rpm": 5769
+          },
+          {
+            "duty": 30,
+            "rpm": 6030
+          },
+          {
+            "duty": 35,
+            "rpm": 6417
+          },
+          {
+            "duty": 40,
+            "rpm": 6417
+          },
+          {
+            "duty": 45,
+            "rpm": 6629
+          },
+          {
+            "duty": 50,
+            "rpm": 6217
+          },
+          {
+            "duty": 55,
+            "rpm": 6282
+          },
+          {
+            "duty": 60,
+            "rpm": 6217
+          },
+          {
+            "duty": 65,
+            "rpm": 6349
+          },
+          {
+            "duty": 70,
+            "rpm": 6217
+          },
+          {
+            "duty": 75,
+            "rpm": 6153
+          },
+          {
+            "duty": 80,
+            "rpm": 6030
+          },
+          {
+            "duty": 85,
+            "rpm": 5769
+          },
+          {
+            "duty": 90,
+            "rpm": 5769
+          },
+          {
+            "duty": 95,
+            "rpm": 5714
+          },
+          {
+            "duty": 100,
+            "rpm": 5660
+          }
+        ],
+        "down_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 2,
+            "rpm": 0
+          },
+          {
+            "duty": 4,
+            "rpm": 0
+          },
+          {
+            "duty": 6,
+            "rpm": 0
+          },
+          {
+            "duty": 8,
+            "rpm": 0
+          },
+          {
+            "duty": 10,
+            "rpm": 0
+          },
+          {
+            "duty": 12,
+            "rpm": 0
+          },
+          {
+            "duty": 14,
+            "rpm": 0
+          },
+          {
+            "duty": 16,
+            "rpm": 0
+          },
+          {
+            "duty": 18,
+            "rpm": 0
+          },
+          {
+            "duty": 20,
+            "rpm": 0
+          },
+          {
+            "duty": 22,
+            "rpm": 0
+          },
+          {
+            "duty": 24,
+            "rpm": 4897
+          },
+          {
+            "duty": 26,
+            "rpm": 4687
+          },
+          {
+            "duty": 28,
+            "rpm": 4597
+          },
+          {
+            "duty": 30,
+            "rpm": 4724
+          },
+          {
+            "duty": 35,
+            "rpm": 4918
+          },
+          {
+            "duty": 40,
+            "rpm": 4687
+          },
+          {
+            "duty": 45,
+            "rpm": 4897
+          },
+          {
+            "duty": 50,
+            "rpm": 5084
+          },
+          {
+            "duty": 55,
+            "rpm": 4979
+          },
+          {
+            "duty": 60,
+            "rpm": 5042
+          },
+          {
+            "duty": 65,
+            "rpm": 5150
+          },
+          {
+            "duty": 70,
+            "rpm": 5217
+          },
+          {
+            "duty": 75,
+            "rpm": 5309
+          },
+          {
+            "duty": 80,
+            "rpm": 5217
+          },
+          {
+            "duty": 85,
+            "rpm": 5309
+          },
+          {
+            "duty": 90,
+            "rpm": 5479
+          },
+          {
+            "duty": 95,
+            "rpm": 5405
+          },
+          {
+            "duty": 100,
+            "rpm": 5607
+          }
+        ],
+        "kick_duration_ms": 3000,
+        "min_start_duty": 24,
+        "min_sustain_duty": 24,
+        "min_stable_duty": 24,
+        "max_eff_duty": 45,
+        "rpm_max": 6629,
+        "curve_kind": "Stepped",
+        "warnings": [],
+        "was_rpm_only": false,
+        "kick_boost_override": null,
+        "kick_duration_override_ms": null,
+        "walk_after_kick_override": null,
+        "timestamp": "2026-09-03T18:12:04.039333510+08:00"
+      }
+    },
+    {
+      "device_uid": "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7",
+      "channel_name": "fan6",
+      "calibration": {
+        "up_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 2,
+            "rpm": 0
+          },
+          {
+            "duty": 4,
+            "rpm": 0
+          },
+          {
+            "duty": 6,
+            "rpm": 0
+          },
+          {
+            "duty": 8,
+            "rpm": 0
+          },
+          {
+            "duty": 10,
+            "rpm": 0
+          },
+          {
+            "duty": 12,
+            "rpm": 0
+          },
+          {
+            "duty": 14,
+            "rpm": 0
+          },
+          {
+            "duty": 16,
+            "rpm": 0
+          },
+          {
+            "duty": 18,
+            "rpm": 0
+          },
+          {
+            "duty": 20,
+            "rpm": 0
+          },
+          {
+            "duty": 22,
+            "rpm": 0
+          },
+          {
+            "duty": 24,
+            "rpm": 0
+          },
+          {
+            "duty": 26,
+            "rpm": 0
+          },
+          {
+            "duty": 28,
+            "rpm": 0
+          },
+          {
+            "duty": 30,
+            "rpm": 0
+          },
+          {
+            "duty": 35,
+            "rpm": 0
+          },
+          {
+            "duty": 40,
+            "rpm": 0
+          },
+          {
+            "duty": 45,
+            "rpm": 0
+          },
+          {
+            "duty": 50,
+            "rpm": 0
+          }
+        ],
+        "down_curve": [],
+        "kick_duration_ms": 3000,
+        "min_start_duty": 100,
+        "min_sustain_duty": 100,
+        "min_stable_duty": 100,
+        "max_eff_duty": 100,
+        "rpm_max": 0,
+        "curve_kind": "Stepped",
+        "warnings": [
+          {
+            "kind": "no_tachometer"
+          }
+        ],
+        "was_rpm_only": false,
+        "kick_boost_override": null,
+        "kick_duration_override_ms": null,
+        "walk_after_kick_override": null,
+        "timestamp": "2026-09-03T18:14:37.034331812+08:00"
+      }
+    },
+    {
+      "device_uid": "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7",
+      "channel_name": "fan7",
+      "calibration": {
+        "up_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 2,
+            "rpm": 0
+          },
+          {
+            "duty": 4,
+            "rpm": 0
+          },
+          {
+            "duty": 6,
+            "rpm": 0
+          },
+          {
+            "duty": 8,
+            "rpm": 0
+          },
+          {
+            "duty": 10,
+            "rpm": 0
+          },
+          {
+            "duty": 12,
+            "rpm": 0
+          },
+          {
+            "duty": 14,
+            "rpm": 0
+          },
+          {
+            "duty": 16,
+            "rpm": 0
+          },
+          {
+            "duty": 18,
+            "rpm": 0
+          },
+          {
+            "duty": 20,
+            "rpm": 0
+          },
+          {
+            "duty": 22,
+            "rpm": 0
+          },
+          {
+            "duty": 24,
+            "rpm": 0
+          },
+          {
+            "duty": 26,
+            "rpm": 0
+          },
+          {
+            "duty": 28,
+            "rpm": 0
+          },
+          {
+            "duty": 30,
+            "rpm": 0
+          },
+          {
+            "duty": 35,
+            "rpm": 0
+          },
+          {
+            "duty": 40,
+            "rpm": 0
+          },
+          {
+            "duty": 45,
+            "rpm": 0
+          },
+          {
+            "duty": 50,
+            "rpm": 0
+          }
+        ],
+        "down_curve": [],
+        "kick_duration_ms": 3000,
+        "min_start_duty": 100,
+        "min_sustain_duty": 100,
+        "min_stable_duty": 100,
+        "max_eff_duty": 100,
+        "rpm_max": 0,
+        "curve_kind": "Stepped",
+        "warnings": [
+          {
+            "kind": "no_tachometer"
+          }
+        ],
+        "was_rpm_only": false,
+        "kick_boost_override": null,
+        "kick_duration_override_ms": null,
+        "walk_after_kick_override": null,
+        "timestamp": "2026-09-03T18:13:13.060337724+08:00"
+      }
+    },
+    {
+      "device_uid": "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7",
+      "channel_name": "fan8",
+      "calibration": {
+        "up_curve": [
+          {
+            "duty": 0,
+            "rpm": 0
+          },
+          {
+            "duty": 2,
+            "rpm": 0
+          },
+          {
+            "duty": 4,
+            "rpm": 0
+          },
+          {
+            "duty": 6,
+            "rpm": 0
+          },
+          {
+            "duty": 8,
+            "rpm": 0
+          },
+          {
+            "duty": 10,
+            "rpm": 0
+          },
+          {
+            "duty": 12,
+            "rpm": 0
+          },
+          {
+            "duty": 14,
+            "rpm": 0
+          },
+          {
+            "duty": 16,
+            "rpm": 0
+          },
+          {
+            "duty": 18,
+            "rpm": 0
+          },
+          {
+            "duty": 20,
+            "rpm": 0
+          },
+          {
+            "duty": 22,
+            "rpm": 0
+          },
+          {
+            "duty": 24,
+            "rpm": 0
+          },
+          {
+            "duty": 26,
+            "rpm": 0
+          },
+          {
+            "duty": 28,
+            "rpm": 0
+          },
+          {
+            "duty": 30,
+            "rpm": 0
+          },
+          {
+            "duty": 35,
+            "rpm": 0
+          },
+          {
+            "duty": 40,
+            "rpm": 0
+          },
+          {
+            "duty": 45,
+            "rpm": 0
+          },
+          {
+            "duty": 50,
+            "rpm": 0
+          }
+        ],
+        "down_curve": [],
+        "kick_duration_ms": 3000,
+        "min_start_duty": 100,
+        "min_sustain_duty": 100,
+        "min_stable_duty": 100,
+        "max_eff_duty": 100,
+        "rpm_max": 0,
+        "curve_kind": "Stepped",
+        "warnings": [
+          {
+            "kind": "no_tachometer"
+          }
+        ],
+        "was_rpm_only": false,
+        "kick_boost_override": null,
+        "kick_duration_override_ms": null,
+        "walk_after_kick_override": null,
+        "timestamp": "2026-09-03T18:17:19.036332159+08:00"
+      }
+    }
+  ]
+}

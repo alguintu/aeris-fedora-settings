@@ -21,6 +21,7 @@ unrelated personal state, hardware identifiers, and application data.
 - [Authentication prompt placement](settings/authentication-placement.md)
 - [Quickshell touch dashboard](quickshell/aeris-dashboard/README.md)
 - [Hardware monitoring](settings/monitoring.md)
+- [Linux cooling control](settings/cooling.md)
 - [CPU efficiency tuning](settings/cpu-tuning.md)
 - [GPU efficiency tuning](settings/gpu-tuning.md)
 - [Efficiency baseline and test log](settings/efficiency-baseline.md)
@@ -76,6 +77,23 @@ Restore or synchronize the Aeris/OpenRGB service separately:
 ```bash
 ./scripts/install-openrgb.sh
 ```
+
+Restore PWM cooling separately using the saved curves, modes, calibrations,
+and labels. Follow the [cooling reinstall guide](settings/cooling.md): driver
+installation/discovery comes first, then the guarded data restore. Secure Boot
+key enrollment is required only when Secure Boot is enabled.
+
+```bash
+./scripts/install-cooling.sh --install
+./scripts/check-cooling.sh --firmware
+./scripts/install-cooling.sh --activate
+./scripts/restore-cooling.sh --check
+./scripts/restore-cooling.sh --restore
+```
+
+The restore leaves CoolerControl stopped for review; the guide gives the
+explicit start command. No passwords, cookies, or private signing keys are
+part of the snapshot.
 
 Use `./scripts/install-openrgb.sh --check` for a read-only comparison against the
 running installation.

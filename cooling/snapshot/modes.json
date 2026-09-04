@@ -1,0 +1,203 @@
+{
+  "modes": [
+    {
+      "uid": "85327be8-d445-4397-b62a-df285c97326f",
+      "name": "BIOS / Firmware",
+      "all_device_settings": {
+        "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7": {},
+        "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726": {
+          "fan1": {
+            "channel_name": "fan1",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "0"
+          }
+        }
+      }
+    },
+    {
+      "uid": "013d1402-c9d8-4770-bf1a-fe52a20467e5",
+      "name": "Quiet",
+      "all_device_settings": {
+        "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7": {
+          "fan2": {
+            "channel_name": "fan2",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "741d7ac1-f662-4da3-957e-b00796adbbd1"
+          },
+          "fan5": {
+            "channel_name": "fan5",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "9e01c288-d78d-4d9f-9347-3c23e9ea5c92"
+          },
+          "fan4": {
+            "channel_name": "fan4",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "0cfe853b-50e9-4f84-9aca-b616e028833a"
+          },
+          "fan1": {
+            "channel_name": "fan1",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "4635c8d0-73c3-4f44-8c1b-072087149cf9"
+          },
+          "fan3": {
+            "channel_name": "fan3",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "d60afc9c-765c-4eb5-88b4-efa0b0ec1899"
+          }
+        },
+        "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726": {
+          "fan1": {
+            "channel_name": "fan1",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "0"
+          }
+        }
+      }
+    },
+    {
+      "uid": "c156cd38-8428-4e6e-8c98-3ac7699c8bd8",
+      "name": "Default",
+      "all_device_settings": {
+        "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7": {
+          "fan3": {
+            "channel_name": "fan3",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "6e34c1c1-5ea3-4dd8-a50c-c0fa3770148b"
+          },
+          "fan5": {
+            "channel_name": "fan5",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "1b19fa30-d7b8-4f62-9e31-fb4e7ddbfc85"
+          },
+          "fan1": {
+            "channel_name": "fan1",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "0de2401d-744c-4480-bce5-8c11a372084b"
+          },
+          "fan2": {
+            "channel_name": "fan2",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "741d7ac1-f662-4da3-957e-b00796adbbd1"
+          },
+          "fan4": {
+            "channel_name": "fan4",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "0bb2ed20-f35f-43ad-8a86-1bc6a9694686"
+          }
+        },
+        "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726": {
+          "fan1": {
+            "channel_name": "fan1",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "0"
+          }
+        }
+      }
+    },
+    {
+      "uid": "0d23d4f7-13e8-49bd-95f2-410134ea5752",
+      "name": "Performance",
+      "all_device_settings": {
+        "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726": {
+          "fan1": {
+            "channel_name": "fan1",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "0"
+          }
+        },
+        "7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7": {
+          "fan4": {
+            "channel_name": "fan4",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "3e34f0a4-11fa-48fd-a362-00d1c4d88f9e"
+          },
+          "fan1": {
+            "channel_name": "fan1",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "f7307818-a175-4d6f-b710-e875c1f5ec36"
+          },
+          "fan3": {
+            "channel_name": "fan3",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "83978c81-1679-4092-9173-c4966f01efa3"
+          },
+          "fan5": {
+            "channel_name": "fan5",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "1bc1c8f0-739b-47ef-9999-e31f75916e8c"
+          },
+          "fan2": {
+            "channel_name": "fan2",
+            "speed_fixed": null,
+            "lighting": null,
+            "lcd": null,
+            "reset_to_default": null,
+            "profile_uid": "741d7ac1-f662-4da3-957e-b00796adbbd1"
+          }
+        }
+      }
+    }
+  ],
+  "order": [
+    "c156cd38-8428-4e6e-8c98-3ac7699c8bd8",
+    "013d1402-c9d8-4770-bf1a-fe52a20467e5",
+    "0d23d4f7-13e8-49bd-95f2-410134ea5752",
+    "85327be8-d445-4397-b62a-df285c97326f"
+  ],
+  "current_active_mode": "c156cd38-8428-4e6e-8c98-3ac7699c8bd8",
+  "previous_active_mode": "0d23d4f7-13e8-49bd-95f2-410134ea5752"
+}

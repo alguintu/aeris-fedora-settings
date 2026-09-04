@@ -54,6 +54,35 @@ The shell selects `DP-3` by connector name and falls back to the unique
 1920×480 logical screen geometry. It does not create a surface on the primary
 display.
 
+## Aeris cooling controls
+
+The three icon-only cooling tiles select the live
+CoolerControl modes:
+
+- **Default** — the generous everyday airflow curve.
+- **Quiet / Performance** — enters Quiet from another mode, then alternates
+  between Quiet and Performance on successive taps.
+- **BIOS** — releases motherboard fan control back to firmware rather than
+  applying a CoolerControl curve.
+
+The selected tile follows CoolerControl's reported active mode instead of
+assuming that a tap succeeded. The helper talks only to the local HTTPS API and
+reuses the existing CoolerControl GUI session from its user configuration; it
+does not embed or store a password or token. Controls disable themselves if the
+local daemon or authenticated GUI session is unavailable.
+
+The same modes are callable from QuickShell IPC or the terminal:
+
+```bash
+./scripts/run-dashboard.sh ipc call dashboard setCoolingMode default
+./scripts/run-dashboard.sh ipc call dashboard setCoolingMode quiet
+./scripts/run-dashboard.sh ipc call dashboard setCoolingMode performance
+./scripts/run-dashboard.sh ipc call dashboard setCoolingMode firmware
+
+./quickshell/aeris-dashboard/services/coolingctl.py status
+./quickshell/aeris-dashboard/services/coolingctl.py set default
+```
+
 Run the telemetry adapter independently with:
 
 ```bash

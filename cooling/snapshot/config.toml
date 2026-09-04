@@ -1,0 +1,457 @@
+# This is the CoolerControl configuration file.
+# Comments and most formatting is preserved.
+# Most of this file you can edit by hand, but it is recommended to stop the daemon when doing so.
+# -------------------------------
+
+
+# Unique ID Device List
+# -------------------------------
+# This is a simple UID and device name key-value pair, that is automatically generated at startup
+#  to help humans distinguish which UID belongs to which device in this config file.
+#  Only the device name is given here, complete Device information can be requested from the API.
+#  UIDs are generated sha256 hashes based on specific criteria to help determine device uniqueness.
+# ANY CHANGES WILL BE OVERWRITTEN.
+# Example:
+# 21091c4fb341ceab6236e8c9e905ccc263a4ac08134b036ed415925ba4c1645d = "Nvidia GPU"
+[devices]
+34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726 = "amdgpu"
+19e098e312e1b1b39163a343ea22b6ea17f18ec1a803ffe0ce44f5bacd6076ee = "Custom Sensors"
+539ed6463c5756339a687792b904f537d59d8481c2c0627fc50f4648068f3383 = "nvme1"
+1bc40bedc9ad4fb71cc6965a687044b14f69aeec3f6ee8ed6fc1e34c473a0582 = "nvme0"
+866a2883560ca1a759129e204f127932e182d1f15f645b506204e6465500d732 = "r8169_0_2a00:00"
+7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7 = "nct6687"
+e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735 = "AMD Ryzen 9 5950X 16-Core Processor"
+
+
+# Legacy690 Option for devices
+# -------------------------------
+# There are 2 Asetek 690LC liquid coolers that have the same device ID.
+#  To tell them apart we need user input to know which cooler we're actually dealing with.
+#  This is an assignment of liquidctl AseTek690LC device UIDs to true/false:
+#   true = Legacy690 Cooler aka NZXT Kraken X40, X60, X31, X41, X51 and X61
+#   false = Modern690 Cooler aka EVGA CLC 120 (CLC12), 240, 280 and 360
+# Example:
+# 21091c4fb341ceab6236e8c9e905ccc263a4ac08134b036ed415925ba4c1645d = true
+[legacy690]
+
+
+# Device Settings
+# -------------------------------
+# This is where CoolerControl will save device settings for the cooresponding device.
+# Settings can be set here also specifically by hand. (restart required for applying)
+# These settings are applied on startup and each is overwritten once a new setting
+# has been applied.
+# Example:
+# [device-settings.4b9cd1bc5fb2921253e6b7dd5b1b011086ea529d915a86b3560c236084452807]
+# pump = { speed_fixed = 30 }
+# logo = { lighting = { mode = "fixed", colors = [[0, 255, 255]] } }
+# ring = { lighting = { mode = "spectrum-wave", backward = true, colors = [] } }
+[device-settings]
+
+[device-settings.34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726]
+fan1 = { profile_uid = "0" }
+
+[device-settings.7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7]
+fan1 = { profile_uid = "0de2401d-744c-4480-bce5-8c11a372084b" }
+fan3 = { profile_uid = "6e34c1c1-5ea3-4dd8-a50c-c0fa3770148b" }
+fan4 = { profile_uid = "0bb2ed20-f35f-43ad-8a86-1bc6a9694686" }
+fan5 = { profile_uid = "1b19fa30-d7b8-4f62-9e31-fb4e7ddbfc85" }
+fan2 = { profile_uid = "741d7ac1-f662-4da3-957e-b00796adbbd1" }
+
+
+# A list of profiles to be used with each device's settings
+# -------------------------------
+[[profiles]]
+uid = "0"
+name = "Unmanaged"
+p_type = "Default"
+function = "0"
+
+[[profiles]]
+uid = "741d7ac1-f662-4da3-957e-b00796adbbd1"
+name = "Aeris Pump 100%"
+p_type = "Fixed"
+speed_fixed = 100
+function_uid = "0"
+offset_profile = []
+
+[[profiles]]
+uid = "0de2401d-744c-4480-bce5-8c11a372084b"
+name = "Aeris Default - Radiator"
+p_type = "Graph"
+speed_profile = [[20.0, 30], [40.0, 30], [55.0, 38], [70.0, 58], [85.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 85.0
+function_uid = "7a532a98-d91e-4501-83cc-fba69fd801aa"
+offset_profile = []
+
+[[profiles]]
+uid = "6e34c1c1-5ea3-4dd8-a50c-c0fa3770148b"
+name = "Aeris Default - Rear Intake"
+p_type = "Graph"
+speed_profile = [[20.0, 40], [40.0, 40], [55.0, 45], [70.0, 60], [80.0, 75], [90.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 90.0
+function_uid = "7a532a98-d91e-4501-83cc-fba69fd801aa"
+offset_profile = []
+
+[[profiles]]
+uid = "bf54a658-c5a5-4a1d-b32b-f0bf071ab886"
+name = "Aeris Default - Front CPU Demand"
+p_type = "Graph"
+speed_profile = [[20.0, 40], [40.0, 40], [55.0, 50], [70.0, 70], [85.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 85.0
+function_uid = "7a532a98-d91e-4501-83cc-fba69fd801aa"
+offset_profile = []
+
+[[profiles]]
+uid = "ca673b34-234b-4f85-bc21-b752761e4f34"
+name = "Aeris Default - Front GPU Demand"
+p_type = "Graph"
+speed_profile = [[30.0, 40], [55.0, 40], [70.0, 50], [85.0, 70], [100.0, 100]]
+temp_source = { temp_name = "temp2", device_uid = "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726" }
+temp_min = 30.0
+temp_max = 100.0
+function_uid = "7a532a98-d91e-4501-83cc-fba69fd801aa"
+offset_profile = []
+
+[[profiles]]
+uid = "0bb2ed20-f35f-43ad-8a86-1bc6a9694686"
+name = "Aeris Default - Front Intake MAX"
+p_type = "Mix"
+function_uid = "0"
+member_profile_uids = ["bf54a658-c5a5-4a1d-b32b-f0bf071ab886", "ca673b34-234b-4f85-bc21-b752761e4f34"]
+mix_function_type = "Max"
+offset_profile = []
+
+[[profiles]]
+uid = "1b19fa30-d7b8-4f62-9e31-fb4e7ddbfc85"
+name = "Aeris Default - GPU Exhaust"
+p_type = "Graph"
+speed_profile = [[30.0, 32], [55.0, 32], [70.0, 45], [85.0, 65], [95.0, 80], [105.0, 100]]
+temp_source = { temp_name = "temp2", device_uid = "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726" }
+temp_min = 30.0
+temp_max = 105.0
+function_uid = "7a532a98-d91e-4501-83cc-fba69fd801aa"
+offset_profile = []
+
+[[profiles]]
+uid = "4635c8d0-73c3-4f44-8c1b-072087149cf9"
+name = "Aeris Quiet - Radiator"
+p_type = "Graph"
+speed_profile = [[20.0, 25], [45.0, 25], [60.0, 35], [75.0, 55], [88.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 88.0
+function_uid = "94c7883d-a495-4e3e-8872-e42ab6b254fa"
+offset_profile = []
+
+[[profiles]]
+uid = "d60afc9c-765c-4eb5-88b4-efa0b0ec1899"
+name = "Aeris Quiet - Rear Intake"
+p_type = "Graph"
+speed_profile = [[20.0, 25], [45.0, 25], [60.0, 35], [75.0, 55], [88.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 88.0
+function_uid = "94c7883d-a495-4e3e-8872-e42ab6b254fa"
+offset_profile = []
+
+[[profiles]]
+uid = "f7b7d471-0d9b-4dfa-aa44-2c93da83a4a2"
+name = "Aeris Quiet - Front CPU Demand"
+p_type = "Graph"
+speed_profile = [[20.0, 30], [45.0, 30], [60.0, 40], [75.0, 60], [88.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 88.0
+function_uid = "94c7883d-a495-4e3e-8872-e42ab6b254fa"
+offset_profile = []
+
+[[profiles]]
+uid = "529bbbc9-f4fe-4722-a686-4b48e63c590a"
+name = "Aeris Quiet - Front GPU Demand"
+p_type = "Graph"
+speed_profile = [[30.0, 30], [60.0, 30], [75.0, 40], [88.0, 60], [103.0, 100]]
+temp_source = { temp_name = "temp2", device_uid = "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726" }
+temp_min = 30.0
+temp_max = 103.0
+function_uid = "94c7883d-a495-4e3e-8872-e42ab6b254fa"
+offset_profile = []
+
+[[profiles]]
+uid = "0cfe853b-50e9-4f84-9aca-b616e028833a"
+name = "Aeris Quiet - Front Intake MAX"
+p_type = "Mix"
+function_uid = "0"
+member_profile_uids = ["f7b7d471-0d9b-4dfa-aa44-2c93da83a4a2", "529bbbc9-f4fe-4722-a686-4b48e63c590a"]
+mix_function_type = "Max"
+offset_profile = []
+
+[[profiles]]
+uid = "9e01c288-d78d-4d9f-9347-3c23e9ea5c92"
+name = "Aeris Quiet - GPU Exhaust"
+p_type = "Graph"
+speed_profile = [[30.0, 24], [65.0, 24], [78.0, 35], [90.0, 55], [100.0, 75], [105.0, 100]]
+temp_source = { temp_name = "temp2", device_uid = "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726" }
+temp_min = 30.0
+temp_max = 105.0
+function_uid = "94c7883d-a495-4e3e-8872-e42ab6b254fa"
+offset_profile = []
+
+[[profiles]]
+uid = "f7307818-a175-4d6f-b710-e875c1f5ec36"
+name = "Aeris Performance - Radiator"
+p_type = "Graph"
+speed_profile = [[20.0, 40], [35.0, 40], [50.0, 55], [65.0, 75], [80.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 80.0
+function_uid = "b97e89e4-f31e-4c20-ae47-9a8cfcf4af17"
+offset_profile = []
+
+[[profiles]]
+uid = "83978c81-1679-4092-9173-c4966f01efa3"
+name = "Aeris Performance - Rear Intake"
+p_type = "Graph"
+speed_profile = [[20.0, 45], [35.0, 45], [50.0, 60], [65.0, 75], [80.0, 90], [88.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 88.0
+function_uid = "b97e89e4-f31e-4c20-ae47-9a8cfcf4af17"
+offset_profile = []
+
+[[profiles]]
+uid = "ee948ef8-985c-4b74-8e33-a0d843bf7005"
+name = "Aeris Performance - Front CPU Demand"
+p_type = "Graph"
+speed_profile = [[20.0, 50], [35.0, 50], [50.0, 60], [65.0, 75], [80.0, 100]]
+temp_source = { temp_name = "temp1", device_uid = "e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735" }
+temp_min = 20.0
+temp_max = 80.0
+function_uid = "b97e89e4-f31e-4c20-ae47-9a8cfcf4af17"
+offset_profile = []
+
+[[profiles]]
+uid = "5e21a3c0-2c37-40f7-98a9-cf6cac9581ce"
+name = "Aeris Performance - Front GPU Demand"
+p_type = "Graph"
+speed_profile = [[30.0, 50], [50.0, 50], [65.0, 60], [80.0, 75], [95.0, 100]]
+temp_source = { temp_name = "temp2", device_uid = "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726" }
+temp_min = 30.0
+temp_max = 95.0
+function_uid = "b97e89e4-f31e-4c20-ae47-9a8cfcf4af17"
+offset_profile = []
+
+[[profiles]]
+uid = "3e34f0a4-11fa-48fd-a362-00d1c4d88f9e"
+name = "Aeris Performance - Front Intake MAX"
+p_type = "Mix"
+function_uid = "0"
+member_profile_uids = ["ee948ef8-985c-4b74-8e33-a0d843bf7005", "5e21a3c0-2c37-40f7-98a9-cf6cac9581ce"]
+mix_function_type = "Max"
+offset_profile = []
+
+[[profiles]]
+uid = "1bc1c8f0-739b-47ef-9999-e31f75916e8c"
+name = "Aeris Performance - GPU Exhaust"
+p_type = "Graph"
+speed_profile = [[30.0, 40], [50.0, 40], [65.0, 55], [78.0, 70], [90.0, 85], [100.0, 100]]
+temp_source = { temp_name = "temp2", device_uid = "34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726" }
+temp_min = 30.0
+temp_max = 100.0
+function_uid = "b97e89e4-f31e-4c20-ae47-9a8cfcf4af17"
+offset_profile = []
+
+# A list of functions to be applied to the various profiles
+# -------------------------------
+[[functions]]
+uid = "0"
+name = "Default Function"
+f_type = "Identity"
+
+[[functions]]
+uid = "7a532a98-d91e-4501-83cc-fba69fd801aa"
+name = "Aeris Default Response"
+f_type = "Standard"
+duty_minimum = 2
+duty_maximum = 12
+step_size_min_decreasing = 1
+step_size_max_decreasing = 4
+response_delay = 3
+deviance = 2.0
+only_downward = true
+threshold_hopping = true
+bypass_min_at_extremes = true
+
+[[functions]]
+uid = "94c7883d-a495-4e3e-8872-e42ab6b254fa"
+name = "Aeris Quiet Response"
+f_type = "Standard"
+duty_minimum = 2
+duty_maximum = 10
+step_size_min_decreasing = 1
+step_size_max_decreasing = 3
+response_delay = 5
+deviance = 3.0
+only_downward = true
+threshold_hopping = true
+bypass_min_at_extremes = true
+
+[[functions]]
+uid = "b97e89e4-f31e-4c20-ae47-9a8cfcf4af17"
+name = "Aeris Performance Response"
+f_type = "Standard"
+duty_minimum = 3
+duty_maximum = 20
+step_size_min_decreasing = 2
+step_size_max_decreasing = 6
+response_delay = 2
+deviance = 1.0
+only_downward = true
+threshold_hopping = true
+bypass_min_at_extremes = true
+
+
+# Cooler Control Settings
+# -------------------------------
+# This is where CoolerControl specifc general and specifc device settings are set. These device
+# settings differ from the above Device Settings, in that they are applied to CoolerControl,
+# and not on the devices themselves. For ex. settings such as disabling/enabling a particular device.
+[settings]
+
+# whether to apply the saved device settings on daemon startup
+apply_on_boot = true
+
+# Whether to enable the integration with liquidctl.
+# Disabling this will prevent any communication with liquidctl,
+# and all HWMon supported devices will be shown.
+liquidctl_integration = true
+
+# There are some devices that are supported both by liquidctl and hwmon drivers. Normally the
+# preference is to use liquidctl as it supports more features such as RGB control. There are
+# some cases where the hwmon driver is preferred though. Note: Care should be taken to blacklist
+# one of the devices to avoid needlessly loading the device IO and avoid concurrency issues.
+# Use at your own risk.
+hide_duplicate_devices = true
+
+# Will skip initialization calls for liquidctl devices. ONLY USE if you are doing initialiation manually.
+no_init = false
+
+# Startup Delay (seconds) is an integer value between 0 and 10
+startup_delay = 2
+
+# For ThinkPads, wheather to use the 'full-speed' option when settings the fan to 100%
+# This option drives the fan as fast as it can go, which might exceed hardware limits,
+# so use this level with caution.
+thinkpad_full_speed = false
+
+# API Address and Port:
+# The daemon by default uses port 11987 and the standard loopback IPv4 and IPv6 addresses.
+# You can set an IPv4, IPv6 or both addresses to listen on. An empty string will disable the address.
+# It is highly recommended to use the default settings unless you have a specific reason to change them
+# and understand the implications.
+# If you expose the API to a public network, it is recommended to use TLS/HTTPS (see below).
+# For more information see the project wiki.
+# Example:
+# port = 11987
+# ipv4_address = "127.0.0.1"
+# ipv6_address = "::1"
+
+# Whether to compress the response payload from the API. This will reduce the size of the response
+# but will increase CPU usage a tiny bit. This is useful if you are running the API over a network.
+# 'compress' is deprecated, use compress_payload instead.
+compress_payload = true
+
+# The polling rate for sensor data collection. The default is 1.0 second. Limited to values
+# between 0.5 and 5.0 seconds in half-second increments.
+# Note: Caution should be used when using values less than 1.0.
+# poll_rate = 1.0
+
+# Whether to check if drivetemp supported drives are in a suspended state/spun down, and if so,
+# return 0C as their reporting temperature.
+drivetemp_suspend = false
+
+[settings.e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735]
+name = "AMD Ryzen 9 5950X 16-Core Processor"
+disable = false
+
+[settings.e7a379142766ef8adca8fc914ac73c9e8cb0e557122bac280848a0303a384735.channel_settings]
+
+[settings.34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726]
+name = "AMD Radeon RX 6900 XT"
+disable = false
+
+[settings.34ac133e3b26ef02e4f7f42537046612a928751a3c5d0a3d2626081dad376726.channel_settings]
+
+[settings.7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7]
+name = "MSI B550M Mortar WIFI"
+disable = false
+
+[settings.7bfee7e15e0af819a1c74ac2f088d69197bdae5f361d2af4da2960c931be3cc7.channel_settings]
+fan8 = { label = "System Fan #6", disabled = true }
+fan7 = { label = "System Fan #5", disabled = true }
+fan6 = { label = "System Fan #4", disabled = true }
+
+[settings.539ed6463c5756339a687792b904f537d59d8481c2c0627fc50f4648068f3383]
+name = "Samsung SSD 990 PRO 1TB"
+disable = false
+
+[settings.539ed6463c5756339a687792b904f537d59d8481c2c0627fc50f4648068f3383.channel_settings]
+
+[settings.1bc40bedc9ad4fb71cc6965a687044b14f69aeec3f6ee8ed6fc1e34c473a0582]
+name = "Lexar SSD NM620 512GB"
+disable = false
+
+[settings.1bc40bedc9ad4fb71cc6965a687044b14f69aeec3f6ee8ed6fc1e34c473a0582.channel_settings]
+
+[settings.866a2883560ca1a759129e204f127932e182d1f15f645b506204e6465500d732]
+name = "r8169_0_2a00:00"
+disable = false
+
+[settings.866a2883560ca1a759129e204f127932e182d1f15f645b506204e6465500d732.channel_settings]
+
+# TLS/HTTPS Configuration:
+# TLS to secure the REST API with HTTPS. (enabled by default)
+# When enabled, a self-signed certificate will be automatically generated on first startup if no
+# certificate paths are specified. The certificate and key are stored in /etc/coolercontrol/ by
+# default.
+# Note: Self-signed certificates will cause browser warnings. You can provide your own
+# certificate by specifying the paths below, or use a reverse proxy (nginx, caddy, traefik)
+# to handle TLS termination as an alternative approach.
+# tls_enabled = true
+# tls_cert_path = "/etc/coolercontrol/coolercontrol.crt"
+# tls_key_path = "/etc/coolercontrol/coolercontrol.key"
+
+# Reverse Proxy / CORS Configuration:
+# Custom origins to allow in CORS requests. This is useful when accessing CoolerControl through
+# a reverse proxy with a custom domain, or via port forwarding with a public IP. Add the full
+# origin URL (scheme + host + port if non-standard).
+# origins = ["https://coolercontrol.mydomain.com", "http://192.168.1.1:8080"]
+
+# Header to check for the client's original protocol when behind a reverse proxy. Common values
+# are "X-Forwarded-Proto" (nginx, Apache) or "X-Scheme". When this header indicates "https",
+# the HTTP-to-HTTPS redirect is skipped (the proxy handles TLS termination).
+# protocol_header = "X-Forwarded-Proto"
+
+# Allow unencrypted HTTP connections from non-localhost addresses. By default, non-localhost
+# HTTP requests are redirected to HTTPS when TLS is enabled. Set this to true to allow HTTP.
+# Note: This should only be used as a last resort and is not recommended.
+# allow_unencrypted = false
+
+# Whether to auto-detect Super-I/O hardware sensors and load the appropriate kernel
+# modules at startup. This helps ensure all hwmon chips are available. (x86_64 only)
+# sensors_auto_detect = true
+
+# Whether to listen for kernel device add/remove events (e.g. USB hotplug) at startup.
+# When enabled, the daemon watches for hardware changes and notifies connected clients.
+# Disable this in containers or environments without netlink socket access.
+# device_listener_enabled = true
+
+# CoolerControl Device settings Example:
+# [settings.4b9cd1bc5fb2921253e6b7dd5b1b011086ea529d915a86b3560c236084452807]
+# disabled = true

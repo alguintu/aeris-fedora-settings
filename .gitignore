@@ -8,6 +8,12 @@
 *token*
 auth.json
 hosts.yml
+*.key
+*.pem
+*.p12
+*.pfx
+mok.pub
+CoolerControl.conf
 
 # Python/OpenRGB generated state.
 __pycache__/

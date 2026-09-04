@@ -9,6 +9,11 @@ Item {
     property var metrics: ({})
     property bool metricsHealthy: false
     property date now
+    property string coolingMode: "unknown"
+    property bool coolingHealthy: false
+    property bool coolingPending: false
+    property string coolingError: ""
+    signal coolingModeRequested(string mode)
 
     function percent(value, total) {
         return total > 0 ? Math.max(0, Math.min(1, value / total)) : 0
@@ -196,5 +201,39 @@ Item {
                 }
             }
         }
+        Item {
+            Layout.preferredWidth: 360
+            Layout.minimumWidth: 360
+            Layout.fillHeight: true
+            Row {
+                anchors.centerIn: parent
+                spacing: 12
+                CoolingModeButton {
+                    iconKind: "default"
+                    selected: page.coolingMode === "default"
+                    available: page.coolingHealthy
+                    busy: page.coolingPending
+                    onClicked: page.coolingModeRequested("default")
+                }
+                CoolingModeButton {
+                    iconKind: page.coolingMode === "performance" ? "performance" : "quiet"
+                    accent: page.coolingMode === "performance" ? "#f0aa58" : "#8ed170"
+                    selected: page.coolingMode === "quiet" || page.coolingMode === "performance"
+                    available: page.coolingHealthy
+                    busy: page.coolingPending
+                    onClicked: page.coolingModeRequested(
+                        page.coolingMode === "quiet" ? "performance" : "quiet")
+                }
+                CoolingModeButton {
+                    iconKind: "firmware"
+                    accent: "#a99bf5"
+                    selected: page.coolingMode === "firmware"
+                    available: page.coolingHealthy
+                    busy: page.coolingPending
+                    onClicked: page.coolingModeRequested("firmware")
+                }
+            }
+        }
+
     }
 }

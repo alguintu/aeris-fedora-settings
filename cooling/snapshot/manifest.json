@@ -1,0 +1,15 @@
+{
+  "captured": "2026-09-04",
+  "board": "MAG B550M MORTAR WIFI (MS-7C94)",
+  "fedora": "44",
+  "coolercontrol": "4.3.1",
+  "driver": "0.20260901-1.git5997c92.fc44",
+  "default_mode": "c156cd38-8428-4e6e-8c98-3ac7699c8bd8",
+  "files": {
+    "config.toml": "9b2b2ba9950a41f2818cb956e15a332fc187f31e07f5c10a34e02a04cfc89eaa",
+    "modes.json": "162fc811385ffbb473b6ec3af22df0e19bc36f75500555e8bdc14e700971b931",
+    "calibrations.json": "cf4e56674b735a4e52a7e3da019417123853e55759232ca4c9574849c5a5de2e",
+    "config-ui.json": "7db9f2047b21767671869610ac6e43263e99492c727ffe94407fe4f87ed3d829",
+    "alerts.json": "3fb3b3f8289dac3c8f69ceb8e88ee1402dd25e98d531a4ba5f5a2bf0121f77d5"
+  }
+}

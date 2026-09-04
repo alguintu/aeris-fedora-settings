@@ -14,6 +14,10 @@ ShellRoot {
     property bool lastSwipeCommitted: false
     property bool dashboardCollapsed: false
     property bool metricsHealthy: false
+    property string coolingMode: "unknown"
+    property bool coolingHealthy: false
+    property bool coolingPending: false
+    property string coolingError: ""
     property var metrics: ({
         "cpuUsage": 0,
         "cpuCcds": [],
@@ -33,6 +37,30 @@ ShellRoot {
     SystemClock {
         id: systemClock
         precision: SystemClock.Seconds
+    }
+
+    function applyCoolingStatus(data) {
+        try {
+            const status = JSON.parse(data)
+            root.coolingHealthy = status.ok === true
+            root.coolingMode = status.mode || "unknown"
+            root.coolingError = status.error || ""
+        } catch (error) {
+            root.coolingHealthy = false
+            root.coolingMode = "unknown"
+            root.coolingError = "Invalid CoolerControl status"
+            console.warn("Aeris cooling status parse failure:", error)
+        }
+    }
+
+    function setCoolingMode(mode) {
+        if (root.coolingPending || !root.coolingHealthy)
+            return
+        root.coolingPending = true
+        coolingCommandProcess.command = [
+            "python3", Quickshell.shellPath("services/coolingctl.py"), "set", mode
+        ]
+        coolingCommandProcess.running = true
     }
 
     Process {
@@ -63,6 +91,35 @@ ShellRoot {
         onTriggered: metricsProcess.running = true
     }
 
+    Process {
+        id: coolingStatusProcess
+        command: ["python3", Quickshell.shellPath("services/coolingctl.py"), "watch"]
+        running: true
+
+        stdout: SplitParser {
+            onRead: data => root.applyCoolingStatus(data)
+        }
+
+        onExited: coolingStatusRestart.start()
+    }
+
+    Timer {
+        id: coolingStatusRestart
+        interval: 2000
+        onTriggered: coolingStatusProcess.running = true
+    }
+
+    Process {
+        id: coolingCommandProcess
+        running: false
+
+        stdout: SplitParser {
+            onRead: data => root.applyCoolingStatus(data)
+        }
+
+        onExited: root.coolingPending = false
+    }
+
     IpcHandler {
         target: "dashboard"
         readonly property int mode: root.currentMode
@@ -70,9 +127,15 @@ ShellRoot {
         readonly property real swipeVelocity: root.lastSwipeVelocity
         readonly property bool swipeCommitted: root.lastSwipeCommitted
         readonly property bool collapsed: root.dashboardCollapsed
+        readonly property string coolingMode: root.coolingMode
+        readonly property bool coolingHealthy: root.coolingHealthy
 
         function setMode(mode: int): void {
             root.currentMode = Math.max(0, Math.min(root.modeNames.length - 1, mode))
+        }
+
+        function setCoolingMode(mode: string): void {
+            root.setCoolingMode(mode)
         }
 
         function showDashboard(): void {
@@ -166,6 +229,11 @@ ShellRoot {
                             metrics: root.metrics
                             metricsHealthy: root.metricsHealthy
                             now: systemClock.date
+                            coolingMode: root.coolingMode
+                            coolingHealthy: root.coolingHealthy
+                            coolingPending: root.coolingPending
+                            coolingError: root.coolingError
+                            onCoolingModeRequested: mode => root.setCoolingMode(mode)
                         }
 
                         Pages.WorkPage {
