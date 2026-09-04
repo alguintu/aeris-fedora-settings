@@ -1,5 +1,6 @@
 """Declarative Obsidian routines; no scripts, arbitrary commands, or note writes."""
 from contextlib import contextmanager
+from functools import lru_cache
 import fcntl
 import json
 import math
@@ -7,6 +8,7 @@ import os
 from pathlib import Path
 import random
 import re
+import stat
 import tempfile
 import time
 
@@ -16,6 +18,7 @@ FIELDS = {"type", "id", "name", "work_minutes", "break_minutes", "long_break_min
           "sessions", "auto_advance", "work_label", "short_break_labels", "long_break_label", "quotes"}
 _cache = None
 _cache_time = 0
+_cache_signature = None
 
 
 def template_dir():
@@ -76,19 +79,27 @@ def validate(data):
 
 
 def catalog(force=False):
-    global _cache, _cache_time
+    global _cache, _cache_time, _cache_signature
     if not force and _cache is not None and time.monotonic() - _cache_time < 3:
         return _cache
     routines, errors, seen = [], [], set()
+    signature = None
+    retry_read = False
     try:
         directory = template_dir()
         if not directory.is_dir():
             raise ValueError(f"Template folder not found: {directory}")
-        for path in sorted(directory.glob("*.md"))[:64]:
-            if path.is_symlink():
+        paths = [(path, path.lstat()) for path in sorted(directory.glob("*.md"))[:64]]
+        signature = (str(directory), tuple((str(path), info.st_ino, info.st_size,
+                     info.st_mtime_ns, info.st_ctime_ns, info.st_mode) for path, info in paths))
+        if not force and _cache is not None and signature == _cache_signature:
+            _cache_time = time.monotonic()
+            return _cache
+        for path, info in paths:
+            if stat.S_ISLNK(info.st_mode):
                 continue
             try:
-                if path.stat().st_size > 65536:
+                if info.st_size > 65536:
                     raise ValueError("Template exceeds 64 KB")
                 content = path.read_text(encoding="utf-8")
                 match = re.match(r"\A---\s*\n(.*?)\n---(?:\s*\n|$)", content, re.S)
@@ -104,9 +115,12 @@ def catalog(force=False):
                 routines.append(routine)
             except (OSError, ValueError, yaml.YAMLError) as error:
                 errors.append(f"{path.name}: {error}")
+                retry_read = retry_read or isinstance(error, OSError)
     except (OSError, ValueError) as error:
         errors.append(str(error))
+        retry_read = True
     _cache = {"templates": routines, "templateErrors": errors}
+    _cache_signature = None if retry_read else signature
     _cache_time = time.monotonic()
     return _cache
 
@@ -173,6 +187,7 @@ def start(routine, model, request):
     save(model)
 
 
+@lru_cache(maxsize=1)
 def boot_id():
     return Path("/proc/sys/kernel/random/boot_id").read_text().strip()
 

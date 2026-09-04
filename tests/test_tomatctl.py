@@ -1,5 +1,6 @@
 """Run with python3 -m unittest discover -s tests -p test_tomatctl.py."""
 import importlib.util
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -112,6 +113,31 @@ class DaemonTests(unittest.TestCase):
                 daemon.terminate()
                 daemon.wait(timeout=5)
             self.assertFalse(adapter.execute("status")["ok"])
+
+
+NATIVE = ROOT / "quickshell/aeris-backend/target/debug/aeris-dashboard-backend"
+
+
+class NativeAdapter:
+    @staticmethod
+    def execute(action, identifier=None, mode=None):
+        args = [str(NATIVE), "tomat", action]
+        if identifier is not None:
+            args += [identifier, mode]
+        result = subprocess.run(args, capture_output=True, text=True, timeout=10)
+        return json.loads(result.stdout)
+
+    @staticmethod
+    def status():
+        return NativeAdapter.execute("status")
+
+
+@unittest.skipUnless(NATIVE.exists(), "Build the Rust backend first")
+class NativeDaemonTests(DaemonTests):
+    def test_isolated_cycle(self):
+        # Exactly the same behavioral contract against a separate silent daemon.
+        with patch.dict(globals(), adapter=NativeAdapter):
+            super().test_isolated_cycle()
 
 
 if __name__ == "__main__":

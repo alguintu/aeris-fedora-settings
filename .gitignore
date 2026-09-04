@@ -21,3 +21,8 @@ __pycache__/
 .venv/
 venv/
 OpenRGB/logs/
+
+# Reproducible Rust build outputs; source and Cargo.lock are tracked.
+/quickshell/aeris-backend/target/
+/quickshell/aeris-dashboard/bin/aeris-dashboard-backend
+/quickshell/aeris-dashboard/bin/aeris-dashboard-backend.build.*

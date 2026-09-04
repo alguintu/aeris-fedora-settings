@@ -1,0 +1,21 @@
+[package]
+name = "aeris-dashboard-backend"
+version = "0.1.0"
+edition = "2024"
+publish = false
+default-run = "aeris-dashboard-backend"
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+rustix = { version = "1.1.4", features = ["fs", "net", "event", "process", "time"] }
+dbus = { version = "0.9.11", features = ["vendored"] }
+ureq = { version = "3.4.0", default-features = false, features = ["native-tls", "json"] }
+serde_yaml_ng = "0.10.0"
+tempfile = "3.27"
+unicode-casefold = "0.2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

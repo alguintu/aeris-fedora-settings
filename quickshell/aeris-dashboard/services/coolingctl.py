@@ -26,43 +26,67 @@ MODE_UIDS = {
 UID_MODES = {uid: mode for mode, uid in MODE_UIDS.items()}
 
 
-def session_cookie():
-    config = COOLERCONTROL_CONFIG.read_text(encoding="utf-8")
-    match = re.search(
-        r'^networkCookies="@ByteArray\((cc=[^;]+);', config, re.MULTILINE
-    )
-    if not match:
-        raise RuntimeError("CoolerControl session is unavailable")
-    return match.group(1)
+class CoolerClient:
+    """One reusable loopback connection; retry reads, never replay a mode change."""
+
+    def __init__(self):
+        self.connection = self.context = None
+        self.cookie_key = self.cookie_value = None
+
+    def cookie(self):
+        stat = COOLERCONTROL_CONFIG.stat()
+        key = (str(COOLERCONTROL_CONFIG), stat.st_ino, stat.st_mtime_ns, stat.st_size)
+        if key != self.cookie_key:
+            config = COOLERCONTROL_CONFIG.read_text(encoding="utf-8")
+            match = re.search(r'^networkCookies="@ByteArray\((cc=[^;]+);', config, re.MULTILINE)
+            if not match:
+                raise RuntimeError("CoolerControl session is unavailable")
+            self.cookie_value, self.cookie_key = match.group(1), key
+        return self.cookie_value
+
+    def close(self):
+        if self.connection is not None:
+            self.connection.close()
+            self.connection = None
+
+    def request(self, method, path):
+        attempts = 2 if method == "GET" else 1
+        for attempt in range(attempts):
+            headers = {"Accept": "application/json", "Cookie": self.cookie()}
+            body = b"{}" if method == "POST" else None
+            if body is not None:
+                headers["Content-Type"] = "application/json"
+            if self.connection is None:
+                # Local self-signed certificate, fixed loopback endpoint only.
+                if self.context is None:
+                    self.context = ssl._create_unverified_context()
+                self.connection = http.client.HTTPSConnection(
+                    COOLERCONTROL_HOST, COOLERCONTROL_PORT, context=self.context, timeout=1.5)
+            try:
+                self.connection.request(method, path, body=body, headers=headers)
+                response = self.connection.getresponse()
+                payload = response.read()  # fully consume before reusing the connection
+                if response.will_close:
+                    self.close()
+                if response.status in (401, 403):
+                    self.cookie_key = None
+                    self.close()
+                    if attempt + 1 < attempts:
+                        continue
+                if response.status >= 400:
+                    raise RuntimeError(f"CoolerControl returned HTTP {response.status}")
+                return json.loads(payload.decode("utf-8")) if payload else {}
+            except (OSError, http.client.HTTPException):
+                self.close()
+                if attempt + 1 == attempts:
+                    raise
+
+
+_client = CoolerClient()
 
 
 def api_request(method, path):
-    # CoolerControl serves a local self-signed certificate. This connection is
-    # deliberately fixed to loopback and never accepts a caller-provided host.
-    context = ssl._create_unverified_context()
-    connection = http.client.HTTPSConnection(
-        COOLERCONTROL_HOST,
-        COOLERCONTROL_PORT,
-        context=context,
-        timeout=1.5,
-    )
-    body = b"{}" if method == "POST" else None
-    headers = {
-        "Accept": "application/json",
-        "Cookie": session_cookie(),
-    }
-    if body is not None:
-        headers["Content-Type"] = "application/json"
-
-    try:
-        connection.request(method, path, body=body, headers=headers)
-        response = connection.getresponse()
-        payload = response.read()
-        if response.status >= 400:
-            raise RuntimeError(f"CoolerControl returned HTTP {response.status}")
-        return json.loads(payload.decode("utf-8")) if payload else {}
-    finally:
-        connection.close()
+    return _client.request(method, path)
 
 
 def status():
@@ -87,7 +111,7 @@ def set_mode(mode):
 def safe_call(callback):
     try:
         return callback()
-    except (OSError, RuntimeError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (OSError, http.client.HTTPException, RuntimeError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         return {"ok": False, "mode": "unknown", "uid": "", "error": str(exc)}
 
 
@@ -115,6 +139,8 @@ def main():
                 time.sleep(args.interval)
         except KeyboardInterrupt:
             return 0
+        finally:
+            _client.close()
 
     callback = status
     if args.command == "set":

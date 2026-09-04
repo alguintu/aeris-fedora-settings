@@ -7,7 +7,6 @@ import argparse
 import json
 import os
 import re
-import shutil
 import time
 from pathlib import Path
 from typing import Any
@@ -16,7 +15,9 @@ from typing import Any
 HWMON_ROOT = Path("/sys/class/hwmon")
 DRM_ROOT = Path("/sys/class/drm")
 CPU_ROOT = Path("/sys/devices/system/cpu")
-BLOCK_ROOT = Path("/sys/block")
+MOUNTINFO = Path("/proc/self/mountinfo")
+DRIVES = (("System", "/"), ("Workspace", "/mnt/workspace"),
+          ("Documents", "/mnt/documents"), ("Storage", "/mnt/storage"))
 
 
 def read_text(path: Path) -> str | None:
@@ -124,27 +125,14 @@ def memory_bytes() -> tuple[int, int]:
     return total - values["MemAvailable"], total
 
 
-def physical_disk_capacity() -> int | None:
-    """Count whole physical disks once, excluding partitions and virtual devices."""
-    total = 0
-    found = False
-    for disk in BLOCK_ROOT.glob("*"):
-        if not (disk / "device").exists() or "virtual" in disk.resolve().parts:
-            continue
-        sectors = read_number(disk / "size")
-        if sectors is not None and sectors > 0:
-            # Linux sysfs reports size in 512-byte sectors, even for 4K disks.
-            total += int(sectors) * 512
-            found = True
-    return total if found else None
-
-
-def mounted_disk_space() -> tuple[int | None, int | None]:
-    """Usable capacity and user-available space on unique mounted local filesystems."""
+def disk_snapshot() -> dict[str, Any]:
+    """Share one statvfs per local filesystem between totals and drive bars."""
     total = available = 0
-    seen = set()
+    filesystems = {}
+    mounts = {}
+    complete = True
     try:
-        for line in Path("/proc/self/mountinfo").read_text(encoding="utf-8").splitlines():
+        for line in MOUNTINFO.read_text(encoding="utf-8").splitlines():
             before, after = line.split(" - ", 1)
             fs_type, source, *_ = after.split()
             if not source.startswith("/dev/"):
@@ -153,32 +141,31 @@ def mounted_disk_space() -> tuple[int | None, int | None]:
             # Btrfs subvolumes can have different statvfs IDs while sharing
             # the same filesystem capacity. Mountinfo's device ID is shared.
             key = (fs_type, mount_fields[2])
-            if key in seen:
-                continue
             mountpoint = re.sub(r"\\([0-7]{3})", lambda m: chr(int(m[1], 8)), mount_fields[4])
-            stats = os.statvfs(mountpoint)
-            seen.add(key)
-            total += stats.f_blocks * stats.f_frsize
-            available += stats.f_bavail * stats.f_frsize
+            if key not in filesystems:
+                try:
+                    stats = os.statvfs(mountpoint)
+                    filesystems[key] = stats
+                    total += stats.f_blocks * stats.f_frsize
+                    available += stats.f_bavail * stats.f_frsize
+                except OSError:
+                    filesystems[key] = None
+                    complete = False
+            mounts[mountpoint] = filesystems[key]
     except (OSError, ValueError):
-        return None, None
-    return (total, available) if total > 0 else (None, None)
-
-
-def drive_usage() -> list[dict[str, Any]]:
+        complete = False
     drives = []
-    for label, mount in (("System", "/"), ("Workspace", "/mnt/workspace"),
-                         ("Documents", "/mnt/documents"), ("Storage", "/mnt/storage")):
+    for label, mount in DRIVES:
         entry = {"label": label, "mount": mount, "used": None, "total": None}
-        try:
-            # Do not report the root filesystem if a data drive is unmounted.
-            if os.path.ismount(mount):
-                usage = shutil.disk_usage(mount)
-                entry.update(used=usage.used, total=usage.total)
-        except OSError:
-            pass
+        # Only actual mountpoints: an unmounted data drive must not show root usage.
+        stats = mounts.get(mount)
+        if stats is not None:
+            entry.update(used=(stats.f_blocks - stats.f_bfree) * stats.f_frsize,
+                         total=stats.f_blocks * stats.f_frsize)
         drives.append(entry)
-    return drives
+    return {"mountedDiskTotal": total if complete and total > 0 else None,
+            "mountedDiskFree": available if complete and total > 0 else None,
+            "drives": drives}
 
 
 def hwmon_dir(driver_name: str) -> Path | None:
@@ -188,13 +175,12 @@ def hwmon_dir(driver_name: str) -> Path | None:
     return None
 
 
-def labeled_temperature(driver_name: str, wanted_label: str) -> float | None:
-    directory = hwmon_dir(driver_name)
+def temperature_path(directory: Path | None, wanted_label: str) -> Path | None:
     if directory is None:
         return None
     for label_path in directory.glob("temp*_label"):
         if read_text(label_path) == wanted_label:
-            return read_number(label_path.with_name(label_path.name.replace("_label", "_input")), 1000)
+            return label_path.with_name(label_path.name.replace("_label", "_input"))
     return None
 
 
@@ -206,54 +192,95 @@ def gpu_device() -> Path | None:
     return None
 
 
-def cpu_clock_ghz() -> float | None:
-    clocks = [read_number(path, 1_000_000) for path in Path("/sys/devices/system/cpu").glob("cpu[0-9]*/cpufreq/scaling_cur_freq")]
-    valid = [clock for clock in clocks if clock is not None]
-    return round(sum(valid) / len(valid), 2) if valid else None
+class TemperaturePoll:
+    """Independent CPU/GPU cadence, retaining fast reads through early cooldown."""
+
+    def __init__(self) -> None:
+        self.last_read = self.busy_until = float("-inf")
+        self.values: dict[str, float | None] = {}
+
+    def sample(self, now: float, busy: bool, paths: dict[str, Path | None]) -> dict:
+        if busy:
+            self.busy_until = now + 6.0
+        interval = 1.0 if now <= self.busy_until else 3.0
+        if now - self.last_read >= interval:
+            self.values = {key: read_number(path, 1000) if path else None
+                           for key, path in paths.items()}
+            self.last_read = now
+        return self.values
 
 
-def collect(
-    previous_cpu: dict[int | str, tuple[int, int]],
-    current_cpu: dict[int | str, tuple[int, int]],
-) -> dict[str, Any]:
-    ram_used, ram_total = memory_bytes()
-    root_disk = shutil.disk_usage("/")
-    mounted_total, mounted_free = mounted_disk_space()
-    device = gpu_device()
+class MetricsCollector:
+    def __init__(self) -> None:
+        self.cpu_temperatures = TemperaturePoll()
+        self.gpu_temperatures = TemperaturePoll()
+        self.next_discovery = self.next_disk = float("-inf")
+        self.needs_discovery = True
+        self.disks: dict[str, Any] = {}
+        self.clock_paths: dict[int, Path] = {}
 
-    return {
-        "cpuUsage": cpu_usage(previous_cpu["cpu"], current_cpu["cpu"]),
-        "cpuCcds": cpu_ccd_usage(previous_cpu, current_cpu),
-        "cpuTemp": labeled_temperature("k10temp", "Tctl"),
-        "cpuClock": cpu_clock_ghz(),
-        "gpuUsage": read_number(device / "gpu_busy_percent") if device else None,
-        "gpuTemp": labeled_temperature("amdgpu", "edge"),
-        "gpuHotspot": labeled_temperature("amdgpu", "junction"),
-        "vramUsed": int(read_number(device / "mem_info_vram_used") or 0) if device else None,
-        "vramTotal": int(read_number(device / "mem_info_vram_total") or 0) if device else None,
-        "ramUsed": ram_used,
-        "ramTotal": ram_total,
-        "rootUsed": root_disk.used,
-        "rootTotal": root_disk.total,
-        "physicalDiskTotal": physical_disk_capacity(),
-        "mountedDiskTotal": mounted_total,
-        "mountedDiskFree": mounted_free,
-        "drives": drive_usage(),
-        "timestamp": int(time.time()),
-    }
+    def discover(self, now: float) -> None:
+        cpu_hwmon, gpu_hwmon = hwmon_dir("k10temp"), hwmon_dir("amdgpu")
+        self.cpu_paths = {"cpuTemp": temperature_path(cpu_hwmon, "Tctl")}
+        self.gpu_paths = {"gpuTemp": temperature_path(gpu_hwmon, "edge"),
+                          "gpuHotspot": temperature_path(gpu_hwmon, "junction")}
+        self.device = gpu_device()
+        self.vram_total = read_number(self.device / "mem_info_vram_total") if self.device else None
+        self.clock_paths = {}
+        for cpu in CPU_ROOT.glob("cpu[0-9]*"):
+            for name in ("cpuinfo_avg_freq", "scaling_cur_freq"):
+                path = cpu / "cpufreq" / name
+                if path.exists():
+                    self.clock_paths[int(cpu.name[3:])] = path
+                    break
+        self.needs_discovery = False
+        self.next_discovery = now + 30.0
+
+    def collect(self, previous_cpu: dict, current_cpu: dict, now: float | None = None) -> dict[str, Any]:
+        now = time.monotonic() if now is None else now
+        if self.needs_discovery and now >= self.next_discovery:
+            self.discover(now)
+        usage = cpu_usage(previous_cpu["cpu"], current_cpu["cpu"])
+        threads = {cpu: cpu_usage(previous_cpu[cpu], sample)
+                   for cpu, sample in current_cpu.items() if isinstance(cpu, int) and cpu in previous_cpu}
+        # One policy read, not a package-wide average. Selection reuses /proc/stat.
+        candidates = threads.keys() & self.clock_paths.keys()
+        busiest = max(candidates, key=lambda cpu: (threads[cpu], -cpu)) if candidates else None
+        clock = read_number(self.clock_paths[busiest], 1_000_000) if busiest is not None else None
+        if clock is not None and clock <= 0:
+            clock = None
+        gpu_usage = read_number(self.device / "gpu_busy_percent") if self.device else None
+        vram_used = read_number(self.device / "mem_info_vram_used") if self.device else None
+        cpu_temps = self.cpu_temperatures.sample(now, usage >= 10 or max(threads.values(), default=0) >= 50,
+                                                self.cpu_paths)
+        gpu_temps = self.gpu_temperatures.sample(now, (gpu_usage or 0) >= 10, self.gpu_paths)
+        # Missing/unplugged sensors recover without rescanning labels every second.
+        self.needs_discovery = any(value is None for value in
+                                   [clock, gpu_usage, vram_used, self.vram_total,
+                                    *cpu_temps.values(), *gpu_temps.values()])
+        if now >= self.next_disk:
+            self.disks = disk_snapshot()
+            self.next_disk = now + 60.0
+        ram_used, ram_total = memory_bytes()
+        return {"cpuUsage": usage, "cpuCcds": cpu_ccd_usage(previous_cpu, current_cpu),
+                "cpuClock": round(clock, 2) if clock is not None else None,
+                "gpuUsage": gpu_usage, "vramUsed": vram_used, "vramTotal": self.vram_total,
+                "ramUsed": ram_used, "ramTotal": ram_total,
+                **cpu_temps, **gpu_temps, **self.disks, "timestamp": int(time.time())}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
+    collector = MetricsCollector()
 
     previous_cpu = cpu_samples()
     time.sleep(0.25)
 
     while True:
         current_cpu = cpu_samples()
-        print(json.dumps(collect(previous_cpu, current_cpu), separators=(",", ":")), flush=True)
+        print(json.dumps(collector.collect(previous_cpu, current_cpu), separators=(",", ":")), flush=True)
         previous_cpu = current_cpu
         if args.once:
             return

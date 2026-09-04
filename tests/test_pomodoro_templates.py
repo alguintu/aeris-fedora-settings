@@ -40,6 +40,27 @@ class TemplateTests(unittest.TestCase):
             with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                 routines.validate({**raw, field: value})
 
+    def test_unchanged_catalog_skips_yaml_but_edits_and_deletes_refresh(self):
+        with patch.object(routines.yaml, "safe_load", wraps=routines.yaml.safe_load) as parse:
+            routines._cache_time = 0
+            self.assertEqual(routines.catalog(), self.catalog)
+            parse.assert_not_called()
+            path = self.folder / "Classic.md"
+            path.write_text(path.read_text().replace("work_label: WORK", "work_label: EDITED"))
+            routines._cache_time = 0
+            data = routines.catalog()
+            self.assertEqual(routines.find("classic", data["templates"])["work_label"], "EDITED")
+            self.assertGreater(parse.call_count, 0)
+            path.unlink()
+            routines._cache_time = 0
+            self.assertNotIn("classic", [r["id"] for r in routines.catalog()["templates"]])
+
+    def test_transient_read_failure_is_not_cached_indefinitely(self):
+        with patch.object(Path, "read_text", side_effect=OSError("temporary I/O failure")):
+            self.assertTrue(routines.catalog(force=True)["templateErrors"])
+        routines._cache_time = 0
+        self.assertEqual(routines.catalog()["templateErrors"], [])
+
     def test_unsafe_yaml_and_all_duplicate_ids_rejected(self):
         content = (self.folder / "Classic.md").read_text()
         (self.folder / "Copy 1.md").write_text(content)
