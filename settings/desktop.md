@@ -64,7 +64,8 @@ The usable zone area is 3840×2098, leaving pixels 2098–2159 for the panels.
 
 - Base columns: 960 px, 1920 px, 960 px
 - Base rows: 1049 px, 1049 px
-- Six base zones
+- Seven base zones; the upper-left quarter is divided into two equal stacked
+  targets
 - Four explicit overlapping span zones
 - Gutter/padding: 8 px
 - Target activation: normal drag onto a small indicator
@@ -112,5 +113,5 @@ expected display geometry and saves timestamped backups under
 
 The script expects KZones 0.9.2 to already be installed. It applies the local
 native-tiling and per-output compatibility patches only when needed, configures
-the ten zones, restores the panels and cursor, disables native tiling shortcuts
+the eleven zones, restores the panels and cursor, disables native tiling shortcuts
 and edges, disables KZones on `DP-3`, and reloads KZones.
