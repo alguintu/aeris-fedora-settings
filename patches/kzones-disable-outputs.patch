@@ -3,25 +3,36 @@
 @@ -80,0 +81,2 @@
 +            // outputs where KZones should remain inactive
 +            disabledOutputs: KWin.readConfig("disabledOutputs", "").split(/\r?\n/).map((name) => name.trim()).filter((name) => name.length > 0),
-@@ -108,0 +111,13 @@
+@@ -108,0 +111,21 @@
 +    function outputIsDisabled(output) {
 +        if (!output || !output.name) return false;
 +        return config.disabledOutputs.includes(output.name.toString());
 +    }
 +
++    function targetOutput() {
++        if (moving) {
++            const cursorOutput = Workspace.screenAt(Workspace.cursorPos);
++            if (cursorOutput) return cursorOutput;
++        }
++        return Workspace.activeScreen;
++    }
++
 +    function activeOutputIsDisabled() {
-+        return outputIsDisabled(Workspace.activeScreen);
++        return outputIsDisabled(targetOutput());
 +    }
 +
 +    function clientOutputIsDisabled(client) {
 +        return client && outputIsDisabled(client.output);
 +    }
 +
-@@ -112 +126,0 @@
+@@ -112 +134,0 @@
 -        mainDialog.visible = true;
-@@ -115,0 +130 @@
+@@ -115,0 +138 @@
 +        mainDialog.visible = !activeOutputIsDisabled();
-@@ -227,0 +243,8 @@
+@@ -129 +152 @@
+-        activeScreen = Workspace.activeScreen;
++        activeScreen = targetOutput();
+@@ -227,0 +251,8 @@
 +
 +        const disabledOutput = moving ? activeOutputIsDisabled() : clientOutputIsDisabled(client);
 +        if (disabledOutput) {
@@ -30,13 +41,13 @@
 +            return;
 +        }
 +
-@@ -273,0 +297 @@
+@@ -273,0 +305 @@
 +        if (clientOutputIsDisabled(client)) return null;
-@@ -549,0 +574,3 @@
+@@ -549,0 +582,3 @@
 +            refreshClientArea();
 +            if (activeOutputIsDisabled()) highlightedZone = -1;
 +
-@@ -721,0 +749,10 @@
+@@ -721,0 +757,10 @@
 +
 +                if (activeOutputIsDisabled()) {
 +                    mainDialog.visible = false;

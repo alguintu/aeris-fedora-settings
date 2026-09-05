@@ -152,6 +152,12 @@ if ! rg -Fq "$output_patch_marker" "$kzones_main"; then
         <"$repo_root/patches/kzones-disable-outputs.patch"
 fi
 
+activation_margin_patch_marker='activationMargin ||'
+if ! rg -Fq "$activation_margin_patch_marker" "$kzones_main"; then
+    patch --batch --forward -p1 -d "$kzones_dir" \
+        <"$repo_root/patches/kzones-indicator-activation-margins.patch"
+fi
+
 layouts_json=$(jq -c . "$repo_root/settings/kzones-layouts.json")
 kwriteconfig6 --file kwinrc --group Script-kzones --key autoSnapAllNew false
 kwriteconfig6 --file kwinrc --group Script-kzones --key disabledOutputs "$KZONES_DISABLED_OUTPUT"

@@ -1,0 +1,34 @@
+--- a/contents/ui/main.qml
++++ b/contents/ui/main.qml
+@@ -162,9 +162,14 @@
+-    function isHovering(item) {
++    function isHovering(item, activationMargin) {
++        const margin = activationMargin || {};
++        const left = margin.left || 0;
++        const right = margin.right || 0;
++        const top = margin.top || 0;
++        const bottom = margin.bottom || 0;
+         const itemGlobal = item.mapToGlobal(Qt.point(0, 0));
+         return isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, {
+-            x: itemGlobal.x,
+-            y: itemGlobal.y,
+-            width: item.width * item.scale,
+-            height: item.height * item.scale
++            x: itemGlobal.x - left,
++            y: itemGlobal.y - top,
++            width: item.width * item.scale + left + right,
++            height: item.height * item.scale + top + bottom
+         });
+     }
+@@ -771,7 +776,10 @@
+                 const currentZones = repeaterLayout.itemAt(currentLayout)
+                 if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded) {
+                     currentZones.repeater.model.forEach((zone, zoneIndex) => {
+-                        if (isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
++                        if (isHovering(
++                            currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget],
++                            zone.indicator?.activationMargin
++                        )) {
+                             hoveringZone = zoneIndex;
+                         }
+                     });

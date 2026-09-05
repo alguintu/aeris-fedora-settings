@@ -42,7 +42,7 @@ The script requires the 3840×2160 primary display and 1920×480 secondary
 touchscreen at 100% scale. It backs up the existing cursor, KWin, and Plasma
 panel configuration before changing anything. KZones 0.9.2 must already be
 installed. The script then restores the cursor, split floating panels,
-dock-safe seven-zone layout, four span targets, 8 px gutters, secondary-output
+dock-safe nine-zone layout, eight span targets, 8 px gutters, secondary-output
 exclusion, and native-KWin-tiling disablement.
 
 Restore the Git commit identity separately:

@@ -64,27 +64,39 @@ The usable zone area is 3840×2098, leaving pixels 2098–2159 for the panels.
 
 - Base columns: 960 px, 1920 px, 960 px
 - Base rows: 1049 px, 1049 px
-- Seven base zones; the upper-left quarter is divided into two equal stacked
-  targets
-- Four explicit overlapping span zones
+- Nine base zones; the upper-left and upper-right quarters are each divided
+  into two equal stacked targets, while the lower-right quarter is divided into
+  two equal side-by-side vertical targets
+- Eight explicit overlapping span zones
 - Gutter/padding: 8 px
 - Target activation: normal drag onto a small indicator
 - Indicator display: only the target zone, preventing overlapping zones from
   washing out the thumbnail in grey
+- The full-width lower-half thumbnail remains 134 px below the bottom-center
+  thumbnail, with an invisible 34 px activation bridge between them
 - Remember and restore pre-snap window geometry: enabled
 - Enabled output: `HDMI-A-1` (3840×2160)
 - Disabled output: `DP-3` (1920×480); KZones overlays, mouse snapping,
   and keyboard zone moves remain inactive there
 
-The four span targets are:
+During an interactive drag, the output under the pointer determines which
+layout is active and supplies the zone geometry. This avoids losing the main
+display's KZones target when a tall window's center crosses onto `DP-3` before
+its title bar does. Keyboard zone moves continue to use the window's output.
+
+The eight span targets are:
 
 - A: full-height left column
 - B: full-height middle column
 - C: full-height right column
-- E: bottom-middle plus bottom-right
+- D: merged upper-left stack
+- E: merged upper-right stack
+- F: merged lower-right emulator pair
+- G: bottom-middle plus bottom-right
+- H: full-width lower half
 
 The letters are documentation labels only. KZones shows a miniature of each
-target shape rather than an A/B/C/E label. The complete KZones-compatible JSON
+target shape rather than an A/B/C/D/E/F/G/H label. The complete KZones-compatible JSON
 is stored in `kzones-layouts.json`.
 
 KZones cannot combine arbitrary zones dynamically like FancyZones. Each desired
@@ -112,6 +124,7 @@ expected display geometry and saves timestamped backups under
 `~/.local/state/fedora-settings/backups/` before applying the profile.
 
 The script expects KZones 0.9.2 to already be installed. It applies the local
-native-tiling and per-output compatibility patches only when needed, configures
-the eleven zones, restores the panels and cursor, disables native tiling shortcuts
-and edges, disables KZones on `DP-3`, and reloads KZones.
+native-tiling, per-output, and indicator activation-margin compatibility patches
+only when needed, configures the seventeen zones, restores the panels and cursor,
+disables native tiling shortcuts and edges, disables KZones on `DP-3`, and reloads
+KZones.
