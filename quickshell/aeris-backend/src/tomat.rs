@@ -3,7 +3,25 @@ use crate::{
     templates,
 };
 use serde_json::{Value, json};
-use std::{env, path::PathBuf, time::Duration};
+use std::{
+    env,
+    fs::{self, File, OpenOptions},
+    os::unix::fs::OpenOptionsExt,
+    path::PathBuf,
+    time::Duration,
+};
+fn operation_lock() -> Result<File> {
+    let path = templates::state_path().with_extension("operation.lock");
+    fs::create_dir_all(path.parent().ok_or("Missing state directory")?).map_err(err)?;
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .mode(0o600)
+        .open(path)
+        .map_err(err)?;
+    rustix::fs::flock(&file, rustix::fs::FlockOperation::LockExclusive).map_err(err)?;
+    Ok(file)
+}
 pub fn socket() -> PathBuf {
     env::var_os("TOMAT_RUNTIME_DIR")
         .or_else(|| env::var_os("XDG_RUNTIME_DIR"))
@@ -68,6 +86,7 @@ fn seek_args(elapsed: &str, revision: &str) -> Result<Value> {
 
 pub fn seek(elapsed: &str, revision: &str, catalog: &mut templates::Catalog) -> Value {
     (|| -> Result<Value> {
+        let _guard = operation_lock()?;
         request("seek", seek_args(elapsed, revision)?)?;
         Ok(templates::enrich(status()?, catalog, common::monotonic()))
     })()
@@ -81,6 +100,7 @@ pub fn execute(
     catalog: &mut templates::Catalog,
 ) -> Value {
     (|| -> Result<Value> {
+        let _guard = operation_lock()?;
         if ![
             "status", "watch", "toggle", "pause", "resume", "reset", "skip", "select",
         ]
@@ -95,6 +115,42 @@ pub fn execute(
         Ok(templates::enrich(status()?, catalog, observed))
     })()
     .unwrap_or_else(|error| json!({"ok":false,"error":error}))
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RemoteAction {
+    action: String,
+    revision: String,
+    id: Option<String>,
+}
+
+/// Remote actions are explicit, never a blind play/pause toggle after a retry.
+pub fn remote(value: Value, catalog: &mut templates::Catalog) -> Result<Value> {
+    let _guard = operation_lock()?;
+    let action: RemoteAction = serde_json::from_value(value).map_err(err)?;
+    let current = status()?;
+    if current["revision"].as_str() != Some(action.revision.as_str()) {
+        return Err("Timer changed. Review its current phase before trying again.".into());
+    }
+    let name = match action.action.as_str() {
+        "start" if current["phase"] == "Idle" => "toggle",
+        "pause" | "resume" | "skip" if current["phase"] != "Idle" => &action.action,
+        "reset" | "select" => &action.action,
+        _ => return Err("This timer action is unavailable".into()),
+    };
+    if name != "select" && action.id.is_some() {
+        return Err("Only selection accepts a template ID".into());
+    }
+    templates::action(
+        name,
+        &current,
+        catalog,
+        request,
+        action.id.as_deref(),
+        Some("next"),
+    )?;
+    Ok(templates::enrich(status()?, catalog, common::monotonic()))
 }
 
 #[cfg(test)]

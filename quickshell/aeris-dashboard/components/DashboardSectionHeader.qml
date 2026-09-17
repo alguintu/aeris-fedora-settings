@@ -26,13 +26,13 @@ RowLayout {
         visible: root.iconName.length === 0
         Layout.fillWidth: root.detail.length === 0
         text: root.title
-        font.pixelSize: 20
+        font.pixelSize: Theme.sectionTitleSize
     }
 
     ThemeIcon {
         visible: root.iconName.length > 0
-        Layout.preferredWidth: 26
-        Layout.preferredHeight: 26
+        Layout.preferredWidth: Theme.headerIconSize
+        Layout.preferredHeight: Theme.headerIconSize
         name: root.iconName
         color: root.accent
     }
@@ -43,7 +43,7 @@ RowLayout {
         text: root.detail
         color: Theme.text
         font.family: Theme.fontFamily
-        font.pixelSize: 18
+        font.pixelSize: Theme.headerDetailSize
         font.weight: Font.DemiBold
         elide: Text.ElideRight
         Accessible.description: root.detailHint
@@ -57,7 +57,7 @@ RowLayout {
         text: root.eyebrow
         color: root.accent
         font.family: Theme.fontFamily
-        font.pixelSize: 18
+        font.pixelSize: Theme.headerDetailSize
         font.weight: Font.DemiBold
     }
 }

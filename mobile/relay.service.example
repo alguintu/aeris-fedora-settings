@@ -1,0 +1,23 @@
+[Unit]
+Description=Aeris wake relay on the CasaOS host
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=aeris-relay
+ExecStart=/opt/aeris-companion/aeris-companion
+Environment=AERIS_COMPANION_ROLE=relay
+Environment=AERIS_COMPANION_TOKEN_FILE=/etc/aeris-companion/pairing.secret
+Environment=AERIS_WAKE_MAC=2c:f0:5d:57:a2:c2
+Environment=AERIS_WAKE_BROADCAST=192.168.5.255
+Environment=AERIS_COMPANION_PORT=4280
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

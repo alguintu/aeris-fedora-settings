@@ -5,6 +5,7 @@ import "../components"
 // Curated 2026-09-04 build snapshot, not live telemetry. See settings/pc-specs.md.
 Item {
     id: page
+    property bool presentationActive: true
     readonly property var cards: [
         { label: "PROCESSOR", icon: "processor", accent: Theme.blue,
           value: "Ryzen 9 5950X", lines: ["16 cores / 32 threads · 64 MB L3", "3.4 GHz base · 4.9 GHz boost"] },
@@ -22,171 +23,160 @@ Item {
           value: "Fedora Linux 44", lines: ["KDE Plasma 6.7.4 · x86_64", "Linux 7.1.12-200.fc44.x86_64"] }
     ]
 
-    RowLayout {
-        anchors.fill: parent
-        spacing: 12
+    SpecsGrid { id: specsGrid; anchors.fill: parent }
+    readonly property alias layoutGrid: specsGrid
 
-        DashboardTile {
-            Layout.preferredWidth: 300
-            Layout.fillHeight: true
+    GridTile {
+        id: identityCard
+        grid: specsGrid
+        slotName: "identity"
+        Accessible.role: Accessible.Button
+        Accessible.name: "Aeris animation: " + caseBackdrop.backdropAnimationName
+        Accessible.description: "Activate to show the next pixel animation"
+        Accessible.onPressAction: caseBackdrop.nextBackdropAnimation()
 
-            Row {
-                spacing: 12
-                ThemeIcon { name: "processor"; width: 24; height: 24; color: Theme.blue }
-                Text { text: "PC SPECS"; color: Theme.blue; font.family: Theme.fontFamily; font.pixelSize: 22 }
+        TapHandler {
+            // Cover the whole tile, including its inset, but yield to page drags.
+            parent: identityCard
+            enabled: page.presentationActive
+            gesturePolicy: TapHandler.DragThreshold
+            onTapped: caseBackdrop.nextBackdropAnimation()
+        }
+
+        ChromaticPulse {
+            id: caseBackdrop
+            objectName: "specs-case-backdrop"
+            anchors.fill: parent
+            backdropMode: true
+            running: page.presentationActive
+        }
+
+        Row {
+            spacing: 2 * Theme.spacingUnit
+            ThemeIcon { name: "processor"; width: 24; height: 24; color: Theme.blue }
+            Text { text: "PC SPECS"; color: Theme.blue; font.family: Theme.fontFamily; font.pixelSize: 22 }
+        }
+
+        Column {
+            anchors.centerIn: parent
+            width: parent.width
+            spacing: 4 * Theme.spacingUnit
+            ThemeIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                name: "aeris-wordmark"
+                width: Math.min(240, parent.width)
+                height: width * 64 / 240
+                color: Theme.teal
             }
-
-            Column {
-                anchors.centerIn: parent
+            Text {
                 width: parent.width
-                spacing: 22
-                ThemeIcon {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    name: "aeris-wordmark"
-                    width: 240
-                    height: 64
-                    color: Theme.teal
-                }
-                Text {
-                    width: parent.width
-                    text: "WORKSTATION"
-                    horizontalAlignment: Text.AlignHCenter
-                    color: Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 20
-                }
-            }
-
-            Column {
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                spacing: 5
-                Text { text: "BUILD SNAPSHOT"; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 18 }
-                Text { text: "04 SEP 2026"; color: Theme.blue; font.family: Theme.fontFamily; font.pixelSize: 20 }
+                text: "WORKSTATION"
+                horizontalAlignment: Text.AlignHCenter
+                color: Theme.muted
+                font.family: Theme.fontFamily
+                font.pixelSize: 20
             }
         }
 
-        GridLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            columns: 4
-            columnSpacing: 12
-            rowSpacing: 12
+        Column {
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            spacing: Theme.spacingUnit
+            Text { text: "BUILD SNAPSHOT"; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 18 }
+            Text { text: "04 SEP 2026"; color: Theme.blue; font.family: Theme.fontFamily; font.pixelSize: 20 }
+        }
+    }
 
-            Repeater {
-                model: page.cards
-                delegate: DashboardTile {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.preferredWidth: 1
-                    Layout.preferredHeight: 1
+    Repeater {
+        model: page.cards
+        delegate: GridTile {
+            required property var modelData
+            grid: specsGrid
+            slotName: modelData.label.toLowerCase()
 
-                    Column {
-                        anchors.fill: parent
-                        spacing: 12
+            Column {
+                anchors.fill: parent
+                spacing: 2 * Theme.spacingUnit
 
-                        Row {
-                            spacing: 12
-                            ThemeIcon { name: modelData.icon; color: modelData.accent; width: 24; height: 24 }
-                            Text {
-                                text: modelData.label
-                                color: modelData.accent
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 22
-                            }
-                        }
-                        Text {
+                Row {
+                    spacing: 2 * Theme.spacingUnit
+                    ThemeIcon { name: modelData.icon; color: modelData.accent; width: 24; height: 24 }
+                    Text {
+                        text: modelData.label
+                        color: modelData.accent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 22
+                    }
+                }
+                Text {
+                    width: parent.width
+                    text: modelData.value
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 32
+                    font.weight: Font.DemiBold
+                    elide: Text.ElideRight
+                }
+                Column {
+                    width: parent.width
+                    spacing: Theme.spacingUnit
+                    Repeater {
+                        model: modelData.lines
+                        delegate: Text {
+                            required property string modelData
                             width: parent.width
-                            text: modelData.value
-                            color: Theme.text
+                            text: modelData
+                            color: Theme.muted
                             font.family: Theme.fontFamily
-                            font.pixelSize: 32
-                            font.weight: Font.DemiBold
+                            font.pixelSize: 20
                             elide: Text.ElideRight
-                        }
-                        Column {
-                            width: parent.width
-                            spacing: 4
-                            Repeater {
-                                model: modelData.lines
-                                delegate: Text {
-                                    required property string modelData
-                                    width: parent.width
-                                    text: modelData
-                                    color: Theme.muted
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 20
-                                    elide: Text.ElideRight
-                                }
-                            }
                         }
                     }
                 }
             }
+        }
+    }
 
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: 1
-                spacing: 12
+    Repeater {
+        model: [
+            {key: "fans", icon: "fan", accent: Theme.red, label: "THERMALRIGHT FANS",
+             details: "EXHAUST · 3 RAD · 2 GPU\nINTAKE · 1 REAR · 2 FRONT"},
+            {key: "argb", icon: "aurora", accent: Theme.mauve, label: "ARGB ZONES",
+             details: "BACKPLANE + PSU · FANS\nDRAM · GPU"}
+        ]
+        delegate: GridTile {
+            required property var modelData
+            grid: specsGrid
+            slotName: modelData.key
 
-                DashboardTile {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    contentMargin: 14
-
-                    RowLayout {
-                        anchors.fill: parent
-                        spacing: 14
-                        ThemeIcon { name: "fan"; color: Theme.red; width: 30; height: 30 }
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
-                            Text { text: "THERMALRIGHT FANS"; color: Theme.red; font.family: Theme.fontFamily; font.pixelSize: 20 }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "EXHAUST · 3 RAD · 2 GPU"
-                                color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 18
-                                elide: Text.ElideRight
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "INTAKE · 1 REAR · 2 FRONT"
-                                color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 18
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
+            Item {
+                anchors.fill: parent
+                ThemeIcon {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    name: modelData.icon
+                    color: modelData.accent
+                    width: 24; height: 24
                 }
-
-                DashboardTile {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    contentMargin: 14
-
-                    RowLayout {
-                        anchors.fill: parent
-                        spacing: 14
-                        ThemeIcon { name: "aurora"; color: Theme.mauve; width: 30; height: 30 }
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
-                            Text { text: "ARGB ZONES"; color: Theme.mauve; font.family: Theme.fontFamily; font.pixelSize: 20 }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "BACKPLANE + PSU · FANS"
-                                color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 18
-                                elide: Text.ElideRight
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "DRAM · GPU"
-                                color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 18
-                                elide: Text.ElideRight
-                            }
-                        }
+                Column {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 24 + Theme.spacingUnit
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    spacing: Theme.spacingUnit
+                    Text {
+                        width: parent.width
+                        text: modelData.label
+                        color: modelData.accent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 20
+                    }
+                    Text {
+                        width: parent.width
+                        text: modelData.details
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 18
                     }
                 }
             }

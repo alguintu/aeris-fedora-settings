@@ -1,0 +1,9 @@
+[Unit]
+Description=Connect CasaOS on access
+
+[Automount]
+Where=/home/drei/CasaOS
+TimeoutIdleSec=0
+
+[Install]
+WantedBy=multi-user.target

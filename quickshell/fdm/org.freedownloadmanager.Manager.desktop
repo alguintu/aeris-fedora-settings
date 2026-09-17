@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Free Download Manager
+Comment=Powerful download accelerator and organizer
+Exec=aeris-fdm %U
+Icon=org.freedownloadmanager.Manager
+Terminal=false
+Type=Application
+Categories=Network;FileTransfer;Utility;
+MimeType=x-scheme-handler/http;x-scheme-handler/https;application/x-bittorrent;x-scheme-handler/magnet;
+StartupNotify=true
+X-Flatpak=org.freedownloadmanager.Manager

@@ -11,12 +11,14 @@ QtObject {
     // so a tile created after the first reply doesn't wait for the next poll.
     property var awakeState: null
     property var tomatState: null
+    property var fdmState: null
     signal eventReceived(string service, var payload)
 
     function publish(service, payload) {
         connected = true
         if (service === "awake") awakeState = payload
         if (service === "tomat") tomatState = payload
+        if (service === "fdm") fdmState = payload
         eventReceived(service, payload)
     }
 
@@ -24,10 +26,11 @@ QtObject {
         connected = false
         awakeState = null
         tomatState = null
+        fdmState = null
     }
 
     function command(service, args) {
-        if (useNative) return [binary, service].concat(args || [])
+        if (useNative || service === "fdm") return [binary, service].concat(args || [])
         const scripts = {rgb: "rgbctl.py", cooling: "coolingctl.py", sleep: "sleepctl.py",
             tomat: "tomatctl.py", weather: "weather.py", artwork: "media_art.py"}
         return ["python3", Quickshell.shellPath("services/" + scripts[service])].concat(args || [])

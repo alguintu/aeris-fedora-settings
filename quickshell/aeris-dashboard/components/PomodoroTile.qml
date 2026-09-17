@@ -6,6 +6,7 @@ import QtQuick.Controls as Controls
 Item {
     id: root
     property bool presentationActive: true
+    property real contentInset: Theme.tilePadding
     readonly property int stageCount: TomatService.state.sessions
     readonly property int currentStage: Math.min(stageCount - 1, TomatService.state.session - 1)
     readonly property string stageLabel: !TomatService.healthy ? "OFFLINE"
@@ -31,7 +32,7 @@ Item {
 
     ClippingRectangle {
         anchors.fill: parent
-        anchors.margins: -18
+        anchors.margins: -root.contentInset
         radius: Theme.radius
         color: "transparent"
 
@@ -82,8 +83,8 @@ Item {
         Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
-            // The clipping frame begins 18px before the content area.
-            y: Math.max(0, quoteBlock.y + 18 - 140)
+            // Convert content coordinates to the full-tile clipping frame.
+            y: Math.max(0, quoteBlock.y + root.contentInset - 140)
             height: parent.height - y
             gradient: Gradient {
                 GradientStop { position: 0; color: "transparent" }
@@ -210,7 +211,9 @@ Item {
 
             Text {
                 width: parent.width
-                text: TomatService.state.quote || "Nothing lasts. Make it count."
+                text: TomatService.state.workout
+                    ? (TomatService.state.workout.next_exercise || TomatService.state.workout.plan.name)
+                    : TomatService.state.quote || "Nothing lasts. Make it count."
                 maximumLineCount: 4
                 elide: Text.ElideRight
                 wrapMode: Text.WordWrap
@@ -224,7 +227,9 @@ Item {
             Text {
                 width: parent.width
                 horizontalAlignment: Text.AlignRight
-                text: "— AERIS"
+                text: TomatService.state.workout
+                    ? "— " + TomatService.state.workout.completed + "/" + TomatService.state.workout.total + " SETS"
+                    : "— AERIS"
                 color: Theme.muted
                 font.family: Theme.fontFamily
                 font.pixelSize: 13
@@ -280,8 +285,9 @@ Item {
     }
 
     RoutinePicker {
+        contentInset: root.contentInset
         anchors.fill: parent
-        anchors.margins: -18
+        anchors.margins: -root.contentInset
         visible: TomatService.pickerOpen
         z: 20
     }

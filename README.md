@@ -26,6 +26,7 @@ unrelated personal state, hardware identifiers, and application data.
 - [GPU efficiency tuning](settings/gpu-tuning.md)
 - [Efficiency baseline and test log](settings/efficiency-baseline.md)
 - [Storage](settings/storage.md)
+- [Free Download Manager](settings/downloads.md)
 - [Git and GitHub](settings/git.md)
 - [KZones layout geometry](settings/kzones-layouts.json)
 - [Aeris OpenRGB lighting](settings/rgb.md)

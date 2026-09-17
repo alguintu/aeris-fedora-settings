@@ -1,5 +1,6 @@
 singleton Theme 1.0 Theme.qml
 singleton BackendService 1.0 BackendService.qml
+singleton AwakeService 1.0 AwakeService.qml
 singleton DecorativeClock 1.0 DecorativeClock.qml
 DecorativeTick 1.0 DecorativeTick.qml
 ChromaticTime 1.0 ChromaticTime.qml
@@ -11,6 +12,10 @@ HeatmapSurface 1.0 HeatmapSurface.qml
 DashboardHeaderLabel 1.0 DashboardHeaderLabel.qml
 DashboardSectionHeader 1.0 DashboardSectionHeader.qml
 DashboardTile 1.0 DashboardTile.qml
+DashboardGrid 1.0 DashboardGrid.qml
+HomeGrid 1.0 HomeGrid.qml
+SpecsGrid 1.0 SpecsGrid.qml
+GridTile 1.0 GridTile.qml
 GpuHeatmap 1.0 GpuHeatmap.qml
 KeepAwakeButton 1.0 KeepAwakeButton.qml
 LightingModeButton 1.0 LightingModeButton.qml
@@ -23,6 +28,9 @@ SlideReveal 1.0 SlideReveal.qml
 FrameProbe 1.0 FrameProbe.qml
 ThemeIcon 1.0 ThemeIcon.qml
 PomodoroTile 1.0 PomodoroTile.qml
+CompactPomodoro 1.0 CompactPomodoro.qml
+NetworkMonitor 1.0 NetworkMonitor.qml
+CompactRoutinePicker 1.0 CompactRoutinePicker.qml
 TimerScrubber 1.0 TimerScrubber.qml
 RoutinePicker 1.0 RoutinePicker.qml
 singleton TomatService 1.0 TomatService.qml
@@ -31,3 +39,9 @@ WeatherAtmosphere 1.0 WeatherAtmosphere.qml
 WeatherDaylight 1.0 WeatherDaylight.qml
 WeatherMist 1.0 WeatherMist.qml
 singleton WeatherService 1.0 WeatherService.qml
+DownloadMonitor 1.0 DownloadMonitor.qml
+TransferRateLabel 1.0 TransferRateLabel.qml
+AerisAiCard 1.0 AerisAiCard.qml
+AiHubStatus 1.0 AiHubStatus.qml
+ResourceMeters 1.0 ResourceMeters.qml
+HubLink 1.0 HubLink.qml

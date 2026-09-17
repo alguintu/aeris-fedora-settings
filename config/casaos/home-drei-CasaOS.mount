@@ -1,0 +1,11 @@
+[Unit]
+Description=CasaOS DATA share on raspberrypi.local
+Wants=network-online.target
+After=network-online.target
+
+[Mount]
+What=//raspberrypi.local/DATA
+Where=/home/drei/CasaOS
+Type=cifs
+Options=guest,uid=1000,gid=1000,nosuid,nodev,_netdev
+TimeoutSec=15s

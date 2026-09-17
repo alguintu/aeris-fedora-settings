@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
     sync::OnceLock,
 };
-const FIELDS: [&str; 12] = [
+const FIELDS: [&str; 13] = [
     "type",
     "id",
     "name",
@@ -23,6 +23,7 @@ const FIELDS: [&str; 12] = [
     "short_break_labels",
     "long_break_label",
     "quotes",
+    "workout",
 ];
 fn text(value: &Value, field: &str, limit: usize) -> Result<String> {
     value
@@ -96,6 +97,17 @@ pub fn validate(data: &Value) -> Result<Value> {
                 .map(|v| text(v, field, len).map(Value::String))
                 .collect::<Result<_>>()?,
         );
+    }
+    if let Some(workout) = obj.get("workout") {
+        result["workout"] = crate::workout::validate(workout)?;
+        if result["workout"]["blocks"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|b| b["after_round"].as_i64().unwrap() > result["sessions"].as_i64().unwrap())
+        {
+            return Err("Workout block refers to a round outside this routine".into());
+        }
     }
     Ok(result)
 }
@@ -474,6 +486,12 @@ pub fn enrich(mut state: Value, catalog: &mut Catalog, observed: f64) -> Value {
         .cloned()
         .unwrap_or(json!("Nothing lasts. Make it count."));
     if let Some(routine) = routine {
+        if let Some(workout) = routine.get("workout") {
+            match crate::workout::today(workout) {
+                Ok(day) => state["workout"] = day,
+                Err(error) => state["workoutError"] = json!(error),
+            }
+        }
         if state["phase"] == "Idle" {
             let seconds =
                 (routine["work_minutes"].as_f64().unwrap() * 60.0).round_ties_even() as i64;

@@ -8,7 +8,7 @@ Rectangle {
     property string title: ""
     property string eyebrow: ""
     property color accent: Theme.teal
-    property real contentMargin: 18
+    property real contentMargin: Theme.tilePadding
 
     radius: Theme.radius
     color: Theme.surface
@@ -18,7 +18,7 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: root.contentMargin
-        spacing: 10
+        spacing: Theme.headerBodyGap
 
         DashboardSectionHeader {
             Layout.fillWidth: true

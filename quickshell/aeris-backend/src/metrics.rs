@@ -14,6 +14,8 @@ pub struct Paths {
     pub cpu: PathBuf,
     pub drm: PathBuf,
     pub hwmon: PathBuf,
+    pub net_dev: PathBuf,
+    pub net_class: PathBuf,
 }
 
 impl Default for Paths {
@@ -25,6 +27,8 @@ impl Default for Paths {
             cpu: "/sys/devices/system/cpu".into(),
             drm: "/sys/class/drm".into(),
             hwmon: "/sys/class/hwmon".into(),
+            net_dev: "/proc/net/dev".into(),
+            net_class: "/sys/class/net".into(),
         }
     }
 }
@@ -370,6 +374,7 @@ impl<const N: usize> TemperaturePoll<N> {
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Snapshot {
+    pub network: crate::network::Snapshot,
     pub cpu_usage: f64,
     pub cpu_ccds: Vec<Vec<Vec<f64>>>,
     pub cpu_clock: Option<f64>,
@@ -388,6 +393,7 @@ pub struct Snapshot {
 
 pub struct Collector {
     pub paths: Paths,
+    network: crate::network::Collector,
     topology: Vec<Vec<Vec<u32>>>,
     cpu_temp: TemperaturePoll<1>,
     gpu_temp: TemperaturePoll<2>,
@@ -406,6 +412,7 @@ impl Collector {
         Self {
             topology: topology(&paths.cpu),
             paths,
+            network: crate::network::Collector::default(),
             cpu_temp: TemperaturePoll::default(),
             gpu_temp: TemperaturePoll::default(),
             cpu_path: None,
@@ -536,6 +543,9 @@ impl Collector {
             })
             .collect();
         Ok(Snapshot {
+            network: self
+                .network
+                .sample(&self.paths.net_dev, &self.paths.net_class, now),
             cpu_usage,
             cpu_ccds,
             cpu_clock,

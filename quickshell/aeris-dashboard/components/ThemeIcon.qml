@@ -28,6 +28,7 @@ Item {
         "lights-off": "icons/lightbulb-off-outline",
         "aurora": "icons/aurora",
         "coffee": "feather/coffee",
+        "monitor": "feather/monitor",
         "weather-windy": "feather/wind",
         "lightning-bolt": "feather/zap",
         "chip": "feather/cpu",

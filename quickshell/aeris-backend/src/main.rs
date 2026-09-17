@@ -1,7 +1,7 @@
 use aeris_dashboard_backend::{
-    artwork, awake, cooling,
+    ai, artwork, awake, cooling, fdm,
     metrics::{Collector, CpuSamples, Paths},
-    rgb, templates, tomat, weather,
+    rgb, rgb_start, templates, tomat, weather,
 };
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -88,6 +88,18 @@ fn watch() -> io::Result<()> {
             }
         })?;
     let awake_sender = sender.clone();
+    let fdm_sender = sender.clone();
+    thread::Builder::new()
+        .name("aeris-fdm".into())
+        .spawn(move || {
+            let mut reader = fdm::Reader::default();
+            loop {
+                if !send(&fdm_sender, "fdm", reader.status()) {
+                    return;
+                }
+                thread::sleep(Duration::from_secs(1));
+            }
+        })?;
     thread::Builder::new()
         .name("aeris-awake".into())
         .spawn(move || awake::watch(|value| send(&awake_sender, "awake", value)))?;
@@ -118,6 +130,20 @@ fn run(args: &[String]) -> io::Result<bool> {
             watch()?;
             Ok(true)
         }
+        ["fdm", "launch", ..] => fdm::launch(&args[2..]),
+        ["fdm", "status"] => {
+            emit(&fdm::Reader::default().status())?;
+            Ok(true)
+        }
+        ["fdm", "window-status"] => {
+            emit(&aeris_dashboard_backend::fdm_window::request(false)?)?;
+            Ok(true)
+        }
+        ["fdm", "open"] => fdm::open(),
+        ["ai", "status"] => {
+            emit(&ai::status())?;
+            Ok(true)
+        }
         ["metrics", "--once"] => {
             let mut collector = Collector::new(Paths::default());
             let previous = CpuSamples::read(&collector.paths.proc_stat)?;
@@ -146,6 +172,11 @@ fn run(args: &[String]) -> io::Result<bool> {
             }
             Ok(true)
         }
+        ["rgb", "start"] => {
+            let value = rgb_start::start();
+            emit(&value)?;
+            Ok(value["ok"] == true)
+        }
         ["rgb", "status"] | ["rgb", "set", _] => {
             let mode = if args.len() == 3 {
                 Some(args[2].as_str())
@@ -173,7 +204,9 @@ fn run(args: &[String]) -> io::Result<bool> {
                 thread::sleep(Duration::from_secs(1));
             }
         }
-        ["sleep", "status"] | ["sleep", "attach-bridge"] | ["sleep", "set", "on" | "off"] => {
+        ["sleep", "status"]
+        | ["sleep", "attach-bridge"]
+        | ["sleep", "set", "on" | "off" | "normal" | "system" | "full"] => {
             let value = awake::execute(args.last().unwrap());
             emit(&value)?;
             Ok(value["ok"] == true)
@@ -233,7 +266,7 @@ fn run(args: &[String]) -> io::Result<bool> {
         }
         ["--help"] => {
             println!(
-                "aeris-dashboard-backend watch | metrics [--once] | rgb/cooling status|watch|set MODE | sleep status|watch|set on|off|attach-bridge | tomat ACTION [ID next|now] | weather [--refresh] | artwork --title TITLE [--artist ARTIST]"
+                "aeris-dashboard-backend watch | metrics [--once] | fdm status|launch [URL...] | rgb/cooling status|watch|set MODE | sleep status|watch|set normal|system|full|attach-bridge | tomat ACTION [ID next|now] | weather [--refresh] | artwork --title TITLE [--artist ARTIST]"
             );
             Ok(true)
         }
@@ -245,7 +278,16 @@ fn run(args: &[String]) -> io::Result<bool> {
 }
 
 fn main() -> ExitCode {
-    match run(&env::args().skip(1).collect::<Vec<_>>()) {
+    let mut args = env::args().skip(1).collect::<Vec<_>>();
+    if env::args_os()
+        .next()
+        .as_deref()
+        .and_then(|p| std::path::Path::new(p).file_name())
+        == Some(std::ffi::OsStr::new("aeris-fdm"))
+    {
+        args.splice(0..0, ["fdm".to_string(), "launch".to_string()]);
+    }
+    match run(&args) {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::FAILURE,
         Err(error) if error.kind() == io::ErrorKind::BrokenPipe => ExitCode::SUCCESS,

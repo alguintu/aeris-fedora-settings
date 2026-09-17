@@ -87,6 +87,40 @@ fn invalid_mode_is_rejected_before_contacting_socket() {
 }
 
 #[test]
+fn start_on_healthy_daemon_is_read_only_and_preserves_mode() {
+    let runtime = Runtime::new();
+    let listener = UnixListener::bind(runtime.socket()).unwrap();
+    let worker = thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut buffer = [0; 1024];
+        let size = stream.read(&mut buffer).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<Value>(&buffer[..size]).unwrap(),
+            json!({"command":"status"})
+        );
+        stream
+            .write_all(b"{\"ok\":true,\"mode\":\"night\"}\n")
+            .unwrap();
+    });
+    let output = Command::new(BIN)
+        .args(["rgb", "start"])
+        .env("XDG_RUNTIME_DIR", &runtime.0)
+        .env(
+            "DBUS_SESSION_BUS_ADDRESS",
+            "unix:path=/nonexistent-aeris-test-bus",
+        )
+        .output()
+        .unwrap();
+    worker.join().unwrap();
+    assert!(output.status.success());
+    assert_eq!(
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["mode"],
+        "night"
+    );
+    assert!(!runtime.0.join("aeris-openrgb-start-attempt").exists());
+}
+
+#[test]
 fn missing_daemon_fails_cleanly_then_recovers() {
     let runtime = Runtime::new();
     assert!(rgb::request_at(&runtime.socket(), &json!({"command":"status"})).is_err());

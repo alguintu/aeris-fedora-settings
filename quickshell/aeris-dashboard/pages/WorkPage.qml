@@ -1,146 +1,134 @@
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../components"
 
+// Combined AI/work hub. Preserve the two retained cards while its content grows.
 Item {
     id: page
-
+    property bool presentationActive: true
     property var metrics: ({})
     property bool metricsHealthy: false
+    property alias pollingEnabled: aiStatus.pollingEnabled
+    property alias aiState: aiStatus.state
+    property alias aiHealthy: aiStatus.healthy
+    function openFile(path) { if (path) Qt.openUrlExternally("file://" + encodeURI(path).replace(/#/g, "%23")) }
 
-    function percent(value, total) {
-        return total > 0 ? Math.max(0, Math.min(1, value / total)) : 0
-    }
+    AiHubStatus { id: aiStatus; objectName: "hub-status-reader"; presentationActive: page.presentationActive }
 
-    function temperature(value) {
-        return value === null || value === undefined ? "--°" : Math.round(value) + "°C"
-    }
-
-    RowLayout {
-        id: topRow
+    AerisAiCard {
+        id: aiCard
+        objectName: "hub-ai-card"
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.right: parent.right
+        width: 720
         height: 176
-        spacing: 12
+        apis: aiStatus.state.apis || []
+        healthy: aiStatus.healthy
+    }
 
-        DashboardTile {
-            Layout.preferredWidth: 430
-            Layout.fillHeight: true
-            title: "WORK MODE"
-            eyebrow: "READY"
-            accent: Theme.cyan
+    ResourceMeters {
+        id: resources
+        objectName: "hub-resources"
+        anchors.left: aiCard.right; anchors.leftMargin: Theme.tileGap
+        anchors.right: pomodoroTile.left; anchors.rightMargin: Theme.tileGap
+        anchors.top: parent.top
+        height: aiCard.height
+        metrics: page.metrics; healthy: page.metricsHealthy
+        presentationActive: page.presentationActive
+    }
 
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 4
-                Text { text: "DEEP WORKSPACE"; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 27; font.weight: Font.DemiBold; font.letterSpacing: 1 }
-                Text { Layout.fillWidth: true; text: "Fast access, live load, and the current session at a glance."; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 13; wrapMode: Text.WordWrap }
-                Item { Layout.fillHeight: true }
-                Text { text: "Swipe either direction to change context"; color: Theme.cyan; font.family: Theme.fontFamily; font.pixelSize: 11 }
-            }
-        }
-
-        DashboardTile {
-            Layout.preferredWidth: 500
-            Layout.fillHeight: true
-            title: "LIVE LOAD"
-            eyebrow: page.metricsHealthy ? "1 HZ" : "OFFLINE"
-            accent: Theme.teal
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 3
-                MetricBar { Layout.fillWidth: true; label: "CPU"; progress: page.metrics.cpuUsage / 100; valueText: Math.round(page.metrics.cpuUsage) + "%  " + page.temperature(page.metrics.cpuTemp); accent: Theme.red }
-                MetricBar { Layout.fillWidth: true; label: "GPU"; progress: page.metrics.gpuUsage / 100; valueText: Math.round(page.metrics.gpuUsage) + "%  " + page.temperature(page.metrics.gpuTemp); accent: Theme.green }
-                MetricBar { Layout.fillWidth: true; label: "RAM"; progress: page.percent(page.metrics.ramUsed, page.metrics.ramTotal); valueText: Math.round(page.percent(page.metrics.ramUsed, page.metrics.ramTotal) * 100) + "%"; accent: Theme.cyan }
-            }
-        }
-
-        DashboardTile {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            title: "SESSION"
-            eyebrow: "LOCAL"
-            accent: Theme.mauve
-
-            RowLayout {
-                anchors.fill: parent
-                spacing: 18
-                Rectangle {
-                    Layout.preferredWidth: 68
-                    Layout.preferredHeight: 68
-                    radius: 18
-                    color: "#2e2844"
-                    border.color: "#7258a0"
-                    Text { anchors.centerIn: parent; text: "<>"; color: Theme.mauve; font.family: Theme.fontFamily; font.pixelSize: 25; font.weight: Font.Bold }
+    DashboardTile {
+        id: presets
+        objectName: "hub-presets"
+        anchors.left: parent.left; anchors.top: aiCard.bottom; anchors.topMargin: Theme.tileGap
+        anchors.bottom: parent.bottom; width: aiCard.width
+        title: "SAVED PRESETS"; accent: Theme.mauve
+        contentMargin: Theme.gridContentInset
+        ColumnLayout {
+            anchors.fill: parent; spacing: Theme.spacingUnit
+            Repeater {
+                model: aiStatus.state.presets || []
+                delegate: HubLink {
+                    required property var modelData
+                    Layout.fillWidth: true; Layout.fillHeight: true
+                    label: modelData.name.replace(/^Aeris /, "")
+                    detail: (modelData.context ? modelData.context + " context" : "Context unspecified")
+                        + " · " + (modelData.offload === null ? "GPU offload unspecified" : Math.round(modelData.offload * 100) + "% GPU offload")
+                    accent: Theme.mauve
+                    hint: "Open saved preset JSON · does not apply or load a model"
+                    onClicked: page.openFile(modelData.path)
                 }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 3
-                    Text { text: "No active project adapter"; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 20; font.weight: Font.Medium }
-                    Text { Layout.fillWidth: true; text: "Project, Git, and task context will land here without inventing state."; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 13; wrapMode: Text.WordWrap }
+            }
+            Text {
+                visible: !(aiStatus.state.presets || []).length
+                Layout.fillWidth: true; Layout.fillHeight: true
+                text: aiStatus.healthy ? "No saved LM Studio presets found" : "Preset catalog unavailable"
+                color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: Theme.headerDetailSize
+                verticalAlignment: Text.AlignVCenter
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: Theme.tileGap
+                HubLink {
+                    Layout.fillWidth: true; label: "OPEN LM STUDIO"
+                    enabled: aiStatus.state.studioInstalled === true
+                    onClicked: Quickshell.execDetached(["gtk-launch", "lm-studio"])
+                }
+                HubLink {
+                    Layout.fillWidth: true; label: "MODEL FILES"
+                    enabled: !!aiStatus.state.modelsPath
+                    onClicked: page.openFile(aiStatus.state.modelsPath)
                 }
             }
         }
     }
 
-    RowLayout {
-        anchors.top: topRow.bottom
-        anchors.topMargin: 12
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: 12
-
-        DashboardTile {
-            Layout.preferredWidth: 650
-            Layout.fillHeight: true
-            title: "WORKSPACE"
-            eyebrow: "TOUCH LAUNCH"
-            accent: Theme.cyan
-
-            RowLayout {
-                anchors.centerIn: parent
-                spacing: 18
-                ActionButton { iconName: "terminal"; label: "Terminal"; accent: Theme.text; onClicked: Quickshell.execDetached(["konsole"]) }
-                ActionButton { iconName: "code"; label: "Code"; accent: Theme.cyan; onClicked: Quickshell.execDetached(["code"]) }
-                ActionButton { iconName: "folder"; label: "Files"; accent: Theme.teal; onClicked: Quickshell.execDetached(["dolphin"]) }
-                ActionButton { iconName: "globe"; label: "Firefox"; accent: Theme.yellow; onClicked: Quickshell.execDetached(["firefox"]) }
-            }
-        }
-
-        DashboardTile {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            title: "ACTIVE WORK"
-            eyebrow: "CONNECTOR PENDING"
-            accent: Theme.green
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 10
-                Text { text: "TODAY'S CONTEXT"; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 11; font.letterSpacing: 1.2 }
-                Text { text: "Choose a project to make this mode situational."; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 22; font.weight: Font.Medium }
-                Text { Layout.fillWidth: true; text: "Next: bind repository status, running services, tasks, and a real focus timer."; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 13; wrapMode: Text.WordWrap }
-                Item { Layout.fillHeight: true }
-                Row {
-                    spacing: 8
-                    Repeater {
-                        model: ["GIT  NOT CONNECTED", "TASKS  NOT CONNECTED", "FOCUS  READY"]
-                        Rectangle {
-                            required property string modelData
-                            width: tagText.implicitWidth + 24
-                            height: 32
-                            radius: 16
-                            color: "#30262f3c"
-                            border.color: "#4a526072"
-                            Text { id: tagText; anchors.centerIn: parent; text: modelData; color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: 10; font.weight: Font.DemiBold; font.letterSpacing: 0.6 }
-                        }
-                    }
+    DashboardTile {
+        objectName: "hub-worker"
+        anchors.left: resources.left; anchors.right: resources.right
+        anchors.top: presets.top; anchors.bottom: parent.bottom
+        title: "WORKER TEMPLATES"; eyebrow: "MANUAL RUN"; accent: Theme.blue
+        contentMargin: Theme.gridContentInset
+        ColumnLayout {
+            anchors.fill: parent; spacing: Theme.spacingUnit
+            Repeater {
+                model: aiStatus.state.jobs || []
+                delegate: HubLink {
+                    required property var modelData
+                    Layout.fillWidth: true; Layout.fillHeight: true
+                    label: modelData.name; accent: Theme.blue
+                    hint: "Open job TOML for inspection · does not execute it"
+                    onClicked: page.openFile(modelData.path)
                 }
             }
+            Text {
+                visible: !(aiStatus.state.jobs || []).length
+                Layout.fillWidth: true; Layout.fillHeight: true
+                text: aiStatus.healthy ? "No saved worker templates found" : "Worker catalog unavailable"
+                color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: Theme.headerDetailSize
+                verticalAlignment: Text.AlignVCenter
+            }
+            HubLink {
+                Layout.fillWidth: true; label: "OPEN WORKSPACE"
+                enabled: !!aiStatus.state.workspace
+                onClicked: page.openFile(aiStatus.state.workspace)
+            }
+        }
+    }
+
+    DashboardTile {
+        id: pomodoroTile
+        objectName: "hub-pomodoro-card"
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        width: Theme.pomodoroTileWidth
+        accent: Theme.mauve
+
+        PomodoroTile {
+            objectName: "hub-pomodoro"
+            anchors.fill: parent
+            presentationActive: page.presentationActive
         }
     }
 }

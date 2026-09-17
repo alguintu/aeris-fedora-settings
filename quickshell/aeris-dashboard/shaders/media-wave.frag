@@ -7,10 +7,65 @@ layout(std140, binding = 0) uniform buf {
     vec2 size;
     float elapsedSeconds;
     float pixelMix;
+    float backdropMix;
 };
 
 float lineMask(float y, float center, float halfWidth, float aa) {
     return 1.0 - smoothstep(halfWidth, halfWidth + aa, abs(y - center));
+}
+
+float perforationMask(vec2 cells) {
+    vec2 within = fract(cells) - 0.5;
+    return 1.0 - smoothstep(0.29, 0.34, max(abs(within.x), abs(within.y)));
+}
+
+float caseLight(float mode, vec2 cell, vec2 extent, float frame) {
+    if (mode < 0.5) {
+        // Pixel rain: staggered columns, three-cell tails, held integer steps.
+        if (mod(cell.x, 2.0) > 0.5) return 0.0;
+        float head = mod(frame + cell.x * 7.0, extent.y + 7.0);
+        float behind = head - cell.y;
+        return behind >= 0.0 && behind < 3.0 ? 3.0 - behind : 0.0;
+    }
+    if (mode < 1.5) {
+        // A snake follows the grid in alternating left/right rows.
+        float x = mod(cell.y, 2.0) < 0.5 ? cell.x : extent.x - 1.0 - cell.x;
+        float index = cell.y * extent.x + x;
+        float behind = mod(frame - index + extent.x * extent.y, extent.x * extent.y);
+        return behind < 9.0 ? 3.0 - floor(behind / 3.0) : 0.0;
+    }
+    // Tiny four-frame star sprites: point, cross, dim cross, empty.
+    vec2 block = floor(cell / 5.0);
+    vec2 local = mod(cell, 5.0) - 2.0;
+    float phase = mod(floor(frame / 2.0) + block.x * 3.0 + block.y * 5.0, 8.0);
+    float distance = abs(local.x) + abs(local.y);
+    if (phase < 1.0) return distance < 0.5 ? 2.0 : 0.0;
+    if (phase < 2.0) return distance < 0.5 ? 3.0 : (distance < 1.5 ? 2.0 : 0.0);
+    if (phase < 3.0) return distance < 1.5 ? 1.0 : 0.0;
+    return 0.0;
+}
+
+vec4 caseBackdrop(vec2 p, float t) {
+    // Eleven columns like the cover placeholder, extended vertically with
+    // square cells (never stretched to the portrait aspect ratio).
+    float pitch = max(size.x / 11.0, 1.0);
+    float rows = max(floor(size.y / pitch), 1.0);
+    vec2 extent = vec2(11.0, rows);
+    vec2 cells = (p * size - vec2(0.0, (size.y - rows * pitch) * 0.5)) / pitch;
+    if (any(lessThan(cells, vec2(0.0))) || any(greaterThanEqual(cells, extent)))
+        return vec4(0.0);
+    vec2 cell = floor(cells);
+    float frame = floor(t * 4.0);
+    // Give the chase a full traversal; switch modes with a short blank beat,
+    // not a crossfade that invents intermediate shades.
+    float cycleFrames = extent.x * extent.y + 12.0;
+    float mode = mod(floor(frame / cycleFrames), 3.0);
+    float localFrame = mod(frame, cycleFrames);
+    float level = localFrame < cycleFrames - 3.0
+        ? caseLight(mode, cell, extent, localFrame) : 0.0;
+    // Four low-contrast shades only. AA is limited to square edges, never motion.
+    float alpha = perforationMask(cells) * (0.025 + 0.045 * level);
+    return vec4(vec3(0.87, 0.94, 1.0) * alpha, alpha);
 }
 
 void main() {
@@ -18,6 +73,11 @@ void main() {
     vec2 p = qt_TexCoord0;
     float px = 1.0 / max(size.y, 1.0);
     float t = elapsedSeconds;
+
+    if (backdropMix > 0.5) {
+        fragColor = caseBackdrop(p, t) * qt_Opacity;
+        return;
+    }
 
     // Closely registered but not identical: broad overlaps make pale secondary
     // colors and white, while exposed edges retain cyan, magenta, and yellow.
@@ -48,8 +108,7 @@ void main() {
     vec2 inset = (p - vec2(0.075)) / 0.85;
     vec2 cells = inset * 11.0;
     ivec2 cell = ivec2(floor(cells));
-    vec2 within = fract(cells) - 0.5;
-    float square = 1.0 - smoothstep(0.29, 0.34, max(abs(within.x), abs(within.y)));
+    float square = perforationMask(cells);
     bool inside = all(greaterThanEqual(inset, vec2(0.0))) && all(lessThan(inset, vec2(1.0)));
     bool note = (cell.y >= 2 && cell.y <= 3 && cell.x >= 3 && cell.x <= 7)
         || (cell.x == 3 && cell.y >= 2 && cell.y <= 7)

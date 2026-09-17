@@ -1,0 +1,13 @@
+[Unit]
+Description=Private Aeris API tunnel to CasaOS
+After=network-online.target aeris-companion.service
+
+[Service]
+ExecStart=/usr/bin/ssh -NT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ExitOnForwardFailure=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -i %h/.ssh/aeris_casaos_tunnel -R 127.0.0.1:4281:127.0.0.1:4280 aeris-tunnel@raspberrypi.local
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+UMask=0077
+
+[Install]
+WantedBy=default.target

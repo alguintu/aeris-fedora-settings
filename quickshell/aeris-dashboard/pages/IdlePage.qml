@@ -16,6 +16,7 @@ Item {
     property string lightingMode: "unknown"
     property bool lightingHealthy: false
     property bool lightingPending: false
+    property bool lightingCanStart: BackendService.useNative
     property string lightingError: ""
     property string coolingMode: "unknown"
     property bool coolingHealthy: false
@@ -24,6 +25,9 @@ Item {
 
     signal lightingModeRequested(string mode)
     signal coolingModeRequested(string mode)
+
+    HomeGrid { id: homeGrid; anchors.fill: parent }
+    readonly property alias layoutGrid: homeGrid
 
     function percent(value, total) {
         return total > 0 ? Math.max(0, Math.min(1, value / total)) : 0
@@ -52,47 +56,45 @@ Item {
         return Math.pow(2, Math.round(Math.log(gibibytes) / Math.LN2)) + "GB"
     }
 
-    DashboardTile {
+    GridTile {
         id: mediaTile
-        anchors.top: parent.top
-        anchors.left: parent.left
-        width: 540
-        height: middleBand.rowHeight + controlGrid.spacing + controlGrid.tileSize
+        grid: homeGrid
+        slotName: "media"
         accent: Theme.mauve
-        contentMargin: 24
 
         MediaControls {
+            objectName: "home-media-body"
             visible: !page.profilePaused("media")
+            presentationActive: page.animationsActive
             anchors.fill: parent
         }
     }
 
-    DashboardTile {
+    GridTile {
         id: cpuTile
-        anchors.top: parent.top
-        anchors.right: parent.right
-        width: mediaTile.width
-        height: Math.round((parent.height - 12) / 2)
+        grid: homeGrid
+        slotName: "cpu"
 
         Item {
             anchors.fill: parent
-            clip: true
 
             Item {
                 id: cpuSection
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: Math.round((parent.width - 21) * 0.595)
+                width: Math.round((parent.width - 2 * homeGrid.spacingUnit) * 3 / 5)
 
                 ColumnLayout {
                     anchors.fill: parent
-                    spacing: 10
+                    spacing: 2 * homeGrid.spacingUnit
 
                     DashboardSectionHeader {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 24
+                        Layout.minimumHeight: Theme.gridHeaderHeight
+                        Layout.maximumHeight: Theme.gridHeaderHeight
                         title: "CPU"
+                        objectName: "home-cpu-header"
                         iconName: "processor"
                         detail: "R9 5950X " + (page.metrics.cpuClock > 0
                                 ? page.metrics.cpuClock.toFixed(1) : "--") + "GHz"
@@ -103,6 +105,7 @@ Item {
                     }
 
                     CpuHeatmap {
+                        objectName: "home-cpu-field"
                         animationEnabled: page.animationsActive && !page.profilePaused("cpu")
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -117,19 +120,21 @@ Item {
 
             Item {
                 anchors.left: cpuSection.right
-                anchors.leftMargin: 21
+                anchors.leftMargin: 2 * homeGrid.spacingUnit
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
 
                 ColumnLayout {
                     anchors.fill: parent
-                    spacing: 10
+                    spacing: 2 * homeGrid.spacingUnit
 
                     DashboardSectionHeader {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 24
+                        Layout.minimumHeight: Theme.gridHeaderHeight
+                        Layout.maximumHeight: Theme.gridHeaderHeight
                         title: "RAM"
+                        objectName: "home-ram-header"
                         eyebrow: Math.round(page.percent(page.metrics.ramUsed,
                                                          page.metrics.ramTotal) * 100)
                                  + "% · " + page.nominalCapacity(page.metrics.ramTotal)
@@ -137,10 +142,12 @@ Item {
                     }
 
                     MemoryHeatmap {
+                        fillBounds: true
                         animationEnabled: page.animationsActive && !page.profilePaused("memory")
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         field: "ram"
+                        objectName: "home-ram-field"
                         ramUtilization: page.percent(page.metrics.ramUsed,
                                                      page.metrics.ramTotal) * 100
                     }
@@ -149,33 +156,31 @@ Item {
         }
     }
 
-    DashboardTile {
+    GridTile {
         id: gpuTile
-        anchors.top: cpuTile.bottom
-        anchors.topMargin: 12
-        anchors.bottom: parent.bottom
-        anchors.left: cpuTile.left
-        anchors.right: parent.right
+        grid: homeGrid
+        slotName: "gpu"
 
         Item {
             anchors.fill: parent
-            clip: true
 
             Item {
                 id: gpuSection
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: Math.round((parent.width - 21) * 0.595)
+                width: cpuSection.width
 
                 ColumnLayout {
                     anchors.fill: parent
-                    spacing: 10
+                    spacing: 2 * homeGrid.spacingUnit
 
                     DashboardSectionHeader {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 24
+                        Layout.minimumHeight: Theme.gridHeaderHeight
+                        Layout.maximumHeight: Theme.gridHeaderHeight
                         title: "GPU"
+                        objectName: "home-gpu-header"
                         iconName: "graphics-card"
                         detail: "RX 6900 XT"
                         eyebrow: Math.round(page.metrics.gpuUsage) + "% · "
@@ -184,6 +189,7 @@ Item {
                     }
 
                     GpuHeatmap {
+                        objectName: "home-gpu-field"
                         profilingNoBlend: page.profilePaused("gpu-blend")
                         profilingNoPaint: page.profilePaused("gpu-paint")
                         animationEnabled: page.animationsActive && !page.profilePaused("gpu")
@@ -196,19 +202,21 @@ Item {
 
             Item {
                 anchors.left: gpuSection.right
-                anchors.leftMargin: 21
+                anchors.leftMargin: 2 * homeGrid.spacingUnit
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
 
                 ColumnLayout {
                     anchors.fill: parent
-                    spacing: 10
+                    spacing: 2 * homeGrid.spacingUnit
 
                     DashboardSectionHeader {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 24
+                        Layout.minimumHeight: Theme.gridHeaderHeight
+                        Layout.maximumHeight: Theme.gridHeaderHeight
                         title: "VRAM"
+                        objectName: "home-vram-header"
                         eyebrow: Math.round(page.percent(page.metrics.vramUsed,
                                                          page.metrics.vramTotal) * 100)
                                  + "% · " + page.nominalCapacity(page.metrics.vramTotal)
@@ -216,10 +224,12 @@ Item {
                     }
 
                     MemoryHeatmap {
+                        fillBounds: true
                         animationEnabled: page.animationsActive && !page.profilePaused("memory")
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         field: "vram"
+                        objectName: "home-vram-field"
                         vramUtilization: page.percent(page.metrics.vramUsed,
                                                       page.metrics.vramTotal) * 100
                     }
@@ -228,330 +238,341 @@ Item {
         }
     }
 
-    Item {
-        id: middleBand
-        readonly property real rowHeight: Math.round((height - 12) / 2)
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.left: mediaTile.right
-        anchors.leftMargin: 12
-        anchors.right: cpuTile.left
-        anchors.rightMargin: 12
+    GridTile {
+        id: weatherTile
+        grid: homeGrid
+        slotName: "weather"
+        accent: Theme.blue
 
-        Row {
-            id: timeTiles
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: middleBand.rowHeight
-            spacing: 12
+        Item {
+            anchors.fill: parent
 
-            DashboardTile {
-                width: timeTiles.width - pomodoroTile.width - timeTiles.spacing
-                height: timeTiles.height
-                accent: Theme.blue
-
-                Item {
-                    anchors.fill: parent
-
-                    WeatherPattern {
-                        anchors.fill: parent
-                        anchors.margins: -18
-                        condition: WeatherService.condition
-                        isDay: WeatherService.previewMode ? WeatherService.previewMode !== "night"
-                            : WeatherService.state.isDay !== false
-                        moonPhase: WeatherService.moonPhase
-                        moonIllumination: WeatherService.moonIllumination
-                        animationEnabled: page.animationsActive && !page.profilePaused("weather")
-                        useCanvasRenderer: WeatherService.renderingBackend === "canvas"
-                        fixedTime: WeatherService.fixedAnimationTime
-                    }
-
-                    ChromaticTime {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        height: 84
-                        text: String(page.now.getHours() % 12 || 12).padStart(2, "0")
-                    }
-
-                    ChromaticTime {
-                        id: clockMinute
-                        anchors.left: parent.left
-                        anchors.bottom: parent.bottom
-                        height: 84
-                        text: String(page.now.getMinutes()).padStart(2, "0")
-                    }
-
-                    Text {
-                        anchors.left: clockMinute.right
-                        anchors.leftMargin: 12
-                        anchors.baseline: clockMinute.baseline
-                        text: page.now.getHours() >= 12 ? "PM" : "AM"
-                        color: Theme.green
-                        font.family: Theme.clockBoldFontFamily
-                        font.pixelSize: 36
-                        font.weight: Font.Bold
-                    }
-
-                    Text {
-                        id: clockDate
-                        anchors.right: parent.right
-                        anchors.bottom: clockWeekday.top
-                        anchors.bottomMargin: 2
-                        text: Qt.formatDateTime(page.now, "MMM d")
-                        color: Theme.yellow
-                        font.family: Theme.clockFontFamily
-                        font.pixelSize: 24
-                    }
-
-                    Text {
-                        id: clockWeekday
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        text: Qt.formatDateTime(page.now, "dddd").toUpperCase()
-                        color: Theme.yellow
-                        font.family: Theme.clockBoldFontFamily
-                        font.pixelSize: 36
-                        font.weight: Font.Bold
-                    }
-
-                    Text {
-                        id: weatherReading
-                        anchors.top: parent.top
-                        anchors.right: parent.right
-                        height: 52
-                        verticalAlignment: Text.AlignVCenter
-                        text: WeatherService.temperature
-                        color: Theme.cyan
-                        font.family: Theme.clockBoldFontFamily
-                        font.weight: Font.Bold
-                        font.pixelSize: 60
-                    }
-
-                    Text {
-                        id: weatherDescription
-                        anchors.right: parent.right
-                        anchors.top: weatherReading.bottom
-                        anchors.topMargin: 6
-                        text: (WeatherService.stale ? "Cached: " : "") + WeatherService.description
-                        width: Math.min(implicitWidth, 240)
-                        horizontalAlignment: Text.AlignRight
-                        elide: Text.ElideRight
-                        color: WeatherService.stale ? Theme.orange : Theme.mauve
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 20
-                    }
-
-                    Item {
-                        anchors.top: weatherReading.top
-                        anchors.right: parent.right
-                        width: Math.max(weatherReading.width, weatherDescription.width)
-                        height: 96
-                        Accessible.role: Accessible.Button
-                        Accessible.name: "Refresh weather for " + (WeatherService.state.location || "configured location")
-                        Accessible.onPressAction: WeatherService.refresh(true)
-                        Controls.ToolTip.visible: weatherHover.hovered
-                        Controls.ToolTip.text: (WeatherService.state.location || "Set location")
-                            + " · " + WeatherService.description + (WeatherService.stale ? " (cached)" : "")
-                            + (WeatherService.available ? " · Updated " + Qt.formatDateTime(new Date(WeatherService.state.fetchedAt * 1000), "h:mm AP") : "")
-                            + "\nModel conditions by Open-Meteo · tap to refresh"
-                        HoverHandler { id: weatherHover }
-                        TapHandler {
-                            gesturePolicy: TapHandler.ReleaseWithinBounds
-                            grabPermissions: PointerHandler.TakeOverForbidden
-                            onTapped: WeatherService.refresh(true)
-                        }
-                    }
-                }
+            WeatherPattern {
+                anchors.fill: parent
+                anchors.margins: -weatherTile.contentMargin
+                condition: WeatherService.condition
+                isDay: WeatherService.previewMode ? WeatherService.previewMode !== "night"
+                    : WeatherService.state.isDay !== false
+                moonPhase: WeatherService.moonPhase
+                moonIllumination: WeatherService.moonIllumination
+                animationEnabled: page.animationsActive && !page.profilePaused("weather")
+                useCanvasRenderer: WeatherService.renderingBackend === "canvas"
+                fixedTime: WeatherService.fixedAnimationTime
             }
 
-            DashboardTile {
-                id: pomodoroTile
-                width: 296
-                height: middleBand.height
-                accent: Theme.mauve
-                PomodoroTile {
-                    visible: !page.profilePaused("pomodoro")
-                    presentationActive: page.animationsActive && !page.profilePaused("pomodoro")
-                    anchors.fill: parent
-                }
-            }
-        }
-
-        KeepAwakeButton {
-            id: keepAwake
-            contentMargin: cpuTile.contentMargin
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            width: controlGrid.tileSize
-            height: middleBand.rowHeight
-        }
-
-        DashboardTile {
-            // User-selected capacity label for the mounted storage summary.
-            anchors.left: keepAwake.right
-            anchors.leftMargin: 12
-            anchors.right: parent.right
-            anchors.rightMargin: pomodoroTile.width + 12
-            anchors.top: timeTiles.bottom
-            anchors.topMargin: 12
-            anchors.bottom: parent.bottom
-
-            Item {
-                id: diskSummary
+            ChromaticTime {
                 anchors.left: parent.left
                 anchors.top: parent.top
+                height: 84
+                text: String(page.now.getHours() % 12 || 12).padStart(2, "0")
+            }
+
+            ChromaticTime {
+                id: clockMinute
+                anchors.left: parent.left
                 anchors.bottom: parent.bottom
+                height: 84
+                text: String(page.now.getMinutes()).padStart(2, "0")
+            }
+
+            Text {
+                anchors.left: clockMinute.right
+                anchors.leftMargin: 12
+                anchors.baseline: clockMinute.baseline
+                text: page.now.getHours() >= 12 ? "PM" : "AM"
+                color: Theme.green
+                font.family: Theme.clockBoldFontFamily
+                font.pixelSize: 36
+                font.weight: Font.Bold
+            }
+
+            Text {
+                id: clockDate
+                anchors.right: parent.right
+                anchors.bottom: clockWeekday.top
+                anchors.bottomMargin: homeGrid.spacingUnit
+                text: Qt.formatDateTime(page.now, "MMM d")
+                color: Theme.yellow
+                font.family: Theme.clockFontFamily
+                font.pixelSize: 24
+            }
+
+            Text {
+                id: clockWeekday
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                text: Qt.formatDateTime(page.now, "dddd").toUpperCase()
+                color: Theme.yellow
+                font.family: Theme.clockBoldFontFamily
+                font.pixelSize: 36
+                font.weight: Font.Bold
+            }
+
+            Text {
+                id: weatherReading
+                anchors.top: parent.top
+                anchors.right: parent.right
+                height: 52
+                verticalAlignment: Text.AlignVCenter
+                text: WeatherService.temperature
+                color: Theme.cyan
+                font.family: Theme.clockBoldFontFamily
+                font.weight: Font.Bold
+                font.pixelSize: 60
+            }
+
+            Text {
+                id: weatherDescription
+                anchors.right: parent.right
+                anchors.top: weatherReading.bottom
+                anchors.topMargin: 6
+                text: (WeatherService.stale ? "Cached: " : "") + WeatherService.description
+                width: Math.min(implicitWidth, 240)
+                horizontalAlignment: Text.AlignRight
+                elide: Text.ElideRight
+                color: WeatherService.stale ? Theme.orange : Theme.mauve
+                font.family: Theme.fontFamily
+                font.pixelSize: 20
+            }
+
+            Item {
+                anchors.top: weatherReading.top
+                anchors.right: parent.right
+                width: Math.max(weatherReading.width, weatherDescription.width)
+                height: 96
+                Accessible.role: Accessible.Button
+                Accessible.name: "Refresh weather for " + (WeatherService.state.location || "configured location")
+                Accessible.onPressAction: WeatherService.refresh(true)
+                Controls.ToolTip.visible: weatherHover.hovered
+                Controls.ToolTip.text: (WeatherService.state.location || "Set location")
+                    + " · " + WeatherService.description + (WeatherService.stale ? " (cached)" : "")
+                    + (WeatherService.available ? " · Updated " + Qt.formatDateTime(new Date(WeatherService.state.fetchedAt * 1000), "h:mm AP") : "")
+                    + "\nModel conditions by Open-Meteo · tap to refresh"
+                HoverHandler { id: weatherHover }
+                TapHandler {
+                    gesturePolicy: TapHandler.ReleaseWithinBounds
+                    grabPermissions: PointerHandler.TakeOverForbidden
+                    onTapped: WeatherService.refresh(true)
+                }
+            }
+        }
+    }
+
+    GridTile {
+        id: pomodoroTile
+        grid: homeGrid
+        slotName: "pomodoro"
+        accent: Theme.mauve
+        CompactPomodoro {
+            objectName: "home-timer-body"
+            visible: !page.profilePaused("pomodoro")
+            presentationActive: page.animationsActive && !page.profilePaused("pomodoro")
+            anchors.fill: parent
+        }
+    }
+
+    CompactRoutinePicker {
+        objectName: "home-timer-routines"
+        x: homeGrid.slot("pomodoro").x
+        y: homeGrid.slot("pomodoro").y
+        width: homeGrid.slot("pomodoro").width
+        height: homeGrid.slot("pomodoro").height
+        contentInset: homeGrid.contentInset
+        visible: page.animationsActive && TomatService.pickerOpen
+        z: 30
+    }
+
+    KeepAwakeButton {
+        id: keepAwake
+        objectName: "home-awake"
+        readonly property rect bounds: homeGrid.slot("awake")
+        contentMargin: homeGrid.contentInset
+        x: bounds.x; y: bounds.y; width: bounds.width; height: bounds.height
+    }
+
+    GridTile {
+        id: storageTile
+        grid: homeGrid
+        slotName: "storage"
+        // User-selected capacity label for the mounted storage summary.
+
+        Item {
+            id: diskSummary
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: diskLabelMetrics.tightBoundingRect.width
+
+            ThemeIcon {
+                id: diskCapacityIcon
+                anchors.left: parent.left
+                anchors.top: parent.top
+                name: "harddisk-tight"
+                color: Theme.blue
                 width: diskLabelMetrics.tightBoundingRect.width
+                height: width * 20 / 16
+            }
 
-                ThemeIcon {
-                    id: diskCapacityIcon
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    name: "harddisk-tight"
+            Item {
+                id: diskCapacityInk
+                anchors.left: parent.left
+                anchors.top: diskCapacityIcon.bottom
+                anchors.topMargin: 3 * homeGrid.spacingUnit
+                width: parent.width
+                height: diskLabelMetrics.tightBoundingRect.height
+
+                Text {
+                    id: diskCapacityLabel
+                    // Align the ink bounds, not the font's invisible bearings.
+                    x: -diskLabelMetrics.tightBoundingRect.x
+                    y: -baselineOffset - diskLabelMetrics.tightBoundingRect.y
+                    text: "6.5TB"
                     color: Theme.blue
-                    width: diskLabelMetrics.tightBoundingRect.width
-                    height: width * 20 / 16
+                    font.family: Theme.clockBoldFontFamily
+                    font.weight: Font.Bold
+                    font.pixelSize: 32
+                }
+            }
+
+            Item {
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: diskFreeLineMetrics.tightBoundingRect.height
+
+                Text {
+                    id: diskFreeLine
+                    x: -diskFreeLineMetrics.tightBoundingRect.x
+                    y: -baselineOffset - diskFreeLineMetrics.tightBoundingRect.y
+                    text: (page.metrics.mountedDiskTotal > 0
+                        && page.metrics.mountedDiskFree !== null
+                        && page.metrics.mountedDiskFree !== undefined
+                        ? Math.round(page.metrics.mountedDiskFree / page.metrics.mountedDiskTotal * 100) + "%"
+                        : "--%") + " FREE"
+                    color: Theme.green
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 18
+                    font.weight: Font.DemiBold
+                    wrapMode: Text.NoWrap
                 }
 
-                Item {
-                    id: diskCapacityInk
-                    anchors.left: parent.left
-                    anchors.top: diskCapacityIcon.bottom
-                    anchors.topMargin: 16
-                    width: parent.width
-                    height: diskLabelMetrics.tightBoundingRect.height
-
-                    Text {
-                        id: diskCapacityLabel
-                        // Align the ink bounds, not the font's invisible bearings.
-                        x: -diskLabelMetrics.tightBoundingRect.x
-                        y: -baselineOffset - diskLabelMetrics.tightBoundingRect.y
-                        text: "6.5TB"
-                        color: Theme.blue
-                        font.family: Theme.clockBoldFontFamily
-                        font.weight: Font.Bold
-                        font.pixelSize: 32
-                    }
+                TextMetrics {
+                    id: diskFreeLineMetrics
+                    font: diskFreeLine.font
+                    text: diskFreeLine.text
                 }
+            }
 
-                Item {
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
+        }
+
+        TextMetrics {
+            id: diskLabelMetrics
+            font: diskCapacityLabel.font
+            text: diskCapacityLabel.text
+        }
+
+        Rectangle {
+            id: diskDivider
+            anchors.left: diskSummary.right
+            anchors.leftMargin: 18
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 1
+            color: Theme.border
+        }
+
+        Column {
+            anchors.left: diskDivider.right
+            anchors.leftMargin: 18
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            spacing: (height - 4 * 35) / 3
+
+            Repeater {
+                model: 4
+
+                delegate: Item {
+                    id: driveRow
+                    required property int index
+                    readonly property var drive: (page.metrics.drives || [])[index] || null
+                    readonly property color accent: [Theme.red, Theme.green, Theme.yellow, Theme.cyan][index]
                     width: parent.width
-                    height: diskFreeLineMetrics.tightBoundingRect.height
+                    height: 35
 
                     Text {
-                        id: diskFreeLine
-                        x: -diskFreeLineMetrics.tightBoundingRect.x
-                        y: -baselineOffset - diskFreeLineMetrics.tightBoundingRect.y
-                        text: (page.metrics.mountedDiskTotal > 0
-                            && page.metrics.mountedDiskFree !== null
-                            && page.metrics.mountedDiskFree !== undefined
-                            ? Math.round(page.metrics.mountedDiskFree / page.metrics.mountedDiskTotal * 100) + "%"
-                            : "--%") + " FREE"
-                        color: Theme.green
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        height: 23
+                        text: ["SYSTEM", "WORKSPACE", "DOCUMENTS", "STORAGE"][driveRow.index]
+                        color: driveRow.accent
                         font.family: Theme.fontFamily
                         font.pixelSize: 18
                         font.weight: Font.DemiBold
-                        wrapMode: Text.NoWrap
+                        elide: Text.ElideRight
                     }
 
-                    TextMetrics {
-                        id: diskFreeLineMetrics
-                        font: diskFreeLine.font
-                        text: diskFreeLine.text
-                    }
-                }
-
-            }
-
-            TextMetrics {
-                id: diskLabelMetrics
-                font: diskCapacityLabel.font
-                text: diskCapacityLabel.text
-            }
-
-            Rectangle {
-                id: diskDivider
-                anchors.left: diskSummary.right
-                anchors.leftMargin: 18
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 1
-                color: Theme.border
-            }
-
-            Column {
-                anchors.left: diskDivider.right
-                anchors.leftMargin: 18
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                spacing: (height - 4 * 35) / 3
-
-                Repeater {
-                    model: 4
-
-                    delegate: Item {
-                        id: driveRow
-                        required property int index
-                        readonly property var drive: (page.metrics.drives || [])[index] || null
-                        readonly property color accent: [Theme.red, Theme.green, Theme.yellow, Theme.cyan][index]
-                        width: parent.width
-                        height: 35
-
-                        Text {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            height: 23
-                            text: ["SYSTEM", "WORKSPACE", "DOCUMENTS", "STORAGE"][driveRow.index]
-                            color: driveRow.accent
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 18
-                            font.weight: Font.DemiBold
-                            elide: Text.ElideRight
-                        }
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        height: 8
+                        radius: 4
+                        color: Theme.inset
 
                         Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            height: 8
-                            radius: 4
-                            color: Theme.inset
-
-                            Rectangle {
-                                width: parent.width * (driveRow.drive && driveRow.drive.total > 0
-                                    ? Math.max(0, Math.min(1, driveRow.drive.used / driveRow.drive.total)) : 0)
-                                height: parent.height
-                                radius: parent.radius
-                                color: driveRow.accent
-                                Behavior on width {
-                                    NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
-                                }
+                            width: parent.width * (driveRow.drive && driveRow.drive.total > 0
+                                ? Math.max(0, Math.min(1, driveRow.drive.used / driveRow.drive.total)) : 0)
+                            height: parent.height
+                            radius: parent.radius
+                            color: driveRow.accent
+                            Behavior on width {
+                                NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
                             }
                         }
                     }
                 }
             }
         }
+    }
 
+    GridTile {
+        grid: homeGrid
+        slotName: "downloads"
+        DownloadMonitor {
+            anchors.fill: parent
+            presentationActive: page.animationsActive
+            sample: BackendService.fdmState
+            onOpenRequested: Quickshell.execDetached(BackendService.command("fdm", ["open"]))
+        }
+    }
+
+    GridTile {
+        grid: homeGrid
+        slotName: "network"
+        NetworkMonitor {
+            objectName: "home-network-body"
+            anchors.fill: parent
+            presentationActive: page.animationsActive && !page.profilePaused("network")
+            healthy: page.metricsHealthy
+            sample: page.metrics.network || ({})
+        }
     }
 
     Rectangle {
         id: controlGrid
-        anchors.left: mediaTile.left
-        anchors.top: mediaTile.bottom
-        anchors.topMargin: spacing
-        width: (mediaTile.width - spacing) / 2
-        height: tileSize
+        objectName: "home-lights"
+        readonly property rect bounds: homeGrid.slot("controls")
+        x: bounds.x; y: bounds.y
+        width: (bounds.width - homeGrid.gutter) / 2
+        height: bounds.height
         radius: Theme.radius
-        readonly property real spacing: 12
+        readonly property real spacing: Theme.tileGap
 
-        readonly property real tileSize: (middleBand.rowHeight - spacing) / 2
-        readonly property real buttonWidth: (width - spacing * 2) / 3
+        readonly property real tileSize: height
+        readonly property real buttonWidth: width / 3
+        readonly property real iconSize: Math.min(64, buttonWidth - 2 * homeGrid.contentInset)
 
         readonly property var selectedButton: workLight.selected ? workLight
             : dayNightLight.selected ? dayNightLight : partyOffLight.selected ? partyOffLight : null
@@ -567,10 +588,12 @@ Item {
 
         Row {
             anchors.fill: parent
-            spacing: controlGrid.spacing
+            spacing: 0
 
             LightingModeButton {
                 id: workLight
+                objectName: "home-light-aeris"
+                iconSize: controlGrid.iconSize
                 flat: true
                 width: controlGrid.buttonWidth
                 height: controlGrid.tileSize
@@ -578,12 +601,18 @@ Item {
                 accent: Theme.teal
                 selected: page.lightingMode === "work"
                 available: page.lightingHealthy
+                allowOffline: page.lightingCanStart && !page.lightingHealthy
+                helpText: page.lightingPending ? "Applying lighting request…" : page.lightingError
+                    ? page.lightingError + (allowOffline ? " — Tap Aeris for a guarded start" : "")
+                    : allowOffline ? "Tap to start the RGB controller" : "Work lighting"
                 busy: page.lightingPending
                 onClicked: page.lightingModeRequested("work")
             }
 
             LightingModeButton {
                 id: dayNightLight
+                objectName: "home-light-night"
+                iconSize: controlGrid.iconSize
                 flat: true
                 width: controlGrid.buttonWidth
                 height: controlGrid.tileSize
@@ -599,6 +628,8 @@ Item {
 
             LightingModeButton {
                 id: partyOffLight
+                objectName: "home-light-party"
+                iconSize: controlGrid.iconSize
                 flat: true
                 width: controlGrid.buttonWidth
                 height: controlGrid.tileSize
@@ -616,6 +647,7 @@ Item {
 
     Rectangle {
         id: coolingGroup
+        objectName: "home-fans"
         anchors.left: controlGrid.right
         anchors.leftMargin: controlGrid.spacing
         anchors.top: controlGrid.top
@@ -637,10 +669,11 @@ Item {
 
         Row {
             anchors.fill: parent
-            spacing: controlGrid.spacing
+            spacing: 0
 
             CoolingModeButton {
                 id: defaultFan
+                iconSize: controlGrid.iconSize
                 flat: true
                 width: controlGrid.buttonWidth
                 height: controlGrid.tileSize
@@ -654,6 +687,7 @@ Item {
 
             CoolingModeButton {
                 id: tunedFan
+                iconSize: controlGrid.iconSize
                 flat: true
                 width: controlGrid.buttonWidth
                 height: controlGrid.tileSize
@@ -669,6 +703,7 @@ Item {
 
             CoolingModeButton {
                 id: firmwareFan
+                iconSize: controlGrid.iconSize
                 flat: true
                 width: controlGrid.buttonWidth
                 height: controlGrid.tileSize

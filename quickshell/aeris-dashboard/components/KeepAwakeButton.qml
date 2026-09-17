@@ -1,139 +1,90 @@
-import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Controls as Controls
 
 Rectangle {
     id: root
+    property QtObject sleepService: AwakeService
+    property real contentMargin: Theme.gridContentInset
+    readonly property string mode: sleepService.mode
+    readonly property string switchMode: sleepService.pending ? sleepService.requestedMode : mode
+    readonly property bool usable: sleepService.healthy && !sleepService.pending
+    readonly property color accent: mode === "full" ? Theme.yellow
+        : mode === "system" ? Theme.teal : Theme.inactive
+    readonly property var modes: ["full", "system", "normal"]
+    readonly property var icons: ["monitor", "coffee", "reference-moon"]
+    readonly property var descriptions: ["Fully awake — keep the computer and display on",
+        "Computer awake — allow the display to turn off", "Normal — use regular power settings"]
 
-    property bool awake: false
-    property bool healthy: false
-    property bool pending: false
-    property bool requestedAwake: false
-    // Position follows the tap; all colors continue to follow confirmed state.
-    readonly property bool switchAwake: pending ? requestedAwake : awake
-    property string errorText: ""
-    readonly property color accent: Theme.yellow
-    readonly property real contentScale: width / 72
-    property real contentMargin: 18
-    implicitWidth: 97
+    implicitWidth: 94
     implicitHeight: 206
     radius: Theme.radius
-    color: awake ? Theme.tintedSurface(accent, Theme.controlTint) : Theme.surface
+    color: mode !== "normal" ? Theme.tintedSurface(accent, Theme.controlTint) : Theme.surface
     border.width: 0
-    opacity: healthy ? 1 : 0.5
-
-    Accessible.name: "Prevent automatic sleep and screen locking"
-    Accessible.role: Accessible.CheckBox
-    Accessible.checked: awake
-    Controls.ToolTip.visible: hover.hovered
-    Controls.ToolTip.text: errorText || (awake
-        ? "KDE prevent sleep and screen locking is ON. Tap to disable."
-        : "KDE prevent sleep and screen locking is OFF. Tap to enable.")
-
+    opacity: sleepService.healthy ? 1 : 0.5
     Behavior on color { ColorAnimation { duration: 220 } }
 
-    function applyStatus(data) {
-        try {
-            const status = typeof data === "string" ? JSON.parse(data) : data
-            root.healthy = status.ok === true
-            if (root.healthy)
-                root.awake = status.active === true
-            root.errorText = status.error || ""
-        } catch (error) {
-            root.healthy = false
-            root.errorText = "Unable to read sleep inhibitor status"
-        }
-    }
-
-    function toggle() {
-        if (!root.healthy || root.pending)
-            return
-        root.requestedAwake = !root.awake
-        root.pending = true
-        commandProcess.command = BackendService.command("sleep", ["set", root.requestedAwake ? "on" : "off"])
-        commandProcess.running = true
-    }
-
-    Component.onCompleted: {
-        if (BackendService.useNative && BackendService.awakeState) applyStatus(BackendService.awakeState)
-    }
-    Connections {
-        target: BackendService
-        function onEventReceived(service, payload) {
-            if (service === "awake" && !root.pending) root.applyStatus(payload)
-        }
-        function onConnectedChanged() {
-            if (BackendService.useNative && !BackendService.connected) root.healthy = false
-        }
-    }
-    Process {
-        id: statusProcess
-        command: ["python3", Quickshell.shellPath("services/sleepctl.py"), "watch"]
-        running: !BackendService.useNative
-        stdout: SplitParser {
-            onRead: data => { if (!root.pending) root.applyStatus(data) }
-        }
-        onExited: {
-            root.healthy = false
-            if (!BackendService.useNative) restartTimer.start()
-        }
-    }
-
-    Timer {
-        id: restartTimer
-        interval: 2000
-        onTriggered: { if (!BackendService.useNative) statusProcess.running = true }
-    }
-
-    Process {
-        id: commandProcess
-        stdout: SplitParser { onRead: data => root.applyStatus(data) }
-        onExited: root.pending = false
-    }
-
-    Item {
+    Rectangle {
+        id: track
+        objectName: "awake-track"
         anchors.fill: parent
         anchors.margins: root.contentMargin
-
-        ThemeIcon {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            width: 42 * root.contentScale
-            height: 46 * root.contentScale
-            name: "coffee"
-            color: root.awake ? root.accent : Theme.inactive
-            Behavior on color { ColorAnimation { duration: 220 } }
-        }
+        radius: Theme.radius
+        color: Theme.raised
+        border.width: 0
+        readonly property real thumbSize: height / 3
+        readonly property real endInset: 0
+        readonly property real step: (height - 2 * endInset - thumbSize) / 2
 
         Rectangle {
+            id: thumb
+            objectName: "awake-thumb"
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            width: 36 * root.contentScale
-            height: 56 * root.contentScale
-            radius: width / 2
-            color: root.awake ? Theme.inset : Theme.inset
-            border.width: 2
-            border.color: root.awake ? root.accent : Theme.inactive
-            Behavior on border.color { ColorAnimation { duration: 180 } }
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: (root.switchAwake ? 4 : 24) * root.contentScale
-                width: 28 * root.contentScale
-                height: width
-                radius: width / 2
-                color: root.awake ? root.accent : Theme.inactive
-                Behavior on y { NumberAnimation { duration: 180 } }
-                Behavior on color { ColorAnimation { duration: 180 } }
+            width: track.width
+            height: track.thumbSize
+            radius: track.radius
+            y: track.endInset + Math.max(0, root.modes.indexOf(root.switchMode)) * track.step
+            color: root.accent
+            Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.InOutCubic } }
+            Behavior on color { ColorAnimation { duration: 180 } }
+        }
+
+        Repeater {
+            model: 3
+            Item {
+                id: choice
+                required property int index
+                objectName: "awake-" + root.modes[index]
+                width: track.width
+                height: track.height / 3
+                y: index * height
+                readonly property real iconCenterY: track.endInset + track.thumbSize / 2 + index * track.step
+                readonly property bool selected: root.switchMode === root.modes[index]
+                readonly property bool enabledMode: root.usable && (index !== 1 || root.sleepService.supportsSystem)
+                Accessible.role: Accessible.RadioButton
+                Accessible.name: root.descriptions[index]
+                Accessible.checkable: true
+                Accessible.checked: root.mode === root.modes[index]
+                Accessible.onPressAction: { if (enabledMode) root.sleepService.select(root.modes[index]) }
+
+                ThemeIcon {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: choice.iconCenterY - choice.y - height / 2
+                    width: 28
+                    height: width
+                    name: root.icons[choice.index]
+                    color: choice.selected ? Theme.surface : Theme.muted
+                    Behavior on color { ColorAnimation { duration: 180 } }
+                }
+                HoverHandler { id: hover }
+                Controls.ToolTip.visible: hover.hovered
+                Controls.ToolTip.text: root.sleepService.errorText || root.descriptions[index]
+                TapHandler {
+                    enabled: choice.enabledMode
+                    // A horizontal page flick cancels selection rather than changing mode.
+                    gesturePolicy: TapHandler.DragThreshold
+                    onTapped: root.sleepService.select(root.modes[choice.index])
+                }
             }
         }
-    }
-
-    HoverHandler { id: hover }
-    TapHandler {
-        enabled: root.healthy && !root.pending
-        gesturePolicy: TapHandler.ReleaseWithinBounds
-        grabPermissions: PointerHandler.TakeOverForbidden
-        onTapped: root.toggle()
     }
 }

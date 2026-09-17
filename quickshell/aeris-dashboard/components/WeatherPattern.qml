@@ -21,7 +21,11 @@ ClippingRectangle {
     onConditionChanged: elapsed = 0
     readonly property bool moving: animationEnabled && visible && fixedTime < 0 && condition !== "unknown"
     readonly property bool clearDay: condition === "clear" && isDay
-    color: clearDay ? "#467da3" : "transparent"
+    // Cloud cover softens daylight rather than turning the tile into night.
+    readonly property bool cloudyDay: isDay
+        && (condition === "cloudy" || condition === "partly-cloudy")
+    color: clearDay ? "#467da3" : cloudyDay
+        ? (condition === "partly-cloudy" ? "#4b738e" : "#50697c") : "transparent"
     radius: Theme.radius
 
     Behavior on color {

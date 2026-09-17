@@ -4,6 +4,7 @@ Rectangle {
     id: root
     radius: Theme.radius
     color: Theme.surface
+    property real contentInset: Theme.tilePadding
     property string candidate: ""
     property bool submitting: false
     readonly property var routines: TomatService.state.templates || []
@@ -32,7 +33,7 @@ Rectangle {
 
     Item {
         anchors.fill: parent
-        anchors.margins: 18
+        anchors.margins: root.contentInset
         Item {
             id: header
             anchors.top: parent.top

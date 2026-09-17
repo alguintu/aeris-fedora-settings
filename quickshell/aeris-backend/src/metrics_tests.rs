@@ -27,6 +27,8 @@ impl Fixture {
             cpu: root.join("cpu"),
             hwmon: root.join("hwmon"),
             drm: root.join("drm"),
+            net_dev: root.join("net-dev"),
+            net_class: root.join("net"),
         };
         let fixture = Self { root, paths };
         fixture.write(

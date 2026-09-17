@@ -11,6 +11,7 @@ Rectangle {
     property bool available: true
     property bool busy: false
     property bool flat: false
+    property real iconSize: 64
     readonly property bool hovered: touchArea.containsMouse
     readonly property bool pressed: touchArea.pressed
 
@@ -29,8 +30,8 @@ Rectangle {
 
     ThemeIcon {
         anchors.centerIn: parent
-        width: 64
-        height: 64
+        width: root.iconSize
+        height: width
         name: root.iconKind === "default" ? "fan"
             : root.iconKind === "quiet" ? "weather-windy"
             : root.iconKind === "performance" ? "lightning-bolt" : "chip"

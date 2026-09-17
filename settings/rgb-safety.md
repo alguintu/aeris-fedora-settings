@@ -141,6 +141,25 @@ device is not assumed read-only.
     running OpenRGB process, and requires the detector set to equal the three-item
     Aeris allowlist. Installation-time checks alone are not sufficient.
 
+## Attended dashboard start (2026-09-05)
+
+Drei explicitly requested that tapping the Aeris lighting logo while the daemon
+is offline attempt to start it. This is an attended start gesture, not automatic
+recovery or permission to bypass a safety failure. `aeris-dashboard-backend rgb
+start` uses only the existing user service and its installed audit/allowlist/
+version/single-owner gates. Before requesting startup it verifies stopped unit
+states and the exact MSI USB serial plus an existing HID interface using sysfs,
+without opening or probing hardware. A failed daemon is eligible only when its
+own invocation journal identifies the known suspend/pause safety stop; all other
+failures require review. No active/unresponsive service is restarted.
+
+One atomic runtime attempt marker prevents duplicates and remains after failed or
+uncertain startup until manually reviewed. Success requires the daemon's healthy
+socket reply; no mode/color command is replayed by this start path. `Restart=no`,
+no reconnect, no persistent writes, exact inventory validation, and the existing
+discovery window remain unchanged. This narrowly extends the manual-start UI,
+not the authorization for firmware recovery, rescans, or hardware-error retries.
+
 ## Controlled static-save maintenance
 
 This is not a routine command path. It is permitted only after a new, explicit

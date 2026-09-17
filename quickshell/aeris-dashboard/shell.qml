@@ -2,7 +2,6 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Window
-import QtQuick.Effects
 import "pages" as Pages
 import "components" as Components
 
@@ -11,7 +10,7 @@ ShellRoot {
 
     property string targetOutput: "DP-3"
     property int currentMode: 1 // Idle remains the startup page.
-    readonly property var modeNames: ["PC SPECS", "IDLE", "WORK", "AI FOCUS"]
+    readonly property var modeNames: ["PC SPECS", "IDLE", "AERIS AI", "GRID PREVIEW"]
     property real lastSwipeDistance: 0
     property real lastSwipeVelocity: 0
     property bool lastSwipeCommitted: false
@@ -36,6 +35,7 @@ ShellRoot {
     property bool lightingHealthy: false
     property bool lightingPending: false
     property string lightingError: ""
+    property string lightingCommandError: ""
     property string coolingMode: "unknown"
     property bool coolingHealthy: false
     property bool coolingPending: false
@@ -64,7 +64,8 @@ ShellRoot {
             const status = typeof data === "string" ? JSON.parse(data) : data
             root.lightingHealthy = status.ok === true
             root.lightingMode = status.mode || "unknown"
-            root.lightingError = status.error || ""
+            if (root.lightingHealthy) root.lightingCommandError = ""
+            root.lightingError = root.lightingCommandError || status.error || ""
         } catch (error) {
             root.lightingHealthy = false
             root.lightingMode = "unknown"
@@ -74,10 +75,13 @@ ShellRoot {
     }
 
     function setLightingMode(mode) {
-        if (root.lightingPending || !root.lightingHealthy)
+        if (root.lightingPending || (!root.lightingHealthy && (mode !== "work" || !root.nativeBackend)))
             return
+        root.lightingCommandError = ""
+        root.lightingError = ""
         root.lightingPending = true
-        rgbCommandProcess.command = Components.BackendService.command("rgb", ["set", mode])
+        rgbCommandProcess.command = Components.BackendService.command("rgb",
+            root.lightingHealthy ? ["set", mode] : ["start"])
         rgbCommandProcess.running = true
     }
 
@@ -115,7 +119,7 @@ ShellRoot {
                     const event = JSON.parse(data)
                     if (root.nativeBackend) Components.BackendService.publish(event.service, event.payload)
                     if (root.nativeBackend && event.service === "rgb") {
-                        root.applyLightingStatus(event.payload)
+                        if (!root.lightingPending) root.applyLightingStatus(event.payload)
                         return
                     }
                     if (root.nativeBackend && event.service === "cooling") {
@@ -175,12 +179,28 @@ ShellRoot {
     Process {
         id: rgbCommandProcess
         running: false
+        property bool replied: false
+        onRunningChanged: { if (running) replied = false }
 
         stdout: SplitParser {
-            onRead: data => root.applyLightingStatus(data)
+            onRead: data => {
+                rgbCommandProcess.replied = true
+                try {
+                    const status = JSON.parse(data)
+                    root.lightingCommandError = status.ok === true ? "" : status.error || "RGB request failed"
+                    root.applyLightingStatus(status)
+                } catch (error) {
+                    root.lightingCommandError = "Invalid RGB command response"
+                    root.applyLightingStatus({ok: false})
+                }
+            }
         }
 
         onExited: {
+            if (!replied) {
+                root.lightingCommandError = "RGB command did not respond; no automatic retry"
+                root.applyLightingStatus({ok: false})
+            }
             root.lightingPending = false
         }
     }
@@ -295,11 +315,12 @@ ShellRoot {
             screen.name === root.targetOutput || (screen.width === 1920 && screen.height === 480))
 
         delegate: Component {
-            PanelWindow {
+            Components.BackdropWindow {
                 required property var modelData
 
                 screen: modelData
-                color: "transparent"
+                backdropOffset: dashboardMotion.panelOffset
+                backdropHidden: dashboardMotion.fullyHidden
                 aboveWindows: true
                 focusable: false
                 exclusionMode: ExclusionMode.Ignore
@@ -336,20 +357,6 @@ ShellRoot {
                     Components.FrameProbe { id: frameProbe }
                     Binding { target: root; property: "renderProbe"; value: frameProbe }
 
-                    Image {
-                        anchors.fill: parent
-                        source: "file:///usr/share/wallpapers/Honeywave/contents/images/5120x2880.jpg"
-                        fillMode: Image.PreserveAspectCrop
-                        sourceSize.width: 1920
-                        sourceSize.height: 1080
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            blurEnabled: true
-                            blurMax: 48
-                            blur: 0.85
-                        }
-                    }
-
                     Components.PageViewport {
                         id: viewport
                         anchors.fill: parent
@@ -366,8 +373,10 @@ ShellRoot {
                         }
 
                         Pages.SpecsPage {
+                            id: specsPage
                             width: viewport.pageWidth
                             height: viewport.pageHeight
+                            presentationActive: dashboardMotion.presentationActive && viewport.pageIsVisible(specsPage)
                         }
 
                         Pages.IdlePage {
@@ -401,26 +410,22 @@ ShellRoot {
                             id: workPage
                             width: viewport.pageWidth
                             height: viewport.pageHeight
-                            readonly property bool presentationActive: dashboardMotion.presentationActive && viewport.pageIsVisible(workPage)
+                            presentationActive: dashboardMotion.presentationActive && viewport.pageIsVisible(workPage)
                             Binding on metrics {
                                 when: workPage.presentationActive
                                 value: root.metrics
                                 restoreMode: Binding.RestoreNone
                             }
-                            metricsHealthy: root.metricsHealthy
-                        }
-
-                        Pages.AiFocusPage {
-                            id: aiPage
-                            width: viewport.pageWidth
-                            height: viewport.pageHeight
-                            readonly property bool presentationActive: dashboardMotion.presentationActive && viewport.pageIsVisible(aiPage)
-                            Binding on metrics {
-                                when: aiPage.presentationActive
-                                value: root.metrics
+                            Binding on metricsHealthy {
+                                when: workPage.presentationActive
+                                value: root.metricsHealthy
                                 restoreMode: Binding.RestoreNone
                             }
-                            metricsHealthy: root.metricsHealthy
+                        }
+
+                        Pages.GridPreviewPage {
+                            width: viewport.pageWidth
+                            height: viewport.pageHeight
                         }
                     }
 

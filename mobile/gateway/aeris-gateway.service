@@ -1,0 +1,24 @@
+[Unit]
+Description=Aeris private phone gateway and LAN wake relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=aeris-gateway
+Group=aeris-gateway
+ExecStart=/opt/aeris-gateway/aeris-gateway
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+UMask=0077
+MemoryMax=64M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

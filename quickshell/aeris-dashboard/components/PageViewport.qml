@@ -7,9 +7,9 @@ Item {
 
     default property alias pages: pageTrack.data
     property int pageIndex: 0
-    property real horizontalMargin: 14
-    property real topMargin: 14
-    property real bottomMargin: 42
+    property real horizontalMargin: Theme.pageGutter
+    property real topMargin: Theme.pageTopInset
+    property real bottomMargin: Theme.pageBottomInset
     property bool dragging: false
     property real dragOffset: 0
     readonly property real pageWidth: Math.max(0, width - 2 * horizontalMargin)

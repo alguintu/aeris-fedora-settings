@@ -7,6 +7,7 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    property bool presentationActive: true
 
     readonly property var connectedPlayers: Mpris.players.values
     property string selectedPlayerName: ""
@@ -283,10 +284,11 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 24
+            spacing: 2 * Theme.spacingUnit
 
             ClippingRectangle {
                 id: artFrame
+                objectName: "media-art"
                 readonly property real artSize: root.height
                 Layout.minimumWidth: artSize
                 Layout.maximumWidth: artSize
@@ -311,7 +313,7 @@ Item {
 
                     ChromaticPulse {
                         anchors.fill: parent
-                        running: emptyArtwork.visible
+                        running: root.presentationActive && emptyArtwork.visible
                     }
                 }
 
@@ -409,7 +411,7 @@ Item {
                     id: transport
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 24
+                    anchors.bottomMargin: 0
                     spacing: 6
 
                     MediaTransportButton {

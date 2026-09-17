@@ -21,6 +21,25 @@ QtObject {
     readonly property real radius: 12
     readonly property real controlTint: 0.24
 
+    // Layout contract: ../DESIGN.md. Logical pixels at the 1920×480 target.
+    // Keep semantic roles separate even when their current values match.
+    readonly property int pageGutter: 14
+    readonly property int pageTopInset: 14
+    readonly property int pageBottomInset: 42
+    readonly property int tileGap: 12
+    readonly property int gridContentInset: 12
+    readonly property int spacingUnit: 6
+    readonly property int gridHeaderHeight: 30
+    readonly property int tilePadding: 18
+    readonly property int mediaPadding: 24
+    readonly property int compactTilePadding: 14
+    readonly property int headerBodyGap: 10
+    readonly property int primaryTileWidth: 540
+    readonly property int pomodoroTileWidth: 296
+    readonly property int sectionTitleSize: 20
+    readonly property int headerDetailSize: 18
+    readonly property int headerIconSize: 26
+
     function tintedSurface(accent, strength) {
         return Qt.tint(surface, Qt.rgba(accent.r, accent.g, accent.b, strength))
     }

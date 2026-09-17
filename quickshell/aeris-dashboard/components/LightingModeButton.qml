@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 
 Rectangle {
     id: root
@@ -9,8 +10,11 @@ Rectangle {
     property color accent: Theme.teal
     property bool selected: false
     property bool available: true
+    property bool allowOffline: false
+    property string helpText: ""
     property bool busy: false
     property bool flat: false
+    property real iconSize: 64
     readonly property bool hovered: touchArea.containsMouse
     readonly property bool pressed: touchArea.pressed
     property bool componentReady: false
@@ -21,7 +25,12 @@ Rectangle {
     color: root.flat ? "transparent" : (root.selected ? Theme.raised : (touchArea.pressed ? Theme.inset : Theme.surface))
     border.color: root.selected ? root.accent : (touchArea.containsMouse ? root.accent : Theme.border)
     border.width: root.flat ? 0 : (root.selected ? 2 : 1)
-    opacity: root.available ? 1.0 : 0.48
+    opacity: root.available || root.allowOffline ? 1.0 : 0.48
+    Controls.ToolTip.visible: root.hovered && root.helpText.length > 0
+    Controls.ToolTip.text: root.helpText
+    Accessible.role: Accessible.Button
+    Accessible.name: root.helpText || "Lighting mode"
+    Accessible.onPressAction: { if ((root.available || root.allowOffline) && !root.busy) root.clicked() }
 
     Behavior on color {
         ColorAnimation { duration: 220; easing.type: Easing.OutCubic }
@@ -51,7 +60,7 @@ Rectangle {
     Item {
         id: iconState
         property string displayedIconKind: root.iconKind
-        property color iconColor: root.selected ? root.accent : Theme.inactive
+        property color iconColor: root.selected || (root.busy && root.allowOffline) ? root.accent : Theme.inactive
         scale: root.selected ? 1.0 : 0.88
 
         Behavior on iconColor {
@@ -64,8 +73,8 @@ Rectangle {
 
     ThemeIcon {
         anchors.centerIn: parent
-        width: 64
-        height: 64
+        width: root.iconSize
+        height: width
         name: iconState.displayedIconKind === "aeris" ? "aeris"
             : iconState.displayedIconKind === "night" ? "reference-moon"
             : iconState.displayedIconKind === "day" ? "white-balance-sunny"
@@ -102,8 +111,8 @@ Rectangle {
     MouseArea {
         id: touchArea
         anchors.fill: parent
-        enabled: root.available && !root.busy
+        enabled: root.available || root.allowOffline
         hoverEnabled: true
-        onClicked: root.clicked()
+        onClicked: { if (!root.busy) root.clicked() }
     }
 }

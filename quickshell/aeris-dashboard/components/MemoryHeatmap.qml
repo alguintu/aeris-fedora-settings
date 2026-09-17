@@ -17,6 +17,9 @@ Item {
     property int columns: 14
     property int rows: 10
     property real cellGap: 3
+    // Grid-layout mode keeps square cells AND all four field edges aligned.
+    // Distribute residual space into gutters rather than stretching a last cell.
+    property bool fillBounds: false
     readonly property int unitCount: columns * rows
     property color idleColor: Theme.heatIdle
     property color ramColor: Theme.cyan
@@ -177,15 +180,18 @@ Item {
 
             HeatmapSurface {
                 id: ramGrid
-                readonly property real cellSize: root.fittedCellSize(parent.width, parent.height)
+                readonly property real cellSize: root.fillBounds
+                    ? Math.floor(root.fittedCellSize(parent.width, parent.height))
+                    : root.fittedCellSize(parent.width, parent.height)
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 width: root.columns * cellSize + (root.columns - 1) * gapX
                 height: root.rows * cellSize + (root.rows - 1) * gapY
                 columns: root.columns
                 rows: root.rows
-                gapX: root.fittedGap(parent.width, parent.height)
-                gapY: gapX
+                gapX: root.fillBounds ? (parent.width - root.columns * cellSize) / (root.columns - 1)
+                    : root.fittedGap(parent.width, parent.height)
+                gapY: root.fillBounds ? (parent.height - root.rows * cellSize) / (root.rows - 1) : gapX
                 animationEnabled: root.animationEnabled
                 cellColors: root.ramColors
             }
@@ -198,15 +204,18 @@ Item {
 
             HeatmapSurface {
                 id: vramGrid
-                readonly property real cellSize: root.fittedCellSize(parent.width, parent.height)
+                readonly property real cellSize: root.fillBounds
+                    ? Math.floor(root.fittedCellSize(parent.width, parent.height))
+                    : root.fittedCellSize(parent.width, parent.height)
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 width: root.columns * cellSize + (root.columns - 1) * gapX
                 height: root.rows * cellSize + (root.rows - 1) * gapY
                 columns: root.columns
                 rows: root.rows
-                gapX: root.fittedGap(parent.width, parent.height)
-                gapY: gapX
+                gapX: root.fillBounds ? (parent.width - root.columns * cellSize) / (root.columns - 1)
+                    : root.fittedGap(parent.width, parent.height)
+                gapY: root.fillBounds ? (parent.height - root.rows * cellSize) / (root.rows - 1) : gapX
                 animationEnabled: root.animationEnabled
                 cellColors: root.vramColors
             }
