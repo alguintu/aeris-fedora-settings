@@ -6,6 +6,14 @@ This repository records intentional system and desktop choices without copying
 entire configuration directories. Full KDE configuration files can contain
 unrelated personal state, hardware identifiers, and application data.
 
+## Development apps and tools
+
+The [portable Fedora development setup](development/README.md) covers the apps,
+SDKs, and checks used for Flutter/Android, Laravel/PHP, web, Python, and Rust work.
+It includes an observed version inventory and installation instructions for
+another developer, without requiring Aeris hardware, desktop settings, private
+projects, accounts, or mount paths. Start there when reproducing the dev setup.
+
 ## Current machine
 
 - Fedora Linux 44, KDE Plasma 6.6
