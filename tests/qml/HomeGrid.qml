@@ -42,10 +42,12 @@ ShellRoot {
             x: 14; y: 14; width: 1892; height: 424
             now: new Date(2026, 8, 9, 23, 59) // Longest weekday, two-digit time.
             animationsActive: false
+            metricsHealthy: true
             onLightingModeRequested: mode => root.lightingRequests = root.lightingRequests.concat([mode])
             metrics: ({cpuUsage: 0, cpuTemp: null, cpuClock: 0, cpuCcds: [],
                 gpuUsage: 0, gpuTemp: null, ramUsed: 0, ramTotal: 64 * 1073741824,
-                vramUsed: 0, vramTotal: 16 * 1073741824})
+                vramUsed: 0, vramTotal: 16 * 1073741824,
+                drives: [{temperature: 30}, {temperature: 45.85}, {temperature: null}, {}]})
         }
     }
     TestCase { id: input; name: "OfflineLighting"; when: false }
@@ -98,6 +100,18 @@ ShellRoot {
             const timer = find(page, "home-pomodoro"), timerBody = find(page, "home-timer-body")
             const storage = find(page, "home-storage"), downloads = find(page, "home-downloads")
             const network = find(page, "home-network")
+            for (let i = 0; i < 4; ++i) {
+                const label = find(page, "storage-label-" + i)
+                const temperature = find(page, "storage-temperature-" + i)
+                check(temperature.text === (root.step === 0 ? ["30°C", "46°C", "—", "—"][i] : "—"),
+                    "drive temperature rounded; missing or unhealthy never appears as zero")
+                check(near(point(label).y + label.baselineOffset, point(temperature).y + temperature.baselineOffset)
+                    && near(temperature.x + temperature.width, temperature.parent.width)
+                    && near(temperature.x - label.x - label.width, 6),
+                    "drive label and temperature share baseline and opposite edges with 6px gap")
+                check(label.font.pixelSize === 18 && temperature.font.pixelSize === 18
+                    && label.implicitWidth <= label.width, "drive labels stay legible and untruncated")
+            }
             check(downloads.x === storage.x + storage.width + 12 && network.x === downloads.x
                 && downloads.width === network.width && downloads.height === 97 && network.height === 97
                 && network.y === downloads.y + downloads.height + 12
@@ -143,6 +157,7 @@ ShellRoot {
                 check(root.lightingRequests.length === 2, "Python rollback never invokes missing startup API")
                 page.metrics = Object.assign({}, page.metrics, {cpuUsage: 100, cpuTemp: 100, cpuClock: 4.9,
                     gpuUsage: 100, gpuTemp: 100, ramUsed: page.metrics.ramTotal, vramUsed: page.metrics.vramTotal})
+                page.metricsHealthy = false
             } else {
                 console.info("HOME_GRID_TEST_PASSED")
                 Qt.quit()

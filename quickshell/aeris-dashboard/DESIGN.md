@@ -222,6 +222,9 @@ and chromatic artwork deliberately have their own rendering palettes.
 - **Storage:** icon and capacity share ink width; use an 18px (3-unit) gap
   below the icon. Free-space text stays pinned to the inner bottom, not pulled
   up by the capacity label. Drive labels/bars share their own left/right edges.
+  Each drive's temperature is right-aligned opposite its label on the same
+  baseline, matching its 18px demi-bold type and accent, with a 6px minimum
+  label/readout gap. Unknown or stale temperatures show a dash; no extra row.
 - **Network/downloads:** two 3×1 horizontal tiles immediately right of storage,
   downloads above network (305×97 each, 12px gutter/inset). Downloads contains
   a mauve DOWNLOADS header matching NETWORK's type size, pinned top-left.

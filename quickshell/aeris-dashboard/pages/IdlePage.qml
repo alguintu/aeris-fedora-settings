@@ -501,8 +501,11 @@ Item {
                     height: 35
 
                     Text {
+                        id: driveLabel
+                        objectName: "storage-label-" + driveRow.index
                         anchors.left: parent.left
-                        anchors.right: parent.right
+                        anchors.right: driveTemperature.left
+                        anchors.rightMargin: 6
                         anchors.top: parent.top
                         height: 23
                         text: ["SYSTEM", "WORKSPACE", "DOCUMENTS", "STORAGE"][driveRow.index]
@@ -511,6 +514,21 @@ Item {
                         font.pixelSize: 18
                         font.weight: Font.DemiBold
                         elide: Text.ElideRight
+                    }
+
+                    Text {
+                        id: driveTemperature
+                        objectName: "storage-temperature-" + driveRow.index
+                        anchors.right: parent.right
+                        anchors.baseline: driveLabel.baseline
+                        text: page.metricsHealthy && driveRow.drive
+                            && typeof driveRow.drive.temperature === "number"
+                            && isFinite(driveRow.drive.temperature)
+                            ? Math.round(driveRow.drive.temperature) + "°C" : "—"
+                        color: driveRow.accent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 18
+                        font.weight: Font.DemiBold
                     }
 
                     Rectangle {

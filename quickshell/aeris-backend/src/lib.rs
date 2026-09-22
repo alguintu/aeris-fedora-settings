@@ -5,6 +5,7 @@ pub mod artwork;
 pub mod awake;
 pub mod common;
 pub mod cooling;
+pub mod drive_temperatures;
 pub mod fdm;
 pub mod fdm_window;
 pub mod metrics;

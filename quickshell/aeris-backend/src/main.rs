@@ -1,5 +1,5 @@
 use aeris_dashboard_backend::{
-    ai, artwork, awake, cooling, fdm,
+    ai, artwork, awake, cooling, drive_temperatures, fdm,
     metrics::{Collector, CpuSamples, Paths},
     rgb, rgb_start, templates, tomat, weather,
 };
@@ -21,6 +21,7 @@ fn emit(value: &impl Serialize) -> io::Result<()> {
 
 fn metrics_loop(mut publish: impl FnMut(Value) -> bool) {
     let mut collector = Collector::new(Paths::default());
+    let mut drive_temperatures = drive_temperatures::Reader::default();
     let started = Instant::now();
     let mut previous = CpuSamples::read(&collector.paths.proc_stat).ok();
     thread::sleep(Duration::from_millis(250));
@@ -34,7 +35,11 @@ fn metrics_loop(mut publish: impl FnMut(Value) -> bool) {
                 );
                 previous = Some(current);
                 match snapshot {
-                    Ok(snapshot) => json!({"ok": true, "data": snapshot}),
+                    Ok(mut snapshot) => {
+                        drive_temperatures
+                            .update(&mut snapshot.disks.drives, started.elapsed().as_secs_f64());
+                        json!({"ok": true, "data": snapshot})
+                    }
                     Err(error) => json!({"ok": false, "error": error.to_string()}),
                 }
             }
@@ -149,7 +154,9 @@ fn run(args: &[String]) -> io::Result<bool> {
             let previous = CpuSamples::read(&collector.paths.proc_stat)?;
             thread::sleep(Duration::from_millis(250));
             let current = CpuSamples::read(&collector.paths.proc_stat)?;
-            emit(&collector.collect(&previous, &current, 0.0)?)?;
+            let mut snapshot = collector.collect(&previous, &current, 0.0)?;
+            drive_temperatures::Reader::default().update(&mut snapshot.disks.drives, 0.0);
+            emit(&snapshot)?;
             Ok(true)
         }
         ["metrics"] => {

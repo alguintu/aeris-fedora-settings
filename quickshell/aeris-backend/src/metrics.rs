@@ -211,6 +211,7 @@ pub struct Drive {
     pub mount: &'static str,
     pub used: Option<u64>,
     pub total: Option<u64>,
+    pub temperature: Option<f64>,
 }
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -293,6 +294,7 @@ impl Disks {
                 mount,
                 used: space.map(|s| s.total.saturating_sub(s.free)),
                 total: space.map(|s| s.total),
+                temperature: None,
             }
         })
         .collect();

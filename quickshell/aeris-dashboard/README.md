@@ -285,6 +285,14 @@ quickshell/aeris-dashboard/bin/aeris-dashboard-backend metrics --once
 
 ## Compute and memory groups
 
+Home's four storage rows show each physical drive's temperature opposite its
+label. The Rust metrics worker reads the existing UDisks2 SMART cache over system
+D-Bus at most once a minute, resolving filesystem mount points to drive objects
+(including the Btrfs system volume). It converts ATA/NVMe Kelvin values to Celsius
+without issuing SMART refreshes, waking sleeping disks, or requiring a privileged
+helper. Readings older than 30 minutes, unavailable sensors, and failed reads show
+`—`. This is cached device telemetry, not second-by-second temperature polling.
+
 The Idle right column contains two equal hardware-affinity cards: CPU with
 system RAM above GPU with VRAM. Each card keeps separate aligned headers and a
 21 px internal gutter, but the shared outer boundary makes the resource
