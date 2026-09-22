@@ -8,6 +8,12 @@ unrelated personal state, hardware identifiers, and application data.
 
 ## Development apps and tools
 
+**Start with Community Codex (ChatGPT Community):** from this checkout, run
+`./scripts/install-community-codex.sh` as your normal user. It builds and installs
+the community Fedora RPM. Use `--dry-run` to preview the commands. See the
+[Codex entry point](development/README.md#start-here-community-codex) for first-run
+and update instructions.
+
 The [portable Fedora development setup](development/README.md) covers the apps,
 SDKs, and checks used for Flutter/Android, Laravel/PHP, web, Python, and Rust work.
 It includes an observed version inventory and installation instructions for

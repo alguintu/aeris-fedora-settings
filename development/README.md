@@ -11,10 +11,61 @@ Record the versions and download checksums you actually install in your project'
 onboarding documentation. Installation commands here were reviewed, not executed
 on a clean Fedora machine during this documentation pass.
 
+## Start here: Community Codex
+
+Community Codex is the first app in this workflow. The community project is
+[ilysenko/codex-desktop-linux](https://github.com/ilysenko/codex-desktop-linux),
+currently displayed as **ChatGPT Community** in the application menu, with the
+command/package name `codex-desktop`.
+
+On a regular Fedora install, download or clone this settings repository, open a
+terminal in its root, and run:
+
+```bash
+./scripts/install-community-codex.sh --dry-run
+./scripts/install-community-codex.sh
+```
+
+Run as your normal user, with sudo access for packages. Close existing Codex or
+ChatGPT desktop apps first. The helper installs Git, Make, Rust and Cargo, clones
+the community source into `$HOME/.local/share/codex-community/source`, prints its
+Git revision, then runs upstream's `make bootstrap-native` to install the remaining
+dependencies, build and install an RPM. It requires network access and build disk
+space; this is a local build, not an instant binary download.
+
+It uses upstream's default feature selection without copying our personal
+settings. Upstream resolves and verifies the current signed application payload;
+the observed package version below is an inventory entry, not an installer pin.
+Retain the printed source revision and upstream build metadata when recording
+your installation. See the community
+[native setup guide](https://github.com/ilysenko/codex-desktop-linux/blob/main/docs/native-setup.md).
+
+The helper refuses existing checkout paths, including partial failed clones.
+Inspect a failed checkout before retrying; choose a new absolute path with
+`CODEX_COMMUNITY_DIR` if needed. It does not overwrite or reset existing source.
+Fedora Atomic is excluded; use upstream's documented AppImage/container flow.
+
+After installation:
+
+```bash
+rpm -q codex-desktop
+codex-desktop --diagnose
+codex-desktop
+```
+
+Sign in with your own account, open the project folder, and use its README and
+the sections below to set up the required toolchain. No personal account state,
+plugins, model configuration, or Aeris settings are copied. For later updates,
+use the community app's updater or follow its native update instructions; this
+helper is for initial setup. Optional community features can be selected later
+with upstream's `make setup-native` followed by `make install-native` in the
+retained checkout.
+
 ## Apps and observed versions
 
 | Area | Installed app/tool on 2026-09-22 | Purpose / install route |
 | --- | --- | --- |
+| Entry point | Community Codex / ChatGPT Community, `codex-desktop` 2026.09.13.100451 | Community native RPM; start here, then set up project tools |
 | Editor | VS Code 1.138.0; Dart and Flutter extensions 3.142.0 | Native Linux archive; editor and debugger |
 | Flutter | Flutter 3.47.2, Dart 3.13.2 | User-owned SDK; mobile and web development |
 | Android | Command-line Tools 22.0, Platform-Tools 37.0.1, Emulator 37.1.11 | Google's SDK tools; Android Studio is optional and was not found in this inventory |
@@ -265,9 +316,10 @@ another machine's virtual environments. For Rust, install
 [rustup](https://rustup.rs/), honor `rust-toolchain.toml`, and run the project's
 checks, normally `cargo test --locked`. Native dependencies remain project-specific.
 
-AI assistants and local model servers are optional personal tools. No assistant
-account, model, Aeris service, storage mount, dashboard, RGB/cooling rule, window
-layout, or production server configuration is required by this development guide.
+Community Codex is the entry point for this workflow; other assistants and local
+model servers are optional. No particular model, Aeris service, storage mount,
+dashboard, RGB/cooling rule, window layout, or production server configuration is
+required by this development guide.
 
 ## Reproduction checklist
 
