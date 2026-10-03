@@ -11,6 +11,7 @@ pub mod fdm_window;
 pub mod metrics;
 pub mod network;
 pub mod rgb;
+pub mod rgb_sleep;
 pub mod rgb_start;
 pub mod templates;
 pub mod tomat;

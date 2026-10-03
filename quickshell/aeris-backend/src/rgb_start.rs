@@ -1,4 +1,4 @@
-//! Attended startup only. Never called by status polling or automatic recovery.
+//! Guarded startup: attended requests, or one clean sleep-cycle resume.
 use crate::{
     common::{Result, err},
     rgb,
@@ -120,16 +120,46 @@ fn check_usb(root: &Path) -> Result<()> {
     Ok(())
 }
 
-fn perform() -> Result<Value> {
+pub(crate) struct PendingStart {
+    conn: Connection,
+    daemon: BusPath<'static>,
+    server: BusPath<'static>,
+    marker: std::path::PathBuf,
+    deadline: Instant,
+}
+
+fn clean_inactive(conn: &Connection, path: &BusPath<'static>) -> Result<bool> {
+    let result: String = conn
+        .with_proxy(DEST, path.clone(), Duration::from_secs(1))
+        .get("org.freedesktop.systemd1.Service", "Result")
+        .map_err(err)?;
+    Ok(state(conn, path)? == "inactive" && result == "success")
+}
+
+pub(crate) enum Start {
+    Healthy(Value),
+    Pending(PendingStart),
+}
+
+pub(crate) fn begin(automatic: bool) -> Result<Start> {
     let current = rgb::request(None);
     if current["ok"] == true {
-        return Ok(current);
+        return Ok(Start::Healthy(current));
     } // Never restart an already healthy daemon.
+    if rgb::control_path()
+        .with_file_name("aeris-openrgb-sleep-in-progress")
+        .exists()
+    {
+        return Err("Lighting is paused for sleep; wait for wake before starting".into());
+    }
     let conn = Connection::new_session().map_err(err)?;
     let daemon = unit_path(&conn, UNIT)?;
     let server = unit_path(&conn, SERVER)?;
     let daemon_state = state(&conn, &daemon)?;
     let server_state = state(&conn, &server)?;
+    if automatic && (!clean_inactive(&conn, &daemon)? || !clean_inactive(&conn, &server)?) {
+        return Err("RGB resume requires both services to have stopped cleanly; no retry".into());
+    }
     if server_state == "failed" {
         return Err(
             "The OpenRGB server failed; review its journal before another hardware start".into(),
@@ -152,7 +182,7 @@ fn perform() -> Result<Value> {
         } else { err(e) })?;
     writeln!(
         file,
-        "Manual dashboard startup requested; retain on failure or uncertainty"
+        "Guarded RGB startup requested; retain on failure or uncertainty"
     )
     .map_err(err)?;
     file.sync_all().map_err(err)?;
@@ -167,19 +197,45 @@ fn perform() -> Result<Value> {
             (UNIT, "fail"),
         )
         .map_err(err)?;
-    let deadline = Instant::now() + Duration::from_secs(40);
-    while Instant::now() < deadline {
+    Ok(Start::Pending(PendingStart {
+        conn,
+        daemon,
+        server,
+        marker,
+        deadline: Instant::now() + Duration::from_secs(40),
+    }))
+}
+
+impl PendingStart {
+    pub(crate) fn poll(&self) -> Result<Option<Value>> {
         let current = rgb::request(None);
         if current["ok"] == true {
-            fs::remove_file(&marker).map_err(err)?;
-            return Ok(current);
+            fs::remove_file(&self.marker).map_err(err)?;
+            return Ok(Some(current));
         }
-        if failed_without_job(&conn, &daemon)? || failed_without_job(&conn, &server)? {
+        if failed_without_job(&self.conn, &self.daemon)?
+            || failed_without_job(&self.conn, &self.server)?
+        {
             return Err("RGB startup failed its safety checks. Inspect aeris-openrgb.service; no automatic retry".into());
+        }
+        if Instant::now() >= self.deadline {
+            return Err("RGB startup has not confirmed readiness. No retry sent; inspect the service before trying again".into());
+        }
+        Ok(None)
+    }
+}
+
+fn perform() -> Result<Value> {
+    let pending = match begin(false)? {
+        Start::Healthy(current) => return Ok(current),
+        Start::Pending(pending) => pending,
+    };
+    loop {
+        if let Some(current) = pending.poll()? {
+            return Ok(current);
         }
         thread::sleep(Duration::from_millis(250));
     }
-    Err("RGB startup has not confirmed readiness. No retry sent; inspect the service before trying again".into())
 }
 
 pub fn start() -> Value {

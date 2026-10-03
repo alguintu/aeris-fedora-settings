@@ -1,7 +1,7 @@
 use aeris_dashboard_backend::{
     ai, artwork, awake, cooling, drive_temperatures, fdm,
     metrics::{Collector, CpuSamples, Paths},
-    rgb, rgb_start, templates, tomat, weather,
+    rgb, rgb_sleep, rgb_start, templates, tomat, weather,
 };
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -177,6 +177,10 @@ fn run(args: &[String]) -> io::Result<bool> {
             if let Some(error) = error {
                 return Err(error);
             }
+            Ok(true)
+        }
+        ["rgb", "sleep-watch"] => {
+            rgb_sleep::watch().map_err(io::Error::other)?;
             Ok(true)
         }
         ["rgb", "start"] => {

@@ -60,6 +60,50 @@ available on the machine, so music synchronization is technically feasible, but
 it is deferred until capture-node selection, privacy behavior, beat/envelope
 processing, and failure fallback are designed and tested.
 
+## Automatic sleep/wake lifecycle (2026-10-03)
+
+Drei requested automatic lighting recovery after sleep. The separate Rust
+`aeris-openrgb-sleep.service` watches logind `PrepareForSleep` and holds a
+sleep **delay** inhibitor (not a sleep blocker). Before sleep it requests stops
+for both RGB units and releases the inhibitor after checking their results.
+Only a previously healthy runtime with both units cleanly stopped within the
+budget earns one fresh guarded start after wake. The new daemon defaults to Work.
+It never reuses an old hardware connection or retries a failed start.
+
+The watcher remains responsive while the server completes its 10-second startup
+window. A sleep during incomplete startup stops the stack and retains its start
+attempt marker for review. Duplicate signals, an offline/failed runtime before
+sleep, an uncertain stop, missing USB/HID identity, or failed safety checks never
+trigger an automatic retry. A logind/bus failure exits the watcher; `Restart=no`.
+
+Install/enable only this lifecycle service (does not start/restart RGB hardware):
+
+```bash
+./scripts/install-openrgb-sleep.sh
+./scripts/install-openrgb-sleep.sh --check
+journalctl --user -u aeris-openrgb-sleep.service
+```
+
+The runtime `aeris-openrgb-sleep-in-progress` marker suppresses manual starts
+until wake. If the watcher dies mid-cycle, review the journal and both unit states
+before removing that marker manually. The separate `aeris-openrgb-start-attempt`
+marker still requires review after a failed or uncertain start.
+
+The dashboard now translates a missing/refused control socket to “Lighting is
+offline. Tap the RGB logo to start.” The old raw “No such file or directory”
+referred to this volatile socket, not a missing program/configuration file.
+
+Private-bus integration coverage (fake logind, systemd, and RGB status socket;
+existing USB/HID sysfs identity is read-only):
+
+```bash
+AERIS_RGB_PRIVATE_BUS_TEST=1 dbus-run-session -- python3 tests/fixtures/rgb-sleep-bus-check.py \
+  "$PWD/quickshell/aeris-backend/target/debug/aeris-dashboard-backend"
+```
+
+A real physical suspend/resume remains an attended validation step; do not
+suspend the workstation merely to run this test.
+
 ## Logical mapping
 
 | Device or zone | Signal |

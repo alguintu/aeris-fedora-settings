@@ -1,0 +1,12 @@
+[Unit]
+Description=Aeris RGB safe sleep and wake lifecycle
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=/home/drei/Documents/Codex/aeris-fedora-settings/quickshell/aeris-dashboard/bin/aeris-dashboard-backend rgb sleep-watch
+Restart=no
+TimeoutStopSec=3
+
+[Install]
+WantedBy=graphical-session.target

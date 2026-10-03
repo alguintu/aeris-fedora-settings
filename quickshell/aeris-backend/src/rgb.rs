@@ -128,6 +128,34 @@ pub fn request(mode: Option<&str>) -> Value {
         |mode| json!({"command": "set", "mode": mode}),
     );
     // No automatic set retry: a timeout could mean the daemon already applied it.
-    request_at(&control_path(), &payload)
-        .unwrap_or_else(|error| json!({"ok": false, "mode": "unknown", "error": error.to_string()}))
+    request_at(&control_path(), &payload).unwrap_or_else(
+        |error| json!({"ok": false, "mode": "unknown", "error": status_error(&error)}),
+    )
+}
+
+fn status_error(error: &io::Error) -> String {
+    match error.kind() {
+        io::ErrorKind::NotFound | io::ErrorKind::ConnectionRefused => {
+            "Lighting is offline. Tap the RGB logo to start.".into()
+        }
+        _ => format!("Lighting unavailable: {error}"),
+    }
+}
+
+#[cfg(test)]
+mod error_tests {
+    use super::*;
+    #[test]
+    fn missing_or_stale_socket_is_an_offline_service_not_a_missing_file() {
+        for kind in [io::ErrorKind::NotFound, io::ErrorKind::ConnectionRefused] {
+            assert_eq!(
+                status_error(&io::Error::from(kind)),
+                "Lighting is offline. Tap the RGB logo to start."
+            );
+        }
+        assert!(
+            status_error(&io::Error::from(io::ErrorKind::PermissionDenied))
+                .contains("permission denied")
+        );
+    }
 }

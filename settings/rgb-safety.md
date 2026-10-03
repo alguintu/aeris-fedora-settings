@@ -1,6 +1,6 @@
 # OpenRGB hardware-safety policy
 
-Last reviewed: 2026-09-03
+Last reviewed: 2026-10-03
 
 This policy is a hard gate for Aeris, not a troubleshooting suggestion. OpenRGB
 itself warns that it talks to hardware through reverse-engineered protocols and
@@ -159,6 +159,31 @@ socket reply; no mode/color command is replayed by this start path. `Restart=no`
 no reconnect, no persistent writes, exact inventory validation, and the existing
 discovery window remain unchanged. This narrowly extends the manual-start UI,
 not the authorization for firmware recovery, rescans, or hardware-error retries.
+
+## Authorized automatic sleep lifecycle (2026-10-03)
+
+Drei explicitly requested automatic restart after sleep. This is a narrow
+exception to the attended-only startup rule above: a separate Rust logind watcher
+may start the existing audited user service **once per sleep cycle**, only after
+it observed a healthy running stack and cleanly stopped both units before sleep.
+The ordinary daemon retains its pause guard, no reconnect, no persistent writes,
+and `Restart=no`; hardware errors do not authorize recovery.
+
+The watcher holds a logind sleep delay inhibitor, requires at least a five-second
+configured delay budget, and limits its own clean-stop window to four seconds.
+It releases the lock before sleep and reacquires it on wake. A duplicate or
+unpaired wake, inactive/failed pre-sleep runtime, stop error/timeout, interrupted
+startup, or lost logind owner cannot authorize another start. A runtime sleep
+marker blocks manual starts until wake and remains for review if the watcher
+exits mid-cycle. The existing atomic startup marker prevents duplicate requests
+and remains after uncertain/failed startup.
+
+On wake, the existing version/auditor/detector/single-owner gates, exact sysfs
+USB/HID identity, server discovery delay, and six-device/zone validation all run
+again on fresh processes. Only cleanly inactive units qualify automatically;
+failed-unit review remains part of the attended start path. Default mode is Work.
+There is no firmware handoff before sleep or after wake. Forced/kernel sleep
+that bypasses logind is outside this lifecycle guarantee.
 
 ## Controlled static-save maintenance
 
